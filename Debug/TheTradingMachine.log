@@ -1,0 +1,17 @@
+﻿  TestCppClient.cpp
+d:\users\fobboyandy\desktop\thetradingmachine\thetradingmachine\src\testcppclient.cpp(4): fatal error C1083: Cannot open include file: 'StdAfx.h': No such file or directory
+  StdAfx.cpp
+d:\users\fobboyandy\desktop\thetradingmachine\thetradingmachine\src\stdafx.cpp(4): fatal error C1083: Cannot open include file: 'StdAfx.h': No such file or directory
+  ScannerSubscriptionSamples.cpp
+d:\users\fobboyandy\desktop\thetradingmachine\thetradingmachine\src\scannersubscriptionsamples.cpp(3): fatal error C1083: Cannot open include file: 'StdAfx.h': No such file or directory
+  OrderSamples.cpp
+d:\users\fobboyandy\desktop\thetradingmachine\thetradingmachine\src\ordersamples.cpp(3): fatal error C1083: Cannot open include file: 'StdAfx.h': No such file or directory
+  Main.cpp
+d:\users\fobboyandy\desktop\thetradingmachine\thetradingmachine\src\main.cpp(4): fatal error C1083: Cannot open include file: 'StdAfx.h': No such file or directory
+  ContractSamples.cpp
+d:\users\fobboyandy\desktop\thetradingmachine\thetradingmachine\src\contractsamples.cpp(3): fatal error C1083: Cannot open include file: 'StdAfx.h': No such file or directory
+  AvailableAlgoParams.cpp
+d:\users\fobboyandy\desktop\thetradingmachine\thetradingmachine\src\availablealgoparams.cpp(3): fatal error C1083: Cannot open include file: 'StdAfx.h': No such file or directory
+  AccountSummaryTags.cpp
+d:\users\fobboyandy\desktop\thetradingmachine\thetradingmachine\src\accountsummarytags.cpp(1): fatal error C1083: Cannot open include file: 'StdAfx.h': No such file or directory
+  Generating Code...

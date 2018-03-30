@@ -14,4 +14,227 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="TheTradingMachine\src\AccountSummaryTags.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TheTradingMachine\src\AvailableAlgoParams.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TheTradingMachine\src\ContractSamples.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TheTradingMachine\src\Main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TheTradingMachine\src\OrderSamples.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TheTradingMachine\src\ScannerSubscriptionSamples.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TheTradingMachine\src\TestCppClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\ContractCondition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\DefaultEWrapper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\EClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\EClientSocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\EDecoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\EMessage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\EMutex.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\EReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\EReaderOSSignal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\EReaderWMSignal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\ESocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\executioncondition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\MarginCondition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\OperatorCondition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\OrderCondition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\PercentChangeCondition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\PriceCondition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\SoftDollarTier.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\StdAfx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\TimeCondition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IBApi\src\VolumeCondition.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="TheTradingMachine\header\AccountSummaryTags.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TheTradingMachine\header\AvailableAlgoParams.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TheTradingMachine\header\ContractSamples.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TheTradingMachine\header\FAMethodSamples.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TheTradingMachine\header\OrderSamples.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TheTradingMachine\header\ScannerSubscriptionSamples.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TheTradingMachine\header\TestCppClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\CommissionReport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\CommonDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\Contract.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\ContractCondition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\DefaultEWrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EClientMsgSink.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EClientSocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EDecoder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EMessage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EMutex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EPosixClientSocketPlatform.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EReaderOSSignal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EReaderSignal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EReaderWMSignal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\ESocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\ETransport.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\EWrapper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\Execution.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\executioncondition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\IExternalizable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\MarginCondition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\OperatorCondition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\Order.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\OrderCondition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\OrderState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\PercentChangeCondition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\PriceCondition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\ScannerSubscription.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\shared_ptr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\SoftDollarTier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\StdAfx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\TagValue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\TimeCondition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\TwsSocketClientErrors.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IBApi\header\VolumeCondition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>

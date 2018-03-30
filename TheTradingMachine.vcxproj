@@ -18,10 +18,86 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="IBApi\src\ContractCondition.cpp" />
+    <ClCompile Include="IBApi\src\DefaultEWrapper.cpp" />
+    <ClCompile Include="IBApi\src\EClient.cpp" />
+    <ClCompile Include="IBApi\src\EClientSocket.cpp" />
+    <ClCompile Include="IBApi\src\EDecoder.cpp" />
+    <ClCompile Include="IBApi\src\EMessage.cpp" />
+    <ClCompile Include="IBApi\src\EMutex.cpp" />
+    <ClCompile Include="IBApi\src\EReader.cpp" />
+    <ClCompile Include="IBApi\src\EReaderOSSignal.cpp" />
+    <ClCompile Include="IBApi\src\EReaderWMSignal.cpp" />
+    <ClCompile Include="IBApi\src\ESocket.cpp" />
+    <ClCompile Include="IBApi\src\executioncondition.cpp" />
+    <ClCompile Include="IBApi\src\MarginCondition.cpp" />
+    <ClCompile Include="IBApi\src\OperatorCondition.cpp" />
+    <ClCompile Include="IBApi\src\OrderCondition.cpp" />
+    <ClCompile Include="IBApi\src\PercentChangeCondition.cpp" />
+    <ClCompile Include="IBApi\src\PriceCondition.cpp" />
+    <ClCompile Include="IBApi\src\SoftDollarTier.cpp" />
+    <ClCompile Include="IBApi\src\StdAfx.cpp" />
+    <ClCompile Include="IBApi\src\TimeCondition.cpp" />
+    <ClCompile Include="IBApi\src\VolumeCondition.cpp" />
+    <ClCompile Include="TheTradingMachine\src\AccountSummaryTags.cpp" />
+    <ClCompile Include="TheTradingMachine\src\AvailableAlgoParams.cpp" />
+    <ClCompile Include="TheTradingMachine\src\ContractSamples.cpp" />
+    <ClCompile Include="TheTradingMachine\src\Main.cpp" />
+    <ClCompile Include="TheTradingMachine\src\OrderSamples.cpp" />
+    <ClCompile Include="TheTradingMachine\src\ScannerSubscriptionSamples.cpp" />
+    <ClCompile Include="TheTradingMachine\src\TestCppClient.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="IBApi\header\CommissionReport.h" />
+    <ClInclude Include="IBApi\header\CommonDefs.h" />
+    <ClInclude Include="IBApi\header\Contract.h" />
+    <ClInclude Include="IBApi\header\ContractCondition.h" />
+    <ClInclude Include="IBApi\header\DefaultEWrapper.h" />
+    <ClInclude Include="IBApi\header\EClient.h" />
+    <ClInclude Include="IBApi\header\EClientMsgSink.h" />
+    <ClInclude Include="IBApi\header\EClientSocket.h" />
+    <ClInclude Include="IBApi\header\EDecoder.h" />
+    <ClInclude Include="IBApi\header\EMessage.h" />
+    <ClInclude Include="IBApi\header\EMutex.h" />
+    <ClInclude Include="IBApi\header\EPosixClientSocketPlatform.h" />
+    <ClInclude Include="IBApi\header\EReader.h" />
+    <ClInclude Include="IBApi\header\EReaderOSSignal.h" />
+    <ClInclude Include="IBApi\header\EReaderSignal.h" />
+    <ClInclude Include="IBApi\header\EReaderWMSignal.h" />
+    <ClInclude Include="IBApi\header\ESocket.h" />
+    <ClInclude Include="IBApi\header\ETransport.h" />
+    <ClInclude Include="IBApi\header\EWrapper.h" />
+    <ClInclude Include="IBApi\header\Execution.h" />
+    <ClInclude Include="IBApi\header\executioncondition.h" />
+    <ClInclude Include="IBApi\header\IExternalizable.h" />
+    <ClInclude Include="IBApi\header\MarginCondition.h" />
+    <ClInclude Include="IBApi\header\OperatorCondition.h" />
+    <ClInclude Include="IBApi\header\Order.h" />
+    <ClInclude Include="IBApi\header\OrderCondition.h" />
+    <ClInclude Include="IBApi\header\OrderState.h" />
+    <ClInclude Include="IBApi\header\PercentChangeCondition.h" />
+    <ClInclude Include="IBApi\header\PriceCondition.h" />
+    <ClInclude Include="IBApi\header\Resource.h" />
+    <ClInclude Include="IBApi\header\ScannerSubscription.h" />
+    <ClInclude Include="IBApi\header\shared_ptr.h" />
+    <ClInclude Include="IBApi\header\SoftDollarTier.h" />
+    <ClInclude Include="IBApi\header\StdAfx.h" />
+    <ClInclude Include="IBApi\header\TagValue.h" />
+    <ClInclude Include="IBApi\header\TimeCondition.h" />
+    <ClInclude Include="IBApi\header\TwsSocketClientErrors.h" />
+    <ClInclude Include="IBApi\header\VolumeCondition.h" />
+    <ClInclude Include="TheTradingMachine\header\AccountSummaryTags.h" />
+    <ClInclude Include="TheTradingMachine\header\AvailableAlgoParams.h" />
+    <ClInclude Include="TheTradingMachine\header\ContractSamples.h" />
+    <ClInclude Include="TheTradingMachine\header\FAMethodSamples.h" />
+    <ClInclude Include="TheTradingMachine\header\OrderSamples.h" />
+    <ClInclude Include="TheTradingMachine\header\ScannerSubscriptionSamples.h" />
+    <ClInclude Include="TheTradingMachine\header\TestCppClient.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{668BAF61-4251-4270-A0D7-DD7381CF6070}</ProjectGuid>
     <RootNamespace>TheTradingMachine</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -68,7 +144,11 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <SourcePath>D:\Users\fobboyandy\Desktop\TheTradingMachine\TheTradingMachine\src;D:\Users\fobboyandy\Desktop\TheTradingMachine\IBApi\src;$(SourcePath)</SourcePath>
+    <IncludePath>D:\Users\fobboyandy\Desktop\TheTradingMachine;D:\Users\fobboyandy\Desktop\TheTradingMachine\IBApi\header;D:\Users\fobboyandy\Desktop\TheTradingMachine\TheTradingMachine\header;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -81,7 +161,15 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\Users\fobboyandy\Desktop\TheTradingMachine\IBApi\lib</AdditionalLibraryDirectories>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -109,8 +197,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
