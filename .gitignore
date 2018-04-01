@@ -1,0 +1,11 @@
+x64/Debug/AccountSummaryTags.obj
+.vs/TheTradingMachine/v14/.suo
+TheTradingMachine.VC.db
+x64/Debug/AvailableAlgoParams.obj
+*.obj
+*.tlog
+*.idb
+*.pdb
+*.log
+*.ilk
+x64/Debug/TheTradingMachine.exe
