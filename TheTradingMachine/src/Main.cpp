@@ -12,11 +12,15 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 
 #include "TestCppClient.h"
 
 const unsigned MAX_ATTEMPTS = 50;
 const unsigned SLEEP_TIME = 10;
+
+
+using namespace std;
 
 /* IMPORTANT: always use your paper trading account. The code below will submit orders as part of the demonstration. */
 /* IB will not be responsible for accidental executions on your live account. */
@@ -45,12 +49,25 @@ int main(int argc, char** argv)
 		}
 		//! [connect]
 		client.connect( host, port, clientId);
-		//! [connect]
-		//! [ereader]
-		//Unlike the C# and Java clients, there is no need to explicitely create an EReader object nor a thread
-		while( client.isConnected()) {
-			client.processMessages();
+
+		//does another thread even update the isConnected status?
+		int i = 0;
+		while(!client.isConnected() && i < 5) 
+		{
+			std :: cout << "Failed to connect. Attempt " << i++ << endl;
+			sleep(SLEEP_TIME);
 		}
+
+		client.processMessages();
+
+		//by this time the connection should be established
+
+		client.testfn();
+		
+		client.processMessages();
+
+
+
 		//! [ereader]
 		if( attempt >= MAX_ATTEMPTS) {
 			break;

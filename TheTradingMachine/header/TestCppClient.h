@@ -68,6 +68,12 @@ enum State {
 //! [ewrapperimpl]
 class TestCppClient : public EWrapper
 {
+	//test functions
+public:
+
+	void testfn();
+
+
 //! [ewrapperimpl]
 public:
 

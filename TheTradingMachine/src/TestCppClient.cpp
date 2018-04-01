@@ -1191,3 +1191,10 @@ void TestCppClient::softDollarTiers(int reqId, const std::vector<SoftDollarTier>
 	}
 }
 //! [softDollarTiers]
+
+
+void TestCppClient::testfn()
+{
+	m_pClient->reqMarketDataType(3);
+	m_pClient->reqMktData(1004, ContractSamples::USStock(), "233,236,258", false, TagValueListSPtr());
+}
