@@ -99,6 +99,12 @@
     <ClCompile Include="IBApi\src\VolumeCondition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TheTradingMachine\src\TheTradingMachine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TheTradingMachine\src\IBInterface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TheTradingMachine\header\AccountSummaryTags.h">
@@ -234,6 +240,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="IBApi\header\VolumeCondition.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TheTradingMachine\header\TheTradingMachine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TheTradingMachine\header\IBInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

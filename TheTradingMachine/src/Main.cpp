@@ -19,7 +19,6 @@
 const unsigned MAX_ATTEMPTS = 50;
 const unsigned SLEEP_TIME = 10;
 
-
 using namespace std;
 
 /* IMPORTANT: always use your paper trading account. The code below will submit orders as part of the demonstration. */
@@ -49,23 +48,14 @@ int main(int argc, char** argv)
 		}
 		//! [connect]
 		client.connect( host, port, clientId);
-
-		//does another thread even update the isConnected status?
-		int i = 0;
-		while(!client.isConnected() && i < 5) 
-		{
-			std :: cout << "Failed to connect. Attempt " << i++ << endl;
-			sleep(SLEEP_TIME);
-		}
-
 		client.processMessages();
-
 		//by this time the connection should be established
-
 		client.testfn();
-		
-		client.processMessages();
-
+		while(client.isConnected()) 
+		{
+			Sleep(5000);
+			client.processMessages();
+		}
 
 
 		//! [ereader]

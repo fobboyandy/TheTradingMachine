@@ -111,131 +111,131 @@ void TestCppClient::processMessages() {
 
 	time_t now = time(NULL);
 
-	/*****************************************************************/
-    /* Below are few quick-to-test examples on the IB API functions grouped by functionality. Uncomment the relevant methods. */
-    /*****************************************************************/
-	switch (m_state) {
-		case ST_TICKDATAOPERATION:
-			tickDataOperation();
-			break;
-		case ST_TICKDATAOPERATION_ACK:
-			break;
-		case ST_MARKETDEPTHOPERATION:
-			marketDepthOperations();
-			break;
-		case ST_MARKETDEPTHOPERATION_ACK:
-			break;
-		case ST_REALTIMEBARS:
-			realTimeBars();
-			break;
-		case ST_REALTIMEBARS_ACK:
-			break;
-		case ST_MARKETDATATYPE:
-			marketDataType();
-			break;
-		case ST_MARKETDATATYPE_ACK:
-			break;
-		case ST_HISTORICALDATAREQUESTS:
-			historicalDataRequests();
-			break;
-		case ST_HISTORICALDATAREQUESTS_ACK:
-			break;
-		case ST_OPTIONSOPERATIONS:
-			optionsOperations();
-			break;
-		case ST_OPTIONSOPERATIONS_ACK:
-			break;
-		case ST_CONTRACTOPERATION:
-			contractOperations();
-			break;
-		case ST_CONTRACTOPERATION_ACK:
-			break;
-		case ST_MARKETSCANNERS:
-			marketScanners();
-			break;
-		case ST_MARKETSCANNERS_ACK:
-			break;
-		case ST_REUTERSFUNDAMENTALS:
-			reutersFundamentals();
-			break;
-		case ST_REUTERSFUNDAMENTALS_ACK:
-			break;
-		case ST_BULLETINS:
-			bulletins();
-			break;
-		case ST_BULLETINS_ACK:
-			break;
-		case ST_ACCOUNTOPERATIONS:
-			accountOperations();
-			break;
-		case ST_ACCOUNTOPERATIONS_ACK:
-			break;
-		case ST_ORDEROPERATIONS:
-			orderOperations();
-			break;
-		case ST_ORDEROPERATIONS_ACK:
-			break;
-		case ST_OCASAMPLES:
-			ocaSamples();
-			break;
-		case ST_OCASAMPLES_ACK:
-			break;
-		case ST_CONDITIONSAMPLES:
-			conditionSamples();
-			break;
-		case ST_CONDITIONSAMPLES_ACK:
-			break;
-		case ST_BRACKETSAMPLES:
-			bracketSample();
-			break;
-		case ST_BRACKETSAMPLES_ACK:
-			break;
-		case ST_HEDGESAMPLES:
-			hedgeSample();
-			break;
-		case ST_HEDGESAMPLES_ACK:
-			break;
-		case ST_TESTALGOSAMPLES:
-			testAlgoSamples();
-			break;
-		case ST_TESTALGOSAMPLES_ACK:
-			break;
-		case ST_FAORDERSAMPLES:
-			financialAdvisorOrderSamples();
-			break;
-		case ST_FAORDERSAMPLES_ACK:
-			break;
-		case ST_FAOPERATIONS:
-			financialAdvisorOperations();
-			break;
-		case ST_FAOPERATIONS_ACK:
-			break;
-		case ST_DISPLAYGROUPS:
-			testDisplayGroups();
-			break;
-		case ST_DISPLAYGROUPS_ACK:
-			break;
-		case ST_MISCELANEOUS:
-			miscelaneous();
-			break;
-		case ST_MISCELANEOUS_ACK:
-			break;
-		case ST_PING:
-			reqCurrentTime();
-			break;
-		case ST_PING_ACK:
-			if( m_sleepDeadline < now) {
-				disconnect();
-				return;
-			}
-			break;
-		case ST_IDLE:
-			if( m_sleepDeadline < now) {
-				m_state = ST_PING;
-				return;
-			}
-			break;
-	}
+	///*****************************************************************/
+ //   /* Below are few quick-to-test examples on the IB API functions grouped by functionality. Uncomment the relevant methods. */
+ //   /*****************************************************************/
+	//switch (m_state) {
+	//	case ST_TICKDATAOPERATION:
+	//		tickDataOperation();
+	//		break;
+	//	case ST_TICKDATAOPERATION_ACK:
+	//		break;
+	//	case ST_MARKETDEPTHOPERATION:
+	//		marketDepthOperations();
+	//		break;
+	//	case ST_MARKETDEPTHOPERATION_ACK:
+	//		break;
+	//	case ST_REALTIMEBARS:
+	//		realTimeBars();
+	//		break;
+	//	case ST_REALTIMEBARS_ACK:
+	//		break;
+	//	case ST_MARKETDATATYPE:
+	//		marketDataType();
+	//		break;
+	//	case ST_MARKETDATATYPE_ACK:
+	//		break;
+	//	case ST_HISTORICALDATAREQUESTS:
+	//		historicalDataRequests();
+	//		break;
+	//	case ST_HISTORICALDATAREQUESTS_ACK:
+	//		break;
+	//	case ST_OPTIONSOPERATIONS:
+	//		optionsOperations();
+	//		break;
+	//	case ST_OPTIONSOPERATIONS_ACK:
+	//		break;
+	//	case ST_CONTRACTOPERATION:
+	//		contractOperations();
+	//		break;
+	//	case ST_CONTRACTOPERATION_ACK:
+	//		break;
+	//	case ST_MARKETSCANNERS:
+	//		marketScanners();
+	//		break;
+	//	case ST_MARKETSCANNERS_ACK:
+	//		break;
+	//	case ST_REUTERSFUNDAMENTALS:
+	//		reutersFundamentals();
+	//		break;
+	//	case ST_REUTERSFUNDAMENTALS_ACK:
+	//		break;
+	//	case ST_BULLETINS:
+	//		bulletins();
+	//		break;
+	//	case ST_BULLETINS_ACK:
+	//		break;
+	//	case ST_ACCOUNTOPERATIONS:
+	//		accountOperations();
+	//		break;
+	//	case ST_ACCOUNTOPERATIONS_ACK:
+	//		break;
+	//	case ST_ORDEROPERATIONS:
+	//		orderOperations();
+	//		break;
+	//	case ST_ORDEROPERATIONS_ACK:
+	//		break;
+	//	case ST_OCASAMPLES:
+	//		ocaSamples();
+	//		break;
+	//	case ST_OCASAMPLES_ACK:
+	//		break;
+	//	case ST_CONDITIONSAMPLES:
+	//		conditionSamples();
+	//		break;
+	//	case ST_CONDITIONSAMPLES_ACK:
+	//		break;
+	//	case ST_BRACKETSAMPLES:
+	//		bracketSample();
+	//		break;
+	//	case ST_BRACKETSAMPLES_ACK:
+	//		break;
+	//	case ST_HEDGESAMPLES:
+	//		hedgeSample();
+	//		break;
+	//	case ST_HEDGESAMPLES_ACK:
+	//		break;
+	//	case ST_TESTALGOSAMPLES:
+	//		testAlgoSamples();
+	//		break;
+	//	case ST_TESTALGOSAMPLES_ACK:
+	//		break;
+	//	case ST_FAORDERSAMPLES:
+	//		financialAdvisorOrderSamples();
+	//		break;
+	//	case ST_FAORDERSAMPLES_ACK:
+	//		break;
+	//	case ST_FAOPERATIONS:
+	//		financialAdvisorOperations();
+	//		break;
+	//	case ST_FAOPERATIONS_ACK:
+	//		break;
+	//	case ST_DISPLAYGROUPS:
+	//		testDisplayGroups();
+	//		break;
+	//	case ST_DISPLAYGROUPS_ACK:
+	//		break;
+	//	case ST_MISCELANEOUS:
+	//		miscelaneous();
+	//		break;
+	//	case ST_MISCELANEOUS_ACK:
+	//		break;
+	//	case ST_PING:
+	//		reqCurrentTime();
+	//		break;
+	//	case ST_PING_ACK:
+	//		if( m_sleepDeadline < now) {
+	//			disconnect();
+	//			return;
+	//		}
+	//		break;
+	//	case ST_IDLE:
+	//		if( m_sleepDeadline < now) {
+	//			m_state = ST_PING;
+	//			return;
+	//		}
+	//		break;
+	//}
 
 	if( m_sleepDeadline > 0) {
 		// initialize timeout with m_sleepDeadline - now
@@ -836,6 +836,8 @@ void TestCppClient::nextValidId( OrderId orderId)
 {
 	printf("Next Valid Id: %ld\n", orderId);
 	m_orderId = orderId;
+	std::cout << "Order ID: " << m_orderId << std::endl;
+
 	//! [nextvalidid]
 
 	//m_state = ST_TICKDATAOPERATION;
@@ -847,7 +849,7 @@ void TestCppClient::nextValidId( OrderId orderId)
 	//m_state = ST_MARKETSCANNERS;
 	//m_state = ST_REUTERSFUNDAMENTALS;
 	//m_state = ST_BULLETINS;
-	m_state = ST_ACCOUNTOPERATIONS;
+	//m_state = ST_ACCOUNTOPERATIONS;
 	//m_state = ST_ORDEROPERATIONS;
 	//m_state = ST_OCASAMPLES;
 	//m_state = ST_CONDITIONSAMPLES;
@@ -1195,6 +1197,19 @@ void TestCppClient::softDollarTiers(int reqId, const std::vector<SoftDollarTier>
 
 void TestCppClient::testfn()
 {
-	m_pClient->reqMarketDataType(3);
-	m_pClient->reqMktData(1004, ContractSamples::USStock(), "233,236,258", false, TagValueListSPtr());
+	static bool firstTime = true;
+	if(firstTime)
+	{
+		firstTime = false;
+		m_pClient->reqMarketDataType(3);
+	}
+	Contract contract;
+	contract.symbol = "AMD";
+	contract.secType = "STK";
+	contract.currency = "USD";
+	//In the API side, NASDAQ is always defined as ISLAND
+	contract.exchange = "ISLAND";
+	std::cout << std::endl << std::endl << std::endl << m_orderId << std::endl << std::endl << std::endl << std::endl;
+	m_pClient->reqMktData(m_orderId++, contract, "233,236,258", false, TagValueListSPtr());
 }
+
