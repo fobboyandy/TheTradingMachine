@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 		client.testfn();
 		while(client.isConnected()) 
 		{
-			Sleep(5000);
+			Sleep(60000);
 			client.processMessages();
 		}
 

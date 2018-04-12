@@ -49,6 +49,7 @@
     <ClCompile Include="TheTradingMachine\src\ScannerSubscriptionSamples.cpp" />
     <ClCompile Include="TheTradingMachine\src\TestCppClient.cpp" />
     <ClCompile Include="TheTradingMachine\src\TheTradingMachine.cpp" />
+    <ClCompile Include="TheTradingMachine\src\Broker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IBApi\header\CommissionReport.h" />
@@ -98,6 +99,7 @@
     <ClInclude Include="TheTradingMachine\header\ScannerSubscriptionSamples.h" />
     <ClInclude Include="TheTradingMachine\header\TestCppClient.h" />
     <ClInclude Include="TheTradingMachine\header\TheTradingMachine.h" />
+    <ClInclude Include="TheTradingMachine\header\Broker.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{668BAF61-4251-4270-A0D7-DD7381CF6070}</ProjectGuid>

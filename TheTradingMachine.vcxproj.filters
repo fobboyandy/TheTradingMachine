@@ -105,6 +105,9 @@
     <ClCompile Include="TheTradingMachine\src\IBInterface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TheTradingMachine\src\Broker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TheTradingMachine\header\AccountSummaryTags.h">
@@ -246,6 +249,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TheTradingMachine\header\IBInterface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TheTradingMachine\header\Broker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
