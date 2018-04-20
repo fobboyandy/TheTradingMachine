@@ -47,7 +47,6 @@
     <ClCompile Include="TheTradingMachine\src\Main.cpp" />
     <ClCompile Include="TheTradingMachine\src\OrderSamples.cpp" />
     <ClCompile Include="TheTradingMachine\src\ScannerSubscriptionSamples.cpp" />
-    <ClCompile Include="TheTradingMachine\src\TestCppClient.cpp" />
     <ClCompile Include="TheTradingMachine\src\TheTradingMachine.cpp" />
     <ClCompile Include="TheTradingMachine\src\Broker.cpp" />
   </ItemGroup>
@@ -97,7 +96,6 @@
     <ClInclude Include="TheTradingMachine\header\IBInterface.h" />
     <ClInclude Include="TheTradingMachine\header\OrderSamples.h" />
     <ClInclude Include="TheTradingMachine\header\ScannerSubscriptionSamples.h" />
-    <ClInclude Include="TheTradingMachine\header\TestCppClient.h" />
     <ClInclude Include="TheTradingMachine\header\TheTradingMachine.h" />
     <ClInclude Include="TheTradingMachine\header\Broker.h" />
   </ItemGroup>

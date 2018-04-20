@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <iostream>
 
-#include "TestCppClient.h"
+#include "IBInterface.h"
 
 const unsigned MAX_ATTEMPTS = 50;
 const unsigned SLEEP_TIME = 10;
@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 		++attempt;
 		printf( "Attempt %u of %u\n", attempt, MAX_ATTEMPTS);
 
-		TestCppClient client;
+		IBInterface client;
 
 		if( connectOptions) {
 			client.setConnectOptions( connectOptions);

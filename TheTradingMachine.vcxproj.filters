@@ -33,9 +33,6 @@
     <ClCompile Include="TheTradingMachine\src\ScannerSubscriptionSamples.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TheTradingMachine\src\TestCppClient.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="IBApi\src\ContractCondition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -126,9 +123,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TheTradingMachine\header\ScannerSubscriptionSamples.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TheTradingMachine\header\TestCppClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="IBApi\header\CommissionReport.h">
