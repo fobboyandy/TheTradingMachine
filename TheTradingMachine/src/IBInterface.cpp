@@ -35,10 +35,13 @@
 #include "CommonDefs.h"
 #include "AccountSummaryTags.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <iostream>
 #include <thread>
-#include <ctime>
+#include <ctime>.
+#include <algorithm>
+#include <string> 
 
 const int PING_DEADLINE = 2; // seconds
 const int SLEEP_BETWEEN_PINGS = 30; // seconds
@@ -102,140 +105,13 @@ void IBInterface::setConnectOptions(const std::string& connectOptions)
 	m_pClient->setConnectOptions(connectOptions);
 }
 
-void IBInterface::processMessages() {
-	fd_set readSet, writeSet, errorSet;
-
+void IBInterface::processMessages() 
+{
 	struct timeval tval;
 	tval.tv_usec = 0;
 	tval.tv_sec = 0;
 
 	time_t now = time(NULL);
-
-	///*****************************************************************/
-	//   /* Below are few quick-to-test examples on the IB API functions grouped by functionality. Uncomment the relevant methods. */
-	//   /*****************************************************************/
-	//switch (m_state) {
-	//	case ST_TICKDATAOPERATION:
-	//		tickDataOperation();
-	//		break;
-	//	case ST_TICKDATAOPERATION_ACK:
-	//		break;
-	//	case ST_MARKETDEPTHOPERATION:
-	//		marketDepthOperations();
-	//		break;
-	//	case ST_MARKETDEPTHOPERATION_ACK:
-	//		break;
-	//	case ST_REALTIMEBARS:
-	//		realTimeBars();
-	//		break;
-	//	case ST_REALTIMEBARS_ACK:
-	//		break;
-	//	case ST_MARKETDATATYPE:
-	//		marketDataType();
-	//		break;
-	//	case ST_MARKETDATATYPE_ACK:
-	//		break;
-	//	case ST_HISTORICALDATAREQUESTS:
-	//		historicalDataRequests();
-	//		break;
-	//	case ST_HISTORICALDATAREQUESTS_ACK:
-	//		break;
-	//	case ST_OPTIONSOPERATIONS:
-	//		optionsOperations();
-	//		break;
-	//	case ST_OPTIONSOPERATIONS_ACK:
-	//		break;
-	//	case ST_CONTRACTOPERATION:
-	//		contractOperations();
-	//		break;
-	//	case ST_CONTRACTOPERATION_ACK:
-	//		break;
-	//	case ST_MARKETSCANNERS:
-	//		marketScanners();
-	//		break;
-	//	case ST_MARKETSCANNERS_ACK:
-	//		break;
-	//	case ST_REUTERSFUNDAMENTALS:
-	//		reutersFundamentals();
-	//		break;
-	//	case ST_REUTERSFUNDAMENTALS_ACK:
-	//		break;
-	//	case ST_BULLETINS:
-	//		bulletins();
-	//		break;
-	//	case ST_BULLETINS_ACK:
-	//		break;
-	//	case ST_ACCOUNTOPERATIONS:
-	//		accountOperations();
-	//		break;
-	//	case ST_ACCOUNTOPERATIONS_ACK:
-	//		break;
-	//	case ST_ORDEROPERATIONS:
-	//		orderOperations();
-	//		break;
-	//	case ST_ORDEROPERATIONS_ACK:
-	//		break;
-	//	case ST_OCASAMPLES:
-	//		ocaSamples();
-	//		break;
-	//	case ST_OCASAMPLES_ACK:
-	//		break;
-	//	case ST_CONDITIONSAMPLES:
-	//		conditionSamples();
-	//		break;
-	//	case ST_CONDITIONSAMPLES_ACK:
-	//		break;
-	//	case ST_BRACKETSAMPLES:
-	//		bracketSample();
-	//		break;
-	//	case ST_BRACKETSAMPLES_ACK:
-	//		break;
-	//	case ST_HEDGESAMPLES:
-	//		hedgeSample();
-	//		break;
-	//	case ST_HEDGESAMPLES_ACK:
-	//		break;
-	//	case ST_TESTALGOSAMPLES:
-	//		testAlgoSamples();
-	//		break;
-	//	case ST_TESTALGOSAMPLES_ACK:
-	//		break;
-	//	case ST_FAORDERSAMPLES:
-	//		financialAdvisorOrderSamples();
-	//		break;
-	//	case ST_FAORDERSAMPLES_ACK:
-	//		break;
-	//	case ST_FAOPERATIONS:
-	//		financialAdvisorOperations();
-	//		break;
-	//	case ST_FAOPERATIONS_ACK:
-	//		break;
-	//	case ST_DISPLAYGROUPS:
-	//		testDisplayGroups();
-	//		break;
-	//	case ST_DISPLAYGROUPS_ACK:
-	//		break;
-	//	case ST_MISCELANEOUS:
-	//		miscelaneous();
-	//		break;
-	//	case ST_MISCELANEOUS_ACK:
-	//		break;
-	//	case ST_PING:
-	//		reqCurrentTime();
-	//		break;
-	//	case ST_PING_ACK:
-	//		if( m_sleepDeadline < now) {
-	//			disconnect();
-	//			return;
-	//		}
-	//		break;
-	//	case ST_IDLE:
-	//		if( m_sleepDeadline < now) {
-	//			m_state = ST_PING;
-	//			return;
-	//		}
-	//		break;
-	//}
 
 	if (m_sleepDeadline > 0) {
 		// initialize timeout with m_sleepDeadline - now
@@ -887,7 +763,8 @@ void IBInterface::error(const int id, const int errorCode, const std::string err
 
 //! [tickprice]
 void IBInterface::tickPrice(TickerId tickerId, TickType field, double price, int canAutoExecute) {
-	printf("Tick Price. Ticker Id: %ld, Field: %d, Price: %g, CanAutoExecute: %d\n", tickerId, (int)field, price, canAutoExecute);
+	//printf("Tick Price. Ticker Id: %ld, Field: %d, Price: %g, CanAutoExecute: %d\n", tickerId, (int)field, price, canAutoExecute);
+	streamingStockData[tickerId].priceStream.push_back(price);
 }
 //! [tickprice]
 
@@ -1201,7 +1078,7 @@ void IBInterface::testfn()
 	if (firstTime)
 	{
 		firstTime = false;
-		m_pClient->reqMarketDataType(3);
+		m_pClient->reqMarketDataType(1);
 	}
 	Contract contract;
 	contract.symbol = "AMD";
@@ -1211,5 +1088,48 @@ void IBInterface::testfn()
 	contract.exchange = "ISLAND";
 	std::cout << std::endl << std::endl << std::endl << m_orderId << std::endl << std::endl << std::endl << std::endl;
 	m_pClient->reqMktData(m_orderId++, contract, "233,236,258", false, TagValueListSPtr());
+}
+
+void IBInterface::initializeInterface(void)
+{
+	//requests real time data only
+	m_pClient->reqMarketDataType(1);
+	//senttinel slot
+	streamingStockData.resize(1);
+}
+
+//given the ticker name, returns a stream of stock data 
+const Stock& IBInterface::requestStock(string ticker, string exchange)
+{
+	//fail because m_orderId always starts at 1 if connection is valid
+	assert(m_orderId != 0);
+
+	//to upper case arguments
+	std::transform(exchange.begin(), exchange.end(), exchange.begin(), ::toupper);
+	std::transform(exchange.begin(), exchange.end(), exchange.begin(), ::toupper);
+
+	if (tickerOrderIds.find(ticker) != tickerOrderIds.end())
+		return streamingStockData[tickerOrderIds[ticker]];
+	
+	Contract contract;
+	contract.symbol = ticker;
+	contract.secType = "STK";
+	contract.currency = "USD";
+
+	//In the API side, NASDAQ is always defined as ISLAND
+	contract.exchange = exchange;
+
+
+	//allocate space in the stock streaming data container
+	streamingStockData.push_back(Stock(ticker));
+
+	tickerOrderIds[ticker] = m_orderId;
+
+	m_pClient->reqMktData(m_orderId, contract, "233,236,258", false, TagValueListSPtr());
+	//create next valid order id
+	m_orderId++;
+
+	//return the stock data containing the stream
+	return streamingStockData[m_orderId - 1];
 }
 

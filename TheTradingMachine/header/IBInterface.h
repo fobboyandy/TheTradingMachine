@@ -11,6 +11,11 @@
 
 #include <memory>
 #include <vector>
+#include <string>
+#include "Stock.h"
+#include <unordered_map>
+
+using namespace std;
 
 class EClientSocket;
 
@@ -88,6 +93,14 @@ public:
 	bool connect(const char * host, unsigned int port, int clientId = 0);
 	void disconnect() const;
 	bool isConnected() const;
+
+
+public:
+	//given a ticker returns a reference to the container for other classes to read the data
+	const Stock& requestStock(string ticker, string exchange);
+
+	//initializes any settings of the interface such as reqMarketDataType
+	void initializeInterface(void);
 
 private:
 	void tickDataOperation();
@@ -197,7 +210,18 @@ private:
 	OrderId m_orderId;
 	EReader *m_pReader;
 	bool m_extraAuth;
+
+private:
+	//interface data
+	vector<Stock> streamingStockData;
+	unordered_map<string, OrderId> tickerOrderIds; 
+
+
+
 };
+
+
+
 
 #endif
 

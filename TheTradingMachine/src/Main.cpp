@@ -13,6 +13,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <thread>
+#include "Broker.h"
+#include "TheTradingMachine.h"
+
 
 #include "IBInterface.h"
 
@@ -35,7 +39,10 @@ int main(int argc, char** argv)
 	int clientId = 0;
 
 	unsigned attempt = 0;
-	printf( "Start of C++ Socket Client Test %u\n", attempt);
+
+	//initialize stock data structures 
+	vector<vector<Stock>> watchList;
+
 
 	for (;;) {
 		++attempt;
@@ -48,15 +55,19 @@ int main(int argc, char** argv)
 		}
 		//! [connect]
 		client.connect( host, port, clientId);
+		
+		//process all the initial messages from TWS
 		client.processMessages();
-		//by this time the connection should be established
-		client.testfn();
-		while(client.isConnected()) 
-		{
-			Sleep(60000);
-			client.processMessages();
-		}
 
+		//by this time the connection should be established and TWS is ready to accept commands
+		client.initializeInterface();
+
+		const Stock& amd = client.requestStock("AMD", "ISLAND");
+		while(client.isConnected())
+		{
+			client.processMessages();
+			cout << amd.getLatestPrice() << endl;
+		}
 
 		//! [ereader]
 		if( attempt >= MAX_ATTEMPTS) {
