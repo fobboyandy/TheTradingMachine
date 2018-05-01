@@ -46,6 +46,7 @@
     <ClCompile Include="TheTradingMachine\src\IBInterface.cpp" />
     <ClCompile Include="TheTradingMachine\src\Main.cpp" />
     <ClCompile Include="TheTradingMachine\src\OrderSamples.cpp" />
+    <ClCompile Include="TheTradingMachine\src\PythonSocketIPC.cpp" />
     <ClCompile Include="TheTradingMachine\src\ScannerSubscriptionSamples.cpp" />
     <ClCompile Include="TheTradingMachine\src\Stock.cpp" />
     <ClCompile Include="TheTradingMachine\src\TheTradingMachine.cpp" />
@@ -96,6 +97,7 @@
     <ClInclude Include="TheTradingMachine\header\FAMethodSamples.h" />
     <ClInclude Include="TheTradingMachine\header\IBInterface.h" />
     <ClInclude Include="TheTradingMachine\header\OrderSamples.h" />
+    <ClInclude Include="TheTradingMachine\header\PythonSocketIPC.h" />
     <ClInclude Include="TheTradingMachine\header\ScannerSubscriptionSamples.h" />
     <ClInclude Include="TheTradingMachine\header\Stock.h" />
     <ClInclude Include="TheTradingMachine\header\TheTradingMachine.h" />
@@ -152,8 +154,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <SourcePath>D:\Users\fobboyandy\Desktop\TheTradingMachine\TheTradingMachine\src;D:\Users\fobboyandy\Desktop\TheTradingMachine\IBApi\src;$(SourcePath)</SourcePath>
-    <IncludePath>D:\Users\fobboyandy\Desktop\TheTradingMachine;D:\Users\fobboyandy\Desktop\TheTradingMachine\IBApi\header;D:\Users\fobboyandy\Desktop\TheTradingMachine\TheTradingMachine\header;$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\Users\fobboyandy\Desktop\TheTradingMachine;D:\Users\fobboyandy\Desktop\TheTradingMachine\IBApi\header;D:\Users\fobboyandy\Desktop\TheTradingMachine\TheTradingMachine\header;C:\Python\Python36\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Python\Python36\libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -168,9 +170,10 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>python36_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>D:\Users\fobboyandy\Desktop\TheTradingMachine\IBApi\lib</AdditionalLibraryDirectories>
     </Link>
     <ProjectReference>

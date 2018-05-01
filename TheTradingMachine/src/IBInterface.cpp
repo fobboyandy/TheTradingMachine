@@ -763,8 +763,8 @@ void IBInterface::error(const int id, const int errorCode, const std::string err
 
 //! [tickprice]
 void IBInterface::tickPrice(TickerId tickerId, TickType field, double price, int canAutoExecute) {
-	//printf("Tick Price. Ticker Id: %ld, Field: %d, Price: %g, CanAutoExecute: %d\n", tickerId, (int)field, price, canAutoExecute);
-	streamingStockData[tickerId].priceStream.push_back(price);
+	printf("Tick Price. Ticker Id: %ld, Field: %d, Price: %g, CanAutoExecute: %d\n", tickerId, (int)field, price, canAutoExecute);
+	//streamingStockData[tickerId].priceStream.push_back(price);
 }
 //! [tickprice]
 
@@ -940,6 +940,17 @@ void IBInterface::scannerDataEnd(int reqId) {
 void IBInterface::realtimeBar(TickerId reqId, long time, double open, double high, double low, double close,
 	long volume, double wap, int count) {
 	printf("RealTimeBars. %ld - Time: %ld, Open: %g, High: %g, Low: %g, Close: %g, Volume: %ld, Count: %d, WAP: %g\n", reqId, time, open, high, low, close, volume, count, wap);
+	Candlebar candle;
+	candle.open = open;
+	candle.high = high;
+	candle.low = low;
+	candle.close = close;
+	candle.volume = volume;
+	candle.wap = wap;
+	candle.count = count;
+	candle.valid = true;
+	streamingStockData[reqId].candlebars.push_back(candle);
+	
 }
 //! [realtimebar]
 
@@ -1071,65 +1082,56 @@ void IBInterface::softDollarTiers(int reqId, const std::vector<SoftDollarTier> &
 }
 //! [softDollarTiers]
 
-
-void IBInterface::testfn()
-{
-	static bool firstTime = true;
-	if (firstTime)
-	{
-		firstTime = false;
-		m_pClient->reqMarketDataType(1);
-	}
-	Contract contract;
-	contract.symbol = "AMD";
-	contract.secType = "STK";
-	contract.currency = "USD";
-	//In the API side, NASDAQ is always defined as ISLAND
-	contract.exchange = "ISLAND";
-	std::cout << std::endl << std::endl << std::endl << m_orderId << std::endl << std::endl << std::endl << std::endl;
-	m_pClient->reqMktData(m_orderId++, contract, "233,236,258", false, TagValueListSPtr());
-}
-
 void IBInterface::initializeInterface(void)
 {
 	//requests real time data only
-	m_pClient->reqMarketDataType(1);
-	//senttinel slot
-	streamingStockData.resize(1);
+	m_pClient->reqMarketDataType(2);
 }
 
 //given the ticker name, returns a stream of stock data 
-const Stock& IBInterface::requestStock(string ticker, string exchange)
+const Stock& IBInterface::requestStockCandles(string ticker, string exchange)
 {
-	//fail because m_orderId always starts at 1 if connection is valid
-	assert(m_orderId != 0);
-
 	//to upper case arguments
 	std::transform(exchange.begin(), exchange.end(), exchange.begin(), ::toupper);
 	std::transform(exchange.begin(), exchange.end(), exchange.begin(), ::toupper);
 
 	if (tickerOrderIds.find(ticker) != tickerOrderIds.end())
-		return streamingStockData[tickerOrderIds[ticker]];
+		return streamingStockData.at(tickerOrderIds[ticker]);
 	
+	Contract contract = createStockContract(ticker, exchange);
+
+	tickerOrderIds[ticker] = m_orderId;
+
+	streamingStockData[m_orderId] = Stock(ticker);
+
+	m_pClient->reqRealTimeBars(m_orderId, contract, 5, "TRADES", 0, TagValueListSPtr());
+
+	//return the stock data containing the stream
+	//the call back function realtimeBars will populate this Stock structure with new prices every 5 seconds
+	const Stock& rVal = streamingStockData[m_orderId];
+	
+	//prepare next valid order id
+	m_orderId++;
+
+	return rVal;
+
+}
+
+bool IBInterface::ready(void)
+{
+	if (!m_orderId)
+		return false;
+	return true;
+}
+
+Contract IBInterface::createStockContract(string ticker, string exchange)
+{
 	Contract contract;
 	contract.symbol = ticker;
 	contract.secType = "STK";
 	contract.currency = "USD";
-
 	//In the API side, NASDAQ is always defined as ISLAND
 	contract.exchange = exchange;
 
-
-	//allocate space in the stock streaming data container
-	streamingStockData.push_back(Stock(ticker));
-
-	tickerOrderIds[ticker] = m_orderId;
-
-	m_pClient->reqMktData(m_orderId, contract, "233,236,258", false, TagValueListSPtr());
-	//create next valid order id
-	m_orderId++;
-
-	//return the stock data containing the stream
-	return streamingStockData[m_orderId - 1];
+	return contract;
 }
-

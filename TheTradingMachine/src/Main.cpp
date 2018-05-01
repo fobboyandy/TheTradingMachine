@@ -16,7 +16,7 @@
 #include <thread>
 #include "Broker.h"
 #include "TheTradingMachine.h"
-
+#include "PythonSocketIPC.h"
 
 #include "IBInterface.h"
 
@@ -56,17 +56,31 @@ int main(int argc, char** argv)
 		//! [connect]
 		client.connect( host, port, clientId);
 		
-		//process all the initial messages from TWS
-		client.processMessages();
-
+		//wait and process all the initial messages from TWS
+		//TWS will be ready when TWS returns nextValidID
+		while(!client.ready())
+		{	
+			Sleep(1000);
+			client.processMessages();
+		}
 		//by this time the connection should be established and TWS is ready to accept commands
+		//initialize the interface 
 		client.initializeInterface();
 
-		const Stock& amd = client.requestStock("AMD", "ISLAND");
+		PythonSocketIPC stockDataPlot(DEFAULT_PORT);
+		const Stock& amdStockData = client.requestStockCandles("AMD", "ISLAND");
+		Candlebar lastCandle;
 		while(client.isConnected())
 		{
 			client.processMessages();
-			cout << amd.getLatestPrice() << endl;
+			lastCandle = amdStockData.getLastCandle();
+			//transmit it to python
+			if (lastCandle.valid)
+			{
+				string valStr = to_string(lastCandle.close);
+				stockDataPlot.send(valStr.c_str(), valStr.length());
+
+			}
 		}
 
 		//! [ereader]
@@ -81,3 +95,19 @@ int main(int argc, char** argv)
 	printf ( "End of C++ Socket Client Test\n");
 }
 
+
+
+
+//int main()
+//{
+//	PythonSocketIPC pythonIPC(DEFAULT_PORT);
+//
+//	double val = 1.234;
+//	for (size_t i = 0; i < 10; i++)
+//	{
+//		string valStr = to_string((double)(i));
+//		pythonIPC.send(valStr.c_str(), valStr.length() * sizeof(char));
+//		Sleep(500);
+//	}
+//	return 0;
+//}

@@ -108,6 +108,9 @@
     <ClCompile Include="TheTradingMachine\src\Stock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TheTradingMachine\src\PythonSocketIPC.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TheTradingMachine\header\AccountSummaryTags.h">
@@ -252,6 +255,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TheTradingMachine\header\Stock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TheTradingMachine\header\PythonSocketIPC.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

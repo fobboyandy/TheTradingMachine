@@ -7,13 +7,28 @@
 
 using namespace std;
 
+
+struct Candlebar
+{
+	Candlebar();
+	Candlebar(double o, double h, double l, double c);
+	double open;
+	double high;
+	double low;
+	double close;
+	long volume;
+	double wap;
+	int count;
+	bool valid;
+};
+
 struct Stock
 {
 	Stock();
 	Stock(const string& t);
-	double getLatestPrice(void) const;
+	Candlebar getLastCandle(void) const;
 	string ticker;
-	vector<double> priceStream;
+	vector<Candlebar> candlebars;
 };
 
 #endif
