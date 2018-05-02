@@ -57,6 +57,7 @@ PythonSocketIPC::PythonSocketIPC(int portIn)
 	{
 		printf("Unable to connect to server!\n");
 		WSACleanup();
+		validIPC = false;
 	}
 
 	validIPC = true;
@@ -75,5 +76,17 @@ bool PythonSocketIPC::send(const char* buf, int len)
 	iResult = ::send(ConnectSocket, buf, len, 0);
 	if (iResult == SOCKET_ERROR)
 		return false;
+	return true;
+}
+
+bool PythonSocketIPC::send(double val)
+{
+
+	string valStr = to_string(val);
+	iResult = ::send(ConnectSocket, valStr.c_str(), valStr.length() * sizeof(char), 0);
+
+	if (iResult == SOCKET_ERROR)
+		return false;
+
 	return true;
 }

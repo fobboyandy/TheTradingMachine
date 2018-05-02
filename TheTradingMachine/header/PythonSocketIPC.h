@@ -21,6 +21,7 @@ public:
 	~PythonSocketIPC();
 
 	bool send(const char* buf, int len);
+	bool send(double val);
 
 private:
 

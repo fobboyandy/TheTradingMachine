@@ -17,13 +17,43 @@
 #include "Broker.h"
 #include "TheTradingMachine.h"
 #include "PythonSocketIPC.h"
+#include "Python.h"
 
 #include "IBInterface.h"
 
-const unsigned MAX_ATTEMPTS = 50;
 const unsigned SLEEP_TIME = 10;
 
 using namespace std;
+
+
+//Transmits a candle every ~5 seconds
+void PythonCandleIpcThread(const Stock* stock)
+{
+	//start the server script on python
+
+	//initialize the socket ipc 
+	PythonSocketIPC pythonIpc(DEFAULT_PORT); 
+	Candlebar c = stock->getLastCandle();
+	
+	//block until we get the first valid candlebar
+	while (!c.valid)
+	{
+		c = stock->getLastCandle();
+		Sleep(500);
+	}
+	while (1)
+	{
+		 c = stock->getLastCandle();
+		 pythonIpc.send(c.open);
+		 pythonIpc.send(c.high);
+		 pythonIpc.send(c.low);
+		 pythonIpc.send(c.close);
+		 //This will more or less be 5 seconds. Small drifts may accumulate but should be negligible in the long run?
+		 Sleep(5000);
+	}
+
+}
+
 
 /* IMPORTANT: always use your paper trading account. The code below will submit orders as part of the demonstration. */
 /* IB will not be responsible for accidental executions on your live account. */
@@ -39,75 +69,34 @@ int main(int argc, char** argv)
 	int clientId = 0;
 
 	unsigned attempt = 0;
+	bool threadStarted = false;
 
-	//initialize stock data structures 
-	vector<vector<Stock>> watchList;
-
-
-	for (;;) {
-		++attempt;
-		printf( "Attempt %u of %u\n", attempt, MAX_ATTEMPTS);
-
+	while(1)
+	{
 		IBInterface client;
-
-		if( connectOptions) {
-			client.setConnectOptions( connectOptions);
+		//if attempt to reconnect fails after certain amount of attempts, program exits
+		if (!client.Initialize())
+		{
+			cout << "Unable to connect to neither TWS nor IB Gateway!" << endl;
+			Sleep(10000);
+			return -1;
 		}
-		//! [connect]
-		client.connect( host, port, clientId);
-		
-		//wait and process all the initial messages from TWS
-		//TWS will be ready when TWS returns nextValidID
-		while(!client.ready())
-		{	
-			Sleep(1000);
-			client.processMessages();
-		}
-		//by this time the connection should be established and TWS is ready to accept commands
-		//initialize the interface 
-		client.initializeInterface();
 
-		PythonSocketIPC stockDataPlot(DEFAULT_PORT);
 		const Stock& amdStockData = client.requestStockCandles("AMD", "ISLAND");
-		Candlebar lastCandle;
-		while(client.isConnected())
+
+		thread pythonIpcThread(PythonCandleIpcThread, &amdStockData);
+
+		//main thread processes messages
+		while (client.isConnected())
 		{
 			client.processMessages();
-			lastCandle = amdStockData.getLastCandle();
-			//transmit it to python
-			if (lastCandle.valid)
-			{
-				string valStr = to_string(lastCandle.close);
-				stockDataPlot.send(valStr.c_str(), valStr.length());
-
-			}
 		}
 
-		//! [ereader]
-		if( attempt >= MAX_ATTEMPTS) {
-			break;
-		}
+		//if the program was able to connect previously and suddenly fails, we restart the loop and try to reconnect
+		//if the reconnection fails, the program exits
+		cout << "Client got disconnected from either TWS or IB Gateway. Reconnecting..." << endl;
 
-		printf( "Sleeping %u seconds before next attempt\n", SLEEP_TIME);
-		sleep( SLEEP_TIME);
 	}
-
-	printf ( "End of C++ Socket Client Test\n");
+	return 0;
 }
 
-
-
-
-//int main()
-//{
-//	PythonSocketIPC pythonIPC(DEFAULT_PORT);
-//
-//	double val = 1.234;
-//	for (size_t i = 0; i < 10; i++)
-//	{
-//		string valStr = to_string((double)(i));
-//		pythonIPC.send(valStr.c_str(), valStr.length() * sizeof(char));
-//		Sleep(500);
-//	}
-//	return 0;
-//}

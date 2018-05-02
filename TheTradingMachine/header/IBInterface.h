@@ -17,6 +17,8 @@
 
 using namespace std;
 
+const unsigned MAX_ATTEMPTS = 50;
+
 class EClientSocket;
 
 enum State {
@@ -73,11 +75,10 @@ enum State {
 //! [ewrapperimpl]
 class IBInterface : public EWrapper
 {
-	//test functions
+	//Initialize functions
 public:
 
-	void testfn();
-
+	bool Initialize();
 
 	//! [ewrapperimpl]
 public:

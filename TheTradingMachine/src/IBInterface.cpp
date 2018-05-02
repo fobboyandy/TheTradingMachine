@@ -46,7 +46,31 @@
 const int PING_DEADLINE = 2; // seconds
 const int SLEEP_BETWEEN_PINGS = 30; // seconds
 
-									///////////////////////////////////////////////////////////
+bool IBInterface::Initialize()
+{
+	int attempts = 0;
+	while (!isConnected() && attempts < MAX_ATTEMPTS)
+	{
+		connect("", 7496, 0);
+		attempts++;
+	}
+
+	if (attempts == MAX_ATTEMPTS)
+		return false;
+
+	//wait and process all the initial messages from TWS
+	//TWS will be ready when TWS returns nextValidID
+	while (!ready())
+	{
+		Sleep(500);
+		processMessages();
+	}
+
+	initializeInterface();
+	return true;
+}
+
+///////////////////////////////////////////////////////////
 									// member funcs
 									//! [socket_init]
 IBInterface::IBInterface() :
