@@ -212,8 +212,6 @@ public:
 	//given a ticker returns a reference to the container for other classes to read the data
 	const Stock& requestStockCandles(string ticker, string exchange);
 
-	const Stock & requestHistoricalData(string ticker, string duration, string barSize);
-
 	//initializes any settings of the interface such as reqMarketDataType
 	void initializeInterface(void);
 	bool ready(void);
@@ -223,11 +221,7 @@ private:
 	Contract createStockContract(string ticker, string exchange);
 	//interface data
 	unordered_map<OrderId, Stock> streamingStockData;
-	unordered_map<string, OrderId> streamingOrderIds; 
-
-
-	unordered_map<OrderId, Stock> historicalStockData;
-	unordered_map<string, OrderId> historicalOrderIds;
+	unordered_map<string, OrderId> tickerOrderIds; 
 
 };
 

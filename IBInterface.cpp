@@ -936,23 +936,7 @@ void IBInterface::receiveFA(faDataType pFaDataType, const std::string& cxml) {
 //! [historicaldata]
 void IBInterface::historicalData(TickerId reqId, const std::string& date, double open, double high,
 	double low, double close, int volume, int barCount, double WAP, int hasGaps) {
-	//historicalData will be called with "finished" in the date argument when all the historical data has been returned
-	if (date.find("finished") != std::string::npos)
-	{
-		cout << "historicalData done" << endl;
-		historicalStockData[reqId].setHistoricalDataComplete();
-		return;
-	}
-	Candlebar candle;
-	candle.time = date;
-	candle.open = open;
-	candle.high = high;
-	candle.low = low;
-	candle.close = close;
-	candle.volume = volume;
-	candle.wap = WAP;
-	historicalStockData[reqId].addCandlebar(candle);
-
+	printf("HistoricalData. ReqId: %ld - Date: %s, Open: %g, High: %g, Low: %g, Close: %g, Volume: %d, Count: %d, WAP: %g, HasGaps: %d\n", reqId, date.c_str(), open, high, low, close, volume, barCount, WAP, hasGaps);
 }
 //! [historicaldata]
 
@@ -989,7 +973,7 @@ void IBInterface::realtimeBar(TickerId reqId, long time, double open, double hig
 	candle.wap = wap;
 	candle.count = count;
 	candle.valid = true;
-	streamingStockData[reqId].addCandlebar(candle);
+	streamingStockData[reqId].candlebars.push_back(candle);
 	
 }
 //! [realtimebar]
@@ -1131,14 +1115,18 @@ void IBInterface::initializeInterface(void)
 //given the ticker name, returns a stream of stock data 
 const Stock& IBInterface::requestStockCandles(string ticker, string exchange)
 {
-	if (streamingOrderIds.find(ticker) != streamingOrderIds.end())
-		return streamingStockData.at(streamingOrderIds[ticker]);
+	//to upper case arguments
+	std::transform(exchange.begin(), exchange.end(), exchange.begin(), ::toupper);
+	std::transform(exchange.begin(), exchange.end(), exchange.begin(), ::toupper);
+
+	if (tickerOrderIds.find(ticker) != tickerOrderIds.end())
+		return streamingStockData.at(tickerOrderIds[ticker]);
 	
 	Contract contract = createStockContract(ticker, exchange);
 
-	streamingOrderIds[ticker] = m_orderId;
+	tickerOrderIds[ticker] = m_orderId;
+
 	streamingStockData[m_orderId] = Stock(ticker);
-	//Since we're not requesting historical date, the data will be updated in real time so our stock should be marked as complete at all times
 
 	m_pClient->reqRealTimeBars(m_orderId, contract, 5, "TRADES", 0, TagValueListSPtr());
 
@@ -1151,26 +1139,6 @@ const Stock& IBInterface::requestStockCandles(string ticker, string exchange)
 
 	return rVal;
 
-}
-
-const Stock& IBInterface::requestHistoricalData(string ticker, string duration, string timeframe)
-{
-	//requesting existing data
-	if (historicalOrderIds.find(ticker) != historicalOrderIds.end())
-		return historicalStockData.at(historicalOrderIds[ticker]);
-
-	Contract contract = createStockContract(ticker, "ISLAND");
-	historicalOrderIds[ticker] = m_orderId;
-	historicalStockData[m_orderId] = Stock(ticker);
-
-	m_pClient->reqHistoricalData(m_orderId, contract, "", duration, timeframe, "TRADES", 1, 1, TagValueListSPtr());
-
-	const Stock& historicalStockVal = historicalStockData[m_orderId];
-
-	//prepare a new orderId
-	m_orderId++;
-
-	return historicalStockVal;
 }
 
 bool IBInterface::ready(void)
