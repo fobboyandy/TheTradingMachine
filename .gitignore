@@ -10,3 +10,6 @@ x64/Debug/AvailableAlgoParams.obj
 *.ilk
 x64/Debug/TheTradingMachine.exe
 *.opendb
+*.ipch
+*.suo
+*.db

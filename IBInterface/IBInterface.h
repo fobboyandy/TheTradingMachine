@@ -14,12 +14,15 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <functional>
 
 using namespace std;
 
 const unsigned MAX_ATTEMPTS = 50;
 
 class EClientSocket;
+
+
 
 //! [ewrapperimpl]
 class IBInterface : public EWrapper
@@ -165,32 +168,26 @@ private:
 
 public:
 
-	void historicalData()
-	{
-		Contract contract;
-		contract.symbol = "AMD";
-		contract.secType = "STK";
-		contract.currency = "USD";
-		//In the API side, NASDAQ is always defined as ISLAND
-		contract.exchange = "ISLAND";
-
-	//	m_pClient->reqHistoricalData(4002, contract, "", "", "1 day", "TRADES", 1, 1,true , TagValueListSPtr());
-		m_pClient->reqHistoricalData(4002, contract, "", "10 D", "1 min", "TRADES", true, 1, true, TagValueListSPtr());
-		//m_pClient->reqRealTimeBars(4002, contract, 1, "TRADES", false, TagValueListSPtr());
-	}
-
-
+	void requestRealTimeMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback);
 
 private:
 
 	//Contract createStockContract(string ticker, string exchange);
-	////interface data
-	//unordered_map<OrderId, Stock> streamingStockData;
-	//unordered_map<string, OrderId> streamingOrderIds; 
+	
 
+	struct CallbackGroup
+	{
+		Bar callbackBar;
+		vector<function<void(const Bar&)>> callbackFunctions;
+	};
 
-	//unordered_map<OrderId, Stock> historicalStockData;
-	//unordered_map<string, OrderId> historicalOrderIds;
+	//
+	// Stores the callback functions registered to receive real time bars. Each
+	// OrderID corresponds to CallbackGroups mapped by the timeframe in minutes.
+	//
+	unordered_map<string, OrderId> stockRealTimeBarOrderIds;
+	unordered_map<OrderId, unordered_map<int, CallbackGroup>> stockRealTimeBarCallbacks;
+
 
 };
 

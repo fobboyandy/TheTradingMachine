@@ -25,9 +25,14 @@ int main(int argc, char** argv)
 			return -1;
 		}
 	
-		//client.historicalData();
+		auto callback = [](const Bar& b) 
+		{
+			printf("AMD: - Date: %s, Open: %g, High: %g, Low: %g, Close: %g, Volume: %lld, Count: %d, WAP: %g\n", b.time.c_str(), b.open, b.high, b.low, b.close, b.volume, b.count, b.wap);
+		};
 
-		//main thread processes messages
+		client.requestRealTimeMinuteBars("AMD", 1, callback);
+
+		////main thread processes messages
 		while (client.isConnected())
 		{
 			client.processMessages();

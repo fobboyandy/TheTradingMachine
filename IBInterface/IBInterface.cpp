@@ -375,6 +375,57 @@ void IBInterface::printBondContractDetailsMsg(const ContractDetails& contractDet
 	printContractDetailsSecIdList(contractDetails.secIdList);
 }
 
+void IBInterface::requestRealTimeMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback)
+{
+	OrderId oid;
+	if (stockRealTimeBarOrderIds.find(ticker) != stockRealTimeBarOrderIds.end())
+	{
+		oid = stockRealTimeBarOrderIds[ticker];
+	}
+	else
+	{
+		oid = m_orderId;
+		m_orderId++;
+		stockRealTimeBarOrderIds[ticker] = oid;
+
+		//
+		// Initialize the callbackBar to 0 for new requests.
+		//
+		//memset(&(stockRealTimeBarCallbacks[oid])[timeFrameMinutes].callbackBar, 0, sizeof(CallbackGroup::callbackBar));
+	
+		//(stockRealTimeBarCallbacks[oid])[timeFrameMinutes].callbackBar.time.clear();
+
+		auto createContractFn = [&]()
+		{
+			Contract c;
+			c.symbol = ticker;
+			c.secType = "STK";
+			c.currency = "USD";
+			c.exchange = "ISLAND";
+			return c;
+		};
+
+		//
+		// Submit the request with historical data with the update option 
+		// on
+		//
+		m_pClient->reqHistoricalData(
+			oid,
+			createContractFn(),
+			"", 
+			"1 D", 
+			"1 min", 
+			"TRADES", 
+			true, 
+			1, 
+			true, 
+			TagValueListSPtr());
+
+	}
+	(stockRealTimeBarCallbacks[oid])[timeFrameMinutes].callbackFunctions.push_back(callback);
+
+}
+
 //! [contractdetailsend]
 void IBInterface::contractDetailsEnd(int reqId) {
 	printf("ContractDetailsEnd. %d\n", reqId);
@@ -729,6 +780,42 @@ void IBInterface::histogramData(int reqId, const HistogramDataVector& data) {
 //! [historicalDataUpdate]
 void IBInterface::historicalDataUpdate(TickerId reqId, const Bar& bar) {
 	printf("HistoricalDataUpdate. ReqId: %ld - Date: %s, Open: %g, High: %g, Low: %g, Close: %g, Volume: %lld, Count: %d, WAP: %g\n", reqId, bar.time.c_str(), bar.open, bar.high, bar.low, bar.close, bar.volume, bar.count, bar.wap);
+	//
+	////
+	//// Traverse the callbacks registered to this ticker
+	//// For each index, check to see if a new candle should be sent
+	////
+
+	auto& tickerCallbacks = stockRealTimeBarCallbacks[reqId];
+	for (auto it = tickerCallbacks.begin(); it != tickerCallbacks.end(); it++)
+	{
+		Bar& prevBar = it->second.callbackBar;
+		
+		// Parses the time for the minutes of a bar in integer;
+		//
+		auto getPrevBarMinutes = [&]()
+		{
+			return stoi(prevBar.time.substr(13, 2));
+		};
+
+		//
+		// If the bar time has changed (compared to a non new bar) and the 
+		// previous bar time was a multiple of the current timeframe, then 
+		// the previous bar was complete and should be dispatched via the 
+		// callback.
+		//
+		if (prevBar.time.length() != 0 &&
+			bar.time != prevBar.time &&
+			getPrevBarMinutes() % it->first == 0)
+		{
+			for (auto& fn : it->second.callbackFunctions)
+			{
+				fn(prevBar);
+			}
+		}
+
+		prevBar = bar;
+	}
 }
 //! [historicalDataUpdate]
 
