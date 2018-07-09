@@ -3,9 +3,9 @@
 
 #pragma once
 
-#ifndef _MSC_VER
+//#ifndef _MSC_VER
 #include "StdAfx.h"
-#endif
+//#endif
 #include <string>
 
 class TWSAPIDLLEXP SoftDollarTier

@@ -23,7 +23,15 @@ const unsigned MAX_ATTEMPTS = 50;
 
 class EClientSocket;
 
-
+struct Tick
+{
+	int tickType;
+	time_t time;
+	double price;
+	int size;
+	TickAttrib attributes;
+	string exchange;
+};
 
 //! [ewrapperimpl]
 class IBInterface : public EWrapper
@@ -171,6 +179,7 @@ public:
 
 	void requestRealTimeMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback);
 	void requestHistoricalMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback);
+	void requestRealTimeTicks(string ticker, function<void(const Tick&)> callback);
 
 private:
 
@@ -187,10 +196,16 @@ private:
 	// OrderId (if one exists). This OrderId will have a list of call back 
 	// functions which need to be called.
 	//
+	// Real Time Minute Bars
 	unordered_map<string, unordered_map<int, OrderId>> stockRealTimeBarOrderIds;
 	unordered_map<OrderId, Callback> stockRealTimeBarCallbacks;
 
+	// Historical Data
 	unordered_map<OrderId, function<void(const Bar&)>> historicalBarCallbacks;
+
+	// Tick Data
+	unordered_map<string, OrderId> stockTickOrderIds;
+	unordered_map<OrderId, vector<function<void(const Tick&)>>> stockTickCallbacks;
 
 	Contract createUsStockContract(string ticker);
 };

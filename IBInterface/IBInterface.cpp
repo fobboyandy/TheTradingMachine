@@ -438,13 +438,42 @@ void IBInterface::requestHistoricalMinuteBars(string ticker, int timeFrameMinute
 
 }
 
+void IBInterface::requestRealTimeTicks(string ticker, function<void(const Tick&)> callback)
+{
+	OrderId oid;
+	if (stockTickOrderIds.find(ticker) != stockTickOrderIds.end())
+	{
+		oid = stockTickOrderIds[ticker];
+	}
+	else
+	{
+		oid = m_orderId;
+		m_orderId++;
+		stockTickOrderIds[ticker] = oid;
+
+		//
+		// Submit the request with historical data with the update option 
+		// on
+		//
+		m_pClient->reqTickByTickData(
+			oid,
+			createUsStockContract(ticker),
+			"AllLast",
+			0,
+			false
+			);
+
+	}
+	stockTickCallbacks[oid].push_back(callback);
+}
+
 Contract IBInterface::createUsStockContract(string ticker)
 {
 	Contract c;
 	c.symbol = ticker;
 	c.secType = "STK";
 	c.currency = "USD";
-	c.exchange = "ISLAND";
+	c.exchange = "SMART";
 	return c;
 }
 
@@ -909,8 +938,13 @@ void IBInterface::historicalTicksLast(int reqId, const std::vector<HistoricalTic
 
 //! [tickbytickalllast]
 void IBInterface::tickByTickAllLast(int reqId, int tickType, time_t time, double price, int size, const TickAttrib& attribs, const std::string& exchange, const std::string& specialConditions) {
-	printf("Tick-By-Tick. ReqId: %d, TickType: %s, Time: %s, Price: %g, Size: %d, PastLimit: %d, Unreported: %d, Exchange: %s, SpecialConditions:%s\n",
-		reqId, (tickType == 1 ? "Last" : "AllLast"), ctime(&time), price, size, attribs.pastLimit, attribs.unreported, exchange.c_str(), specialConditions.c_str());
+
+	Tick t = {tickType, time, price, size, attribs, exchange};
+
+	for (auto& fn : stockTickCallbacks[reqId])
+	{
+		fn(t);
+	}
 }
 //! [tickbytickalllast]
 

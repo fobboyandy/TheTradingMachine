@@ -77,6 +77,7 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>D:\Users\fobboyandy\Desktop\TheTradingMachine\IBInterface;$(IncludePath)</IncludePath>
     <LibraryPath>D:\Users\fobboyandy\Desktop\TheTradingMachine\x64\Debug;$(LibraryPath)</LibraryPath>
+    <OutDir>..\outputfiles</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

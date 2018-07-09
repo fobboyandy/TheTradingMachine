@@ -13,10 +13,10 @@
 #endif
 #endif
 
-#define assert ASSERT
-#if _MSC_VER<=1800
-#define snprintf _snprintf
-#endif
+//#define assert ASSERT
+//#if _MSC_VER<=1800
+//#define snprintf _snprintf
+//#endif
 #include <WinSock2.h>
 #include <Windows.h>
 #define IB_WIN32

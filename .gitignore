@@ -16,3 +16,8 @@ x64/Debug/TheTradingMachine.exe
 *.suo
 .vs/TheTradingMachine/v15/Solution.VC.db
 .vs/TheTradingMachine/v15/Browse.VC.db
+*.csv
+.vs/TheTradingMachine/v15/Solution.VC.db-shm
+*.db-wal
+*.exe
+*.ipch
