@@ -15,6 +15,7 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include <mutex>
 
 using namespace std;
 
@@ -169,26 +170,29 @@ private:
 public:
 
 	void requestRealTimeMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback);
+	void requestHistoricalMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback);
 
 private:
 
-	//Contract createStockContract(string ticker, string exchange);
-	
-
-	struct CallbackGroup
+	struct Callback
 	{
 		Bar callbackBar;
+		int timeFrame;
 		vector<function<void(const Bar&)>> callbackFunctions;
 	};
 
 	//
-	// Stores the callback functions registered to receive real time bars. Each
-	// OrderID corresponds to CallbackGroups mapped by the timeframe in minutes.
+	// Stores the callback functions registered to receive real time bars.
+	// Each ticker has an list of time frames which will correspond to an 
+	// OrderId (if one exists). This OrderId will have a list of call back 
+	// functions which need to be called.
 	//
-	unordered_map<string, OrderId> stockRealTimeBarOrderIds;
-	unordered_map<OrderId, unordered_map<int, CallbackGroup>> stockRealTimeBarCallbacks;
+	unordered_map<string, unordered_map<int, OrderId>> stockRealTimeBarOrderIds;
+	unordered_map<OrderId, Callback> stockRealTimeBarCallbacks;
 
+	unordered_map<OrderId, function<void(const Bar&)>> historicalBarCallbacks;
 
+	Contract createUsStockContract(string ticker);
 };
 
 #endif

@@ -5,8 +5,54 @@
 //#include "StdAfx.h"
 
 #include <iostream>
+#include <fstream>
 #include "StdAfx.h"
 #include "IBInterface.h"
+#include <thread>
+
+#define BAR_SAVE(TICKER, TIMEFRAME) [](const Bar& bar) \
+{ \
+static string filename = TICKER + to_string(TIMEFRAME) + "min" + bar.time.substr(0, 8) + ".csv";\
+fstream output(filename, ios::app | ios::out);\
+output << bar.time << ',';\
+output << bar.open << ',';\
+output << bar.high << ',';\
+output << bar.low << ',';\
+output << bar.close << ',';\
+output << bar.volume << ',';\
+output << bar.wap << endl;\
+output.close();\
+}
+
+IBInterface client;
+atomic<bool> clientReady(false);
+atomic<bool> clientValid(true);
+
+void IBClientMessaggeThread(void)
+{
+	if (!client.Initialize())
+	{
+		cout << "Unable to connect to neither TWS nor IB Gateway!" << endl;
+		Sleep(10000);
+		clientValid.store(false);
+		return;
+	}
+	clientReady.store(true);
+	
+	// Process messages in this thread
+	while (client.isConnected())
+	{
+		client.processMessages();
+		Sleep(10);
+	}
+
+	//
+	// If somehow it got disconnected, set valid to false
+	//
+	clientValid.store(false);
+}
+
+
 
 /* IMPORTANT: always use your paper trading account. The code below will submit orders as part of the demonstration. */
 /* IB will not be responsible for accidental executions on your live account. */
@@ -14,36 +60,30 @@
 /* Before contacting our API support team please refer to the available documentation. */
 int main(int argc, char** argv)
 {
-	while(1)
+	//
+	// start a message proessing thread
+	//
+	thread IbMessageThread(IBClientMessaggeThread);
+	while (!clientReady.load())
 	{
-		IBInterface client;
-		//if attempt to reconnect fails after certain amount of attempts, program exits
-		if (!client.Initialize())
+		if (!clientValid.load())
 		{
-			cout << "Unable to connect to neither TWS nor IB Gateway!" << endl;
-			Sleep(10000);
-			return -1;
+			cout << "Failed to startup client" << endl;
+			system("pause");
 		}
-	
-		auto callback = [](const Bar& b) 
-		{
-			printf("AMD: - Date: %s, Open: %g, High: %g, Low: %g, Close: %g, Volume: %lld, Count: %d, WAP: %g\n", b.time.c_str(), b.open, b.high, b.low, b.close, b.volume, b.count, b.wap);
-		};
-
-		client.requestRealTimeMinuteBars("AMD", 1, callback);
-
-		////main thread processes messages
-		while (client.isConnected())
-		{
-			client.processMessages();
-		}
-
-		//if the program was able to connect previously and suddenly fails, we restart the loop and try to reconnect
-		//if the reconnection fails, the program exits
-		cout << "Client got disconnected from either TWS or IB Gateway. Reconnecting..." << endl;
-
 	}
-	return 0;
+
+	if(clientValid.load())
+	{
+		client.requestHistoricalMinuteBars("AMD", 1, BAR_SAVE("MU", 1));
+		client.requestHistoricalMinuteBars("MU", 1, BAR_SAVE("MU", 1));
+		client.requestHistoricalMinuteBars("EXPR", 1, BAR_SAVE("NVDA", 1));
+		client.requestHistoricalMinuteBars("VOO", 1, BAR_SAVE("VOO", 1));
+	} 
+
+	while (clientValid.load())
+	{
+		Sleep(10);
+	}
+
 }
-
-

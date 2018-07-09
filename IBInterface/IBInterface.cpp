@@ -378,32 +378,20 @@ void IBInterface::printBondContractDetailsMsg(const ContractDetails& contractDet
 void IBInterface::requestRealTimeMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback)
 {
 	OrderId oid;
-	if (stockRealTimeBarOrderIds.find(ticker) != stockRealTimeBarOrderIds.end())
+	string minString = " min";
+	if (timeFrameMinutes > 1)
+		minString.push_back('s');
+
+	auto& timeframeOrderMap = stockRealTimeBarOrderIds[ticker];
+	if(timeframeOrderMap.find(timeFrameMinutes) != timeframeOrderMap.end())
 	{
-		oid = stockRealTimeBarOrderIds[ticker];
+		oid = timeframeOrderMap[timeFrameMinutes];
 	}
 	else
 	{
 		oid = m_orderId;
 		m_orderId++;
-		stockRealTimeBarOrderIds[ticker] = oid;
-
-		//
-		// Initialize the callbackBar to 0 for new requests.
-		//
-		//memset(&(stockRealTimeBarCallbacks[oid])[timeFrameMinutes].callbackBar, 0, sizeof(CallbackGroup::callbackBar));
-	
-		//(stockRealTimeBarCallbacks[oid])[timeFrameMinutes].callbackBar.time.clear();
-
-		auto createContractFn = [&]()
-		{
-			Contract c;
-			c.symbol = ticker;
-			c.secType = "STK";
-			c.currency = "USD";
-			c.exchange = "ISLAND";
-			return c;
-		};
+		timeframeOrderMap[timeFrameMinutes] = oid;
 
 		//
 		// Submit the request with historical data with the update option 
@@ -411,19 +399,53 @@ void IBInterface::requestRealTimeMinuteBars(string ticker, int timeFrameMinutes,
 		//
 		m_pClient->reqHistoricalData(
 			oid,
-			createContractFn(),
+			createUsStockContract(ticker),
 			"", 
-			"1 D", 
-			"1 min", 
+			"1 D",
+			to_string(timeFrameMinutes) + minString,
 			"TRADES", 
 			true, 
 			1, 
 			true, 
 			TagValueListSPtr());
-
+		
+		stockRealTimeBarCallbacks[oid].timeFrame = timeFrameMinutes;
 	}
-	(stockRealTimeBarCallbacks[oid])[timeFrameMinutes].callbackFunctions.push_back(callback);
+	stockRealTimeBarCallbacks[oid].callbackFunctions.push_back(callback);
 
+}
+
+void IBInterface::requestHistoricalMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback)
+{
+	string minString = " min";
+	if (timeFrameMinutes > 1)
+		minString.push_back('s');
+	OrderId oid = m_orderId;
+	m_orderId++;
+	m_pClient->reqHistoricalData(
+		oid,
+		createUsStockContract(ticker),
+		"",
+		"1 D",
+		to_string(timeFrameMinutes) + minString,
+		"TRADES",
+		true,
+		1,
+		false,
+		TagValueListSPtr());
+
+	historicalBarCallbacks[oid] = callback;
+
+}
+
+Contract IBInterface::createUsStockContract(string ticker)
+{
+	Contract c;
+	c.symbol = ticker;
+	c.secType = "STK";
+	c.currency = "USD";
+	c.exchange = "ISLAND";
+	return c;
 }
 
 //! [contractdetailsend]
@@ -478,13 +500,20 @@ void IBInterface::receiveFA(faDataType pFaDataType, const std::string& cxml) {
 
 //! [historicaldata]
 void IBInterface::historicalData(TickerId reqId, const Bar& bar) {
-	printf("HistoricalData. ReqId: %ld - Date: %s, Open: %g, High: %g, Low: %g, Close: %g, Volume: %lld, Count: %d, WAP: %g\n", reqId, bar.time.c_str(), bar.open, bar.high, bar.low, bar.close, bar.volume, bar.count, bar.wap);
+	//printf("HistoricalData. ReqId: %ld - Date: %s, Open: %g, High: %g, Low: %g, Close: %g, Volume: %lld, Count: %d, WAP: %g\n", reqId, bar.time.c_str(), bar.open, bar.high, bar.low, bar.close, bar.volume, bar.count, bar.wap);
+	//
+	// If a function is requesting historical Data callback
+	//
+	if (historicalBarCallbacks.find(reqId) != historicalBarCallbacks.end())
+	{
+		historicalBarCallbacks[reqId](bar);
+	}
 }
 //! [historicaldata]
 
 //! [historicaldataend]
 void IBInterface::historicalDataEnd(int reqId, const std::string& startDateStr, const std::string& endDateStr) {
-	std::cout << "HistoricalDataEnd. ReqId: " << reqId << " - Start Date: " << startDateStr << ", End Date: " << endDateStr << std::endl;
+	//std::cout << "HistoricalDataEnd. ReqId: " << reqId << " - Start Date: " << startDateStr << ", End Date: " << endDateStr << std::endl;
 }
 //! [historicaldataend]
 
@@ -779,43 +808,40 @@ void IBInterface::histogramData(int reqId, const HistogramDataVector& data) {
 
 //! [historicalDataUpdate]
 void IBInterface::historicalDataUpdate(TickerId reqId, const Bar& bar) {
-	printf("HistoricalDataUpdate. ReqId: %ld - Date: %s, Open: %g, High: %g, Low: %g, Close: %g, Volume: %lld, Count: %d, WAP: %g\n", reqId, bar.time.c_str(), bar.open, bar.high, bar.low, bar.close, bar.volume, bar.count, bar.wap);
+	//printf("HistoricalDataUpdate. ReqId: %ld - Date: %s, Open: %g, High: %g, Low: %g, Close: %g, Volume: %lld, Count: %d, WAP: %g\n", reqId, bar.time.c_str(), bar.open, bar.high, bar.low, bar.close, bar.volume, bar.count, bar.wap);
 	//
-	////
-	//// Traverse the callbacks registered to this ticker
-	//// For each index, check to see if a new candle should be sent
-	////
+	//
+	// Traverse the callbacks registered to this ticker
+	// For each index, check to see if a new candle should be sent
+	//
 
-	auto& tickerCallbacks = stockRealTimeBarCallbacks[reqId];
-	for (auto it = tickerCallbacks.begin(); it != tickerCallbacks.end(); it++)
+	Callback& orderIdCallback = stockRealTimeBarCallbacks[reqId];
+
+	// Parses the time for the minutes of a bar in integer;
+	//
+	auto getPrevBarMinutes = [&]()
 	{
-		Bar& prevBar = it->second.callbackBar;
-		
-		// Parses the time for the minutes of a bar in integer;
-		//
-		auto getPrevBarMinutes = [&]()
-		{
-			return stoi(prevBar.time.substr(13, 2));
-		};
+		return stoi(orderIdCallback.callbackBar.time.substr(13, 2));
+	};
 
-		//
-		// If the bar time has changed (compared to a non new bar) and the 
-		// previous bar time was a multiple of the current timeframe, then 
-		// the previous bar was complete and should be dispatched via the 
-		// callback.
-		//
-		if (prevBar.time.length() != 0 &&
-			bar.time != prevBar.time &&
-			getPrevBarMinutes() % it->first == 0)
+	//
+	// If the bar time has changed (compared to a non new bar) and the 
+	// previous bar time was a multiple of the current timeframe, then 
+	// the previous bar was complete and should be dispatched via the 
+	// callback.
+	//
+	if (orderIdCallback.callbackBar.time.length() != 0 &&
+		bar.time != orderIdCallback.callbackBar.time &&
+		getPrevBarMinutes() % orderIdCallback.timeFrame == 0)
+	{
+		for (auto& fn : orderIdCallback.callbackFunctions)
 		{
-			for (auto& fn : it->second.callbackFunctions)
-			{
-				fn(prevBar);
-			}
+			fn(orderIdCallback.callbackBar);
 		}
-
-		prevBar = bar;
 	}
+
+	orderIdCallback.callbackBar = bar;
+	
 }
 //! [historicalDataUpdate]
 
