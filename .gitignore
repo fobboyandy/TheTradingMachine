@@ -21,3 +21,4 @@ x64/Debug/TheTradingMachine.exe
 *.db-wal
 *.exe
 *.ipch
+*.ipch

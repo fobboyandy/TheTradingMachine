@@ -839,10 +839,6 @@ void IBInterface::histogramData(int reqId, const HistogramDataVector& data) {
 void IBInterface::historicalDataUpdate(TickerId reqId, const Bar& bar) {
 	//printf("HistoricalDataUpdate. ReqId: %ld - Date: %s, Open: %g, High: %g, Low: %g, Close: %g, Volume: %lld, Count: %d, WAP: %g\n", reqId, bar.time.c_str(), bar.open, bar.high, bar.low, bar.close, bar.volume, bar.count, bar.wap);
 	//
-	//
-	// Traverse the callbacks registered to this ticker
-	// For each index, check to see if a new candle should be sent
-	//
 
 	Callback& orderIdCallback = stockRealTimeBarCallbacks[reqId];
 

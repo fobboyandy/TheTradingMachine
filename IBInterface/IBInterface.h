@@ -9,6 +9,7 @@
 #include "EReaderOSSignal.h"
 #include "EReader.h"
 #include "EClientSocket.h"
+#include "Tick.h"
 
 #include <memory>
 #include <vector>
@@ -22,16 +23,6 @@ using namespace std;
 const unsigned MAX_ATTEMPTS = 50;
 
 class EClientSocket;
-
-struct Tick
-{
-	int tickType;
-	time_t time;
-	double price;
-	int size;
-	TickAttrib attributes;
-	string exchange;
-};
 
 //! [ewrapperimpl]
 class IBInterface : public EWrapper
@@ -180,6 +171,7 @@ public:
 	void requestRealTimeMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback);
 	void requestHistoricalMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback);
 	void requestRealTimeTicks(string ticker, function<void(const Tick&)> callback);
+
 
 private:
 

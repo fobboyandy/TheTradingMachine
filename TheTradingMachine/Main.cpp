@@ -2,125 +2,242 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 
 #include "StdAfx.h"
+
 #include <iostream>
 #include <fstream>
 #include <thread>
+#include <functional>
+#include <list>
+#include "CandleMaker.h"
 #include "IBInterface.h"
 #include "TheTradingMachine.h"
-#include <functional>
 
-#define BAR_SAVE(TICKER, TIMEFRAME) [](const Bar& bar) \
-{ \
-static string filename = TICKER + to_string(TIMEFRAME) + "min" + bar.time.substr(0, 8) + ".csv";\
-fstream output(filename, ios::app | ios::out);\
-output << bar.time << ',';\
-output << bar.open << ',';\
-output << bar.high << ',';\
-output << bar.low << ',';\
-output << bar.close << ',';\
-output << bar.volume << ',';\
-output << bar.wap << endl;\
-output.close();\
-}
+#define SIM 1
 
-#define TICK_SAVE(TICKER) [](const Tick& tick) \
-{ \
-static string filename = string(TICKER) + string("TickData.csv");\
-fstream output(filename, ios::app | ios::out);\
-output << tick.tickType << ',';\
-output << ctime(&tick.time) << ',';\
-output << tick.price << ',';\
-output << tick.size << ',';\
-output << (int)tick.attributes.canAutoExecute << ',';\
-output << (int)tick.attributes.pastLimit << ',';\
-output << (int)tick.attributes.preOpen << ',';\
-output << (int)tick.attributes.unreported << ',';\
-output << (int)tick.attributes.bidPastLow << ',';\
-output << (int)tick.attributes.askPastHigh << ',';\
-output << tick.exchange << endl; \
-output.close();\
-}
-
-class DataRecorder : public TheTradingMachine
+class TickRecorder : public TheTradingMachine
 {
 public:
-	DataRecorder(string ticker)
+	TickRecorder(string t) : TheTradingMachine(t), ticker(t)
 	{
-		cout << "requesting ticks for " << ticker << endl;
-		ibapi.requestRealTimeTicks(ticker, [this](const Tick& tick) {this->tickHandler(tick); });
+		if (t.find(".tickdat") != string::npos)
+		{
+			throw std::invalid_argument("Invalid ticker");
+			return;
+		}
 
-		string filename = ticker + "TickData.csv";
-		output.open(filename, ios::trunc | ios::out);
+		auto timenow = time(nullptr);
+		string s = string(ctime(&timenow));
+
+		//remove the newline
+		string filename = s.substr(4, 6) + ticker + ".tickdat";
+		tickoutput.open(filename, ios::trunc | ios::out);
+
+		cout << "requesting ticks for " << ticker << endl;
+		requestTicks([this](const Tick& tick) {this->tickHandler(tick); });
 	}
-	~DataRecorder()
+	~TickRecorder()
 	{
-		output.close();
+		tickoutput.close();
 	}
 	void tickHandler(const Tick& tick)
 	{
-		output << tick.tickType << ','; \
-		output << ctime(&tick.time) << ','; \
-		output << tick.price << ','; \
-		output << tick.size << ','; \
-		output << (int)tick.attributes.canAutoExecute << ','; \
-		output << (int)tick.attributes.pastLimit << ','; \
-		output << (int)tick.attributes.preOpen << ','; \
-		output << (int)tick.attributes.unreported << ','; \
-		output << (int)tick.attributes.bidPastLow << ','; \
-		output << (int)tick.attributes.askPastHigh << ','; \
-		output << tick.exchange << endl; \
-	}
+		string s = ctime(&tick.time);
+		tickoutput << tick.tickType << ',';
+		tickoutput << tick.time << ",";
+		tickoutput << s.substr(0, s.length() - 1) << ",";
+		tickoutput << tick.price << ',';
+		tickoutput << tick.size << ',';
+		tickoutput << (int)tick.attributes.canAutoExecute << ',';
+		tickoutput << (int)tick.attributes.pastLimit << ',';
+		tickoutput << (int)tick.attributes.preOpen << ',';
+		tickoutput << (int)tick.attributes.unreported << ',';
+		tickoutput << (int)tick.attributes.bidPastLow << ',';
+		tickoutput << (int)tick.attributes.askPastHigh << ',';
+		tickoutput << tick.exchange << endl;
 
+		cout << ticker << "\t" << tick.price << '\t' << tick.size << endl;
+	}
+	
 private:
-	fstream output;
-protected:
+	fstream tickoutput;
+	string ticker;
 
 };
 
+class SupportBreakShort : public TheTradingMachine
+{
+public:
+	explicit SupportBreakShort(string input) :
+		TheTradingMachine(input),
+		minuteBarMaker(60),
+		prevDir(UNDEFINED),
+		previousStrength(NONE)
+	{
+		//
+		// TheTradingMachine handles the source of the ticks
+		//
+		requestTicks([this](const Tick& tick) {this->tickHandler(tick); });
+	}
+
+	void tickHandler(const Tick& tick)
+	{
+		Bar minuteBar;
+		lastPrice = tick.price;
+
+		//
+		// Cover trade based on real time prices. Only used in simulation. We use a stoploss
+		// for real trades.
+		//
+		coverTrade();
+
+		//
+		// Enter new trade for new candles
+		//
+		if (minuteBarMaker.getNewCandle(tick, minuteBar))
+		{
+			currentBar = minuteBar;
+			cout << minuteBar.open << "\t";
+			cout << minuteBar.high << "\t";
+			cout << minuteBar.low << "\t";
+			cout << minuteBar.close << "\t";
+			cout << minuteBar.volume << endl;
+			shortTrade();
+		}
+
+	}
+
+	void coverTrade() {}
+
+	void shortTrade()
+	{
+		cout << "new candle" << endl;
+
+		//price increase
+		if (currentBar.close > prevBar.close)
+		{
+			if (prevDir == DOWN)
+			{
+				previousStrength = SUPPORT;
+				prevSupportBar = prevBar;
+			}
+			prevDir = UP;
+		}
+		//
+		// Price decrease. Check if short
+		//
+		else if (currentBar.close < prevBar.close)
+		{
+			//
+			// If the price falls past the previous support and the risk reward is still worth it,
+			// size and short the stock
+			//
+			if (lastPrice < prevSupportBar.close)
+			{
+				double targetGain = prevResistanceBar.close - prevSupportBar.close;
+				double error = lastPrice - prevSupportBar.close;
+				int toleranceFactor = 2;
+
+				if (abs(error) < abs(targetGain / toleranceFactor))
+				{
+					cout << "short at:"  << endl;
+					double targetPrice = prevSupportBar.close - targetGain;
+
+					auto it = targetPrices.begin();
+					//for(; it != targetPrices.end() && it->val; it++)
+					//{
+
+					//}
+				}
+			}
+
+			if (prevDir == UP)
+			{
+				previousStrength = RESISTANCE;
+				prevResistanceBar = prevBar;
+			}
+			prevDir = DOWN;
+		}
+
+		prevBar = currentBar;
+	}
+
+private:
+	enum Dir
+	{
+		UP,
+		DOWN,
+		UNDEFINED
+	};
+	enum Strength
+	{
+		SUPPORT,
+		RESISTANCE,
+		NONE,
+	};
+
+	//
+	// Minute candles
+	//
+	CandleMaker minuteBarMaker;
+
+
+	//
+	// Trading data
+	//
+	double lastPrice;
+	Bar currentBar;
+
+	Bar prevBar;
+	Dir prevDir;
+	Strength previousStrength;
+
+	Bar prevSupportBar;
+	Bar prevResistanceBar;
+
+	fstream logFile;
+
+	list<double> targetPrices;
+};
+
+#if SIM
 /* IMPORTANT: always use your paper trading account. The code below will submit orders as part of the demonstration. */
 /* IB will not be responsible for accidental executions on your live account. */
 /* Any stock or option symbols displayed are for illustrative purposes only and are not intended to portray a recommendation. */
 /* Before contacting our API support team please refer to the available documentation. */
 int main(int argc, char** argv)
 {
-	////
-	//// start a message proessing thread
-	////
-	//thread IbMessageThread(IBClientMessaggeThread);
-	//while (!clientReady.load())
-	//{
-	//	if (!clientValid.load())
-	//	{
-	//		cout << "Failed to startup client" << endl;
-	//		system("pause");
-	//	}
-	//}
 
-	//if(clientValid.load())
-	//{
-	//	client.requestRealTimeTicks("AMD", TICK_SAVE("AMD"));
-	//	client.requestRealTimeTicks("VOO", TICK_SAVE("VOO"));
-	//	client.requestRealTimeTicks("MU", TICK_SAVE("MU"));
-	//	client.requestRealTimeTicks("NVDA", TICK_SAVE("NVDA"));
+	TickRecorder record1("AMD");
+	TickRecorder record2("NVDA");
+	TickRecorder record3("AMZN");
 
-	//} 
+	//SupportBreakShort test("D:\\Users\\fobboyandy\\Desktop\\TheTradingMachine\\x64\\Debug\\Jul 13AMDTickData.tickdat");
 
-	//while (clientValid.load())
-	//{
-	//	Sleep(10);
-	//}
-
-
-	//TheTradingMachine tm,tm2,tm3;
-
-
-	DataRecorder amdTickRecorder("AMD");
-	DataRecorder vooTickRecorder("VOO");
-	DataRecorder muTickRecorder("MU");
-	DataRecorder nvdaTickRecorder("NVDA");
 
 	while (1)
 	{
 		Sleep(10);
 	}
 }
+#else
+int main()
+{
+	vector<vector<string>> csvMax;
+	CsvReader("D:\\Users\\fobboyandy\\Desktop\\TheTradingMachine\\outputfiles\\Jul10AMDTickData.csv", ref(csvMax));
+	//
+
+	vector<double> prices;
+
+	for (auto&i : csvMax)
+		prices.push_back(stod(i[2]));
+	int windowSize = 5;
+	auto& average = RunningAverage(prices, windowSize);
+	fstream runningaverageout("output.txt", ios::out | ios::trunc);
+	for (auto&i : average)
+	{
+		runningaverageout << i << endl;
+	}
+
+}
+
+#endif

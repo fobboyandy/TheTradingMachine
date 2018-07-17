@@ -77,7 +77,6 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>D:\Users\fobboyandy\Desktop\TheTradingMachine\IBInterface;$(IncludePath)</IncludePath>
     <LibraryPath>D:\Users\fobboyandy\Desktop\TheTradingMachine\x64\Debug;$(LibraryPath)</LibraryPath>
-    <OutDir>..\outputfiles</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -151,10 +150,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="CandleMaker.h" />
+    <ClInclude Include="MiscFunctions.h" />
     <ClInclude Include="TheTradingMachine.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CandleMaker.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="MiscFunctions.cpp" />
     <ClCompile Include="TheTradingMachine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

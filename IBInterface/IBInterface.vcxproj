@@ -100,6 +100,7 @@
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="TagValue.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Tick.h" />
     <ClInclude Include="TickAttrib.h" />
     <ClInclude Include="TimeCondition.h" />
     <ClInclude Include="TwsSocketClientErrors.h" />

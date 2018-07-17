@@ -3,6 +3,7 @@
 #include <queue>
 #include <vector>
 #include <memory>
+#include <fstream>
 #include "IBInterface.h"
 
 using namespace std;
@@ -11,8 +12,9 @@ class TheTradingMachine
 {
 
 public:
-	TheTradingMachine();
-	~TheTradingMachine();
+	TheTradingMachine(string input);
+	virtual ~TheTradingMachine();
+	void requestTicks(function<void(const Tick& tick)> callback);
 
 private:
 
@@ -21,9 +23,6 @@ private:
 	public:
 		IBInterfaceClient();
 		~IBInterfaceClient();
-
-		void requestRealTimeMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback);
-		void requestHistoricalMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback);
 		void requestRealTimeTicks(string ticker, function<void(const Tick&)> callback);
 
 	private:
@@ -35,10 +34,23 @@ private:
 		atomic<bool> clientValid;
 	};
 
+	class Position
+	{
+	public:
+		string ticker;
+		
+	private:
+		OrderId id;
+	};
+
+
+	fstream tickDataFile;
+	bool realtime;
+	string ticker;
+	static IBInterfaceClient* ibapi;
+
+
 
 protected:
-
-	static IBInterfaceClient ibapi;
-
 
 };
