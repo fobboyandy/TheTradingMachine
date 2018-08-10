@@ -121,6 +121,7 @@ void TheTradingMachine::requestTicks(function<void(const Tick& tick)> callback)
 					break;
 				}
 			}
+
 			callback(callbackTick);	
 		}
 	}

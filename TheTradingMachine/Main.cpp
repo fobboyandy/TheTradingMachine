@@ -7,12 +7,16 @@
 #include <fstream>
 #include <thread>
 #include <functional>
-#include <list>
+#include <queue>
 #include "CandleMaker.h"
 #include "IBInterface.h"
 #include "TheTradingMachine.h"
 
 #define SIM 1
+
+#define NUM_SECONDS_DAY 86400
+#define RTH_SECONDS 48600
+
 
 class TickRecorder : public TheTradingMachine
 {
@@ -21,7 +25,7 @@ public:
 	{
 		if (t.find(".tickdat") != string::npos)
 		{
-			throw std::invalid_argument("Invalid ticker");
+			throw std::invalid_argument("It is already a file. Aborting...");
 			return;
 		}
 
@@ -81,6 +85,7 @@ public:
 
 	void tickHandler(const Tick& tick)
 	{
+
 		Bar minuteBar;
 		lastPrice = tick.price;
 
@@ -93,7 +98,7 @@ public:
 		//
 		// Enter new trade for new candles
 		//
-		if (minuteBarMaker.getNewCandle(tick, minuteBar))
+		if (minuteBarMaker.getRthCandle(tick, minuteBar))
 		{
 			currentBar = minuteBar;
 			cout << minuteBar.open << "\t";
@@ -112,7 +117,9 @@ public:
 	{
 		cout << "new candle" << endl;
 
+		//
 		//price increase
+		//
 		if (currentBar.close > prevBar.close)
 		{
 			if (prevDir == DOWN)
@@ -127,6 +134,14 @@ public:
 		//
 		else if (currentBar.close < prevBar.close)
 		{
+			if (prevDir == UP)
+			{
+				previousStrength = RESISTANCE;
+				prevResistanceBar = prevBar;
+			}
+			prevDir = DOWN;
+
+
 			//
 			// If the price falls past the previous support and the risk reward is still worth it,
 			// size and short the stock
@@ -141,22 +156,23 @@ public:
 				{
 					cout << "short at:"  << endl;
 					double targetPrice = prevSupportBar.close - targetGain;
+					double stoploss = prevResistanceBar.close;
 
-					auto it = targetPrices.begin();
-					//for(; it != targetPrices.end() && it->val; it++)
-					//{
-
-					//}
+					Position newPosition;
+					newPosition.type = Position::PositionType::SHORT;
+					newPosition.entry = lastPrice;
+					newPosition.stoploss = stoploss;
+					newPosition.target = targetPrice;
+					newPosition.size = 100 / abs(newPosition.entry - newPosition.stoploss);
+					openPositions.push(newPosition);
 				}
 			}
 
-			if (prevDir == UP)
-			{
-				previousStrength = RESISTANCE;
-				prevResistanceBar = prevBar;
-			}
-			prevDir = DOWN;
+
 		}
+
+
+
 
 		prevBar = currentBar;
 	}
@@ -196,7 +212,25 @@ private:
 
 	fstream logFile;
 
-	list<double> targetPrices;
+
+	struct Position
+	{
+		bool operator<(const Position& lhs, const position& rhs)
+		{
+			return lhs.age < rhs.age;
+		}
+
+		enum PositionType {
+			SHORT,
+			LONG
+		};
+		PositionType type;
+		double stoploss;
+		double target;
+		double entry;
+		int size;
+	};
+	std::priority_queue < Position, std::vector<Position>, > openPositions;
 };
 
 #if SIM
@@ -207,11 +241,11 @@ private:
 int main(int argc, char** argv)
 {
 
-	TickRecorder record1("AMD");
-	TickRecorder record2("NVDA");
-	TickRecorder record3("AMZN");
+	//TickRecorder record1("AMD");
+	//TickRecorder record2("NVDA");
+	//TickRecorder record3("AMZN");
 
-	//SupportBreakShort test("D:\\Users\\fobboyandy\\Desktop\\TheTradingMachine\\x64\\Debug\\Jul 13AMDTickData.tickdat");
+	SupportBreakShort test("D:\\Users\\fobboyandy\\Desktop\\TheTradingMachine\\x64\\Debug\\Jul 13AMDTickData.tickdat");
 
 
 	while (1)

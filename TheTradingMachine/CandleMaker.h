@@ -24,7 +24,7 @@ public:
 	// Given a new tick, returns true if a new candle is returned in newCandle.
 	// Tick rates must be smaller than the timeframe of each bar.
 	//
-	bool getNewCandle(const Tick& newTick, Bar& newCandle);
+	bool getRthCandle(const Tick& newTick, Bar& newCandle);
 
 private:
 
@@ -54,7 +54,7 @@ private:
 	// Used to keep track of periods of elapsed timeframes to prevent
 	// ticks within the same timeframe period to trigger a new candle
 	//
-	time_t prevCandlePeriod;
+	time_t candlePeriodCounter;
 
 private:
 	//

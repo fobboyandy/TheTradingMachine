@@ -2,10 +2,20 @@
 #include <ctime>
 #include "CandleMaker.h"
 
-#define CTIME_MINUS_6_MAGIC 18000
-#define SECONDS_IN_DAY 86400
+#define NUM_SECONDS_DAY 86400
+#define RTH_START 48600
+#define RTH_END 72000
 
-using namespace std;
+
+inline bool isRTH(time_t tickTime)
+{
+	time_t secondsPassed = tickTime % NUM_SECONDS_DAY;
+	if (secondsPassed >= RTH_START && secondsPassed < RTH_END)
+	{
+		return true;
+	}
+	return false;
+}
 
 CandleMaker::CandleMaker(int timeFrameSeconds) :
 	timeFrame(timeFrameSeconds),
@@ -17,17 +27,25 @@ CandleMaker::~CandleMaker()
 {
 }
 
-bool CandleMaker::getNewCandle(const Tick& newTick, Bar& newCandle)
+bool CandleMaker::getRthCandle(const Tick& newTick, Bar& newCandle)
 {
-
-	time_t thisPeriod = newTick.time - (newTick.time % timeFrame);
+	//
+	// check for RTH
+	//
+	if (!isRTH(newTick.time))
+	{
+		return false;
+	}
+	
+	time_t thisPeriodCounter = newTick.time / timeFrame;
 
 	//
 	// if thisPeriod > prevCandlePeriod, then it's a new minute
+	// since it won't increment unless it reaches a new period
 	//
-	if (thisPeriod > prevCandlePeriod)
+	if (thisPeriodCounter > candlePeriodCounter)
 	{
-		prevCandlePeriod = thisPeriod;
+		candlePeriodCounter = thisPeriodCounter;
 
 		//
 		// Check if we are at the start of a new time period. For example,
@@ -57,8 +75,6 @@ bool CandleMaker::getNewCandle(const Tick& newTick, Bar& newCandle)
 	{
 		aggregateCandle(newTick);
 	}
-
-	
 
 	return false;
 }
