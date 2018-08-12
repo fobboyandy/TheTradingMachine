@@ -130,14 +130,14 @@ void TheTradingMachine::requestTicks(function<void(const Tick& tick)> callback)
 TheTradingMachine::IBInterfaceClient::IBInterfaceClient() :
 	messageProcess_(nullptr)
 {
-	cout << "Initializing IB Client" << endl;
+	std::cout << "Initializing IB Client" << std::endl;
 	clientReady.store(false);
 	clientValid.store(true);
 	threadRunning.store(false);
 	if (!client.Initialize())
 	{
 	
-		cout << "Unable to connect to neither TWS nor IB Gateway!" << endl;
+		std::cout << "Unable to connect to neither TWS nor IB Gateway!" << std::endl;
 		Sleep(10000);
 		clientValid.store(false);
 	}
@@ -148,7 +148,7 @@ TheTradingMachine::IBInterfaceClient::IBInterfaceClient() :
 		{
 			Sleep(10);
 		}
-		cout << "Successfully initialized IB Client." << endl;
+		std::cout << "Successfully initialized IB Client." << std::endl;
 	}
 }
 
@@ -181,7 +181,7 @@ void TheTradingMachine::IBInterfaceClient::messageProcess(void)
 	threadRunning.store(true);
 	if (client.isConnected())
 	{
-		cout << "IB Message Processing Thread has started." << endl;
+		std::cout << "IB Message Processing Thread has started." << std::endl;
 	}
 
 	clientReady.store(true);

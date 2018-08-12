@@ -36,7 +36,7 @@ public:
 		string filename = s.substr(4, 6) + ticker + ".tickdat";
 		tickoutput.open(filename, ios::trunc | ios::out);
 
-		cout << "requesting ticks for " << ticker << endl;
+		std::cout << "requesting ticks for " << ticker << std::endl;
 		requestTicks([this](const Tick& tick) {this->tickHandler(tick); });
 	}
 	~TickRecorder()
@@ -57,9 +57,9 @@ public:
 		tickoutput << (int)tick.attributes.unreported << ',';
 		tickoutput << (int)tick.attributes.bidPastLow << ',';
 		tickoutput << (int)tick.attributes.askPastHigh << ',';
-		tickoutput << tick.exchange << endl;
+		tickoutput << tick.exchange << std::endl;
 
-		cout << ticker << "\t" << tick.price << '\t' << tick.size << endl;
+		std::cout << ticker << "\t" << tick.price << '\t' << tick.size << std::endl;
 	}
 	
 private:
@@ -100,81 +100,81 @@ public:
 		//
 		if (minuteBarMaker.getRthCandle(tick, minuteBar))
 		{
-			currentBar = minuteBar;
-			cout << minuteBar.open << "\t";
-			cout << minuteBar.high << "\t";
-			cout << minuteBar.low << "\t";
-			cout << minuteBar.close << "\t";
-			cout << minuteBar.volume << endl;
-			shortTrade();
+			//
+			// price increase, check previous direction and mark 
+			// indicators
+			//
+			if (minuteBar.close > prevBar.close)
+			{
+				if (prevDir == DOWN)
+				{
+					previousStrength = SUPPORT;
+					prevSupportBar = prevBar;
+				}
+				prevDir = UP;
+			}
+			//
+			// Price decrease. Check if short
+			//
+			else if (minuteBar.close < prevBar.close)
+			{
+				if (prevDir == UP)
+				{
+					previousStrength = RESISTANCE;
+					prevResistanceBar = prevBar;
+				}
+				prevDir = DOWN;
+				shortTrade();
+			}
+			prevBar = minuteBar;
 		}
+
+		//
+		// Check if any positions need to be closed. Ideally this should be handled 
+		// by the broker by sending conditions but we need this here to be able to 
+		// run backtests.
+		//
+
+		coverTrade();
 
 	}
 
-	void coverTrade() {}
+	//
+	// Check the openPositions for the top most position. The positions are 
+	// sorted by target prices since the highest target price are the positions
+	// that need to be closed first. 
+	//
+	void coverTrade() 
+	{
+
+	}
 
 	void shortTrade()
 	{
-		cout << "new candle" << endl;
-
 		//
-		//price increase
+		// If the price falls past the previous support and the risk reward is still worth it,
+		// size and short the stock
 		//
-		if (currentBar.close > prevBar.close)
+		if (lastPrice < prevSupportBar.close)
 		{
-			if (prevDir == DOWN)
+			double targetGain = prevResistanceBar.close - prevSupportBar.close;
+			double error = lastPrice - prevSupportBar.close;
+			int toleranceFactor = 2;
+
+			if (abs(error) < abs(targetGain / toleranceFactor))
 			{
-				previousStrength = SUPPORT;
-				prevSupportBar = prevBar;
+				std::cout << "short at:" << lastPrice << std::endl;
+				double targetPrice = prevSupportBar.close - targetGain;
+				double stoploss = prevResistanceBar.close;
+
+				Position newPosition;
+				newPosition.entry = lastPrice;
+				newPosition.stoploss = stoploss;
+				newPosition.target = targetPrice;
+				newPosition.size = static_cast<int>(100 / abs(newPosition.entry - newPosition.stoploss));
+				openPositions.push(newPosition);
 			}
-			prevDir = UP;
 		}
-		//
-		// Price decrease. Check if short
-		//
-		else if (currentBar.close < prevBar.close)
-		{
-			if (prevDir == UP)
-			{
-				previousStrength = RESISTANCE;
-				prevResistanceBar = prevBar;
-			}
-			prevDir = DOWN;
-
-
-			//
-			// If the price falls past the previous support and the risk reward is still worth it,
-			// size and short the stock
-			//
-			if (lastPrice < prevSupportBar.close)
-			{
-				double targetGain = prevResistanceBar.close - prevSupportBar.close;
-				double error = lastPrice - prevSupportBar.close;
-				int toleranceFactor = 2;
-
-				if (abs(error) < abs(targetGain / toleranceFactor))
-				{
-					cout << "short at:"  << endl;
-					double targetPrice = prevSupportBar.close - targetGain;
-					double stoploss = prevResistanceBar.close;
-
-					Position newPosition;
-					newPosition.type = Position::PositionType::SHORT;
-					newPosition.entry = lastPrice;
-					newPosition.stoploss = stoploss;
-					newPosition.target = targetPrice;
-					newPosition.size = 100 / abs(newPosition.entry - newPosition.stoploss);
-					openPositions.push(newPosition);
-				}
-			}
-
-
-		}
-
-
-
-
-		prevBar = currentBar;
 	}
 
 private:
@@ -201,7 +201,6 @@ private:
 	// Trading data
 	//
 	double lastPrice;
-	Bar currentBar;
 
 	Bar prevBar;
 	Dir prevDir;
@@ -212,25 +211,19 @@ private:
 
 	fstream logFile;
 
-
 	struct Position
 	{
-		bool operator<(const Position& lhs, const position& rhs)
+		bool operator<(const Position& other) const
 		{
-			return lhs.age < rhs.age;
+			return this->target < other.target;
 		}
-
-		enum PositionType {
-			SHORT,
-			LONG
-		};
-		PositionType type;
-		double stoploss;
-		double target;
 		double entry;
+		double target;
+		double stoploss;
 		int size;
 	};
-	std::priority_queue < Position, std::vector<Position>, > openPositions;
+
+	std::priority_queue <Position> openPositions;
 };
 
 #if SIM
@@ -246,7 +239,6 @@ int main(int argc, char** argv)
 	//TickRecorder record3("AMZN");
 
 	SupportBreakShort test("D:\\Users\\fobboyandy\\Desktop\\TheTradingMachine\\x64\\Debug\\Jul 13AMDTickData.tickdat");
-
 
 	while (1)
 	{
@@ -269,7 +261,7 @@ int main()
 	fstream runningaverageout("output.txt", ios::out | ios::trunc);
 	for (auto&i : average)
 	{
-		runningaverageout << i << endl;
+		runningaverageout << i << std::endl;
 	}
 
 }

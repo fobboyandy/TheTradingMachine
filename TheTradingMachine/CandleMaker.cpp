@@ -29,12 +29,13 @@ CandleMaker::~CandleMaker()
 
 bool CandleMaker::getRthCandle(const Tick& newTick, Bar& newCandle)
 {
+	bool candleValid = false;
 	//
 	// check for RTH
 	//
 	if (!isRTH(newTick.time))
 	{
-		return false;
+		return candleValid;
 	}
 	
 	time_t thisPeriodCounter = newTick.time / timeFrame;
@@ -56,7 +57,7 @@ bool CandleMaker::getRthCandle(const Tick& newTick, Bar& newCandle)
 		if (beginAggregation)
 		{
 			newCandle = aggregatedCandle;
-			return true;
+			candleValid = true;
 		}
 		else
 		{
@@ -76,7 +77,7 @@ bool CandleMaker::getRthCandle(const Tick& newTick, Bar& newCandle)
 		aggregateCandle(newTick);
 	}
 
-	return false;
+	return candleValid;
 }
 
 void CandleMaker::aggregateCandle(const Tick& newTick)
