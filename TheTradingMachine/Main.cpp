@@ -8,6 +8,8 @@
 #include <thread>
 #include <functional>
 #include <queue>
+#include <list>
+#include <stack>
 #include "CandleMaker.h"
 #include "IBInterface.h"
 #include "TheTradingMachine.h"
@@ -16,25 +18,28 @@
 
 #define NUM_SECONDS_DAY 86400
 #define RTH_SECONDS 48600
+#define RTH_START 48600
+#define RTH_END 72000
+
 
 
 class TickRecorder : public TheTradingMachine
 {
 public:
-	TickRecorder(string t) : TheTradingMachine(t), ticker(t)
+	TickRecorder(std::string t) : TheTradingMachine(t), ticker(t)
 	{
-		if (t.find(".tickdat") != string::npos)
+		if (t.find(".tickdat") != std::string::npos)
 		{
 			throw std::invalid_argument("It is already a file. Aborting...");
 			return;
 		}
 
 		auto timenow = time(nullptr);
-		string s = string(ctime(&timenow));
+		std::string s = std::string(ctime(&timenow));
 
 		//remove the newline
-		string filename = s.substr(4, 6) + ticker + ".tickdat";
-		tickoutput.open(filename, ios::trunc | ios::out);
+		std::string filename = s.substr(4, 6) + ticker + ".tickdat";
+		tickoutput.open(filename, std::ios::trunc | std::ios::out);
 
 		std::cout << "requesting ticks for " << ticker << std::endl;
 		requestTicks([this](const Tick& tick) {this->tickHandler(tick); });
@@ -45,7 +50,7 @@ public:
 	}
 	void tickHandler(const Tick& tick)
 	{
-		string s = ctime(&tick.time);
+		std::string s = ctime(&tick.time);
 		tickoutput << tick.tickType << ',';
 		tickoutput << tick.time << ",";
 		tickoutput << s.substr(0, s.length() - 1) << ",";
@@ -63,19 +68,20 @@ public:
 	}
 	
 private:
-	fstream tickoutput;
-	string ticker;
+	std::fstream tickoutput;
+	std::string ticker;
 
 };
 
 class SupportBreakShort : public TheTradingMachine
 {
 public:
-	explicit SupportBreakShort(string input) :
+	explicit SupportBreakShort(std::string input) :
 		TheTradingMachine(input),
 		minuteBarMaker(60),
 		prevDir(UNDEFINED),
-		previousStrength(NONE)
+		previousStrength(NONE),
+		profit(0)
 	{
 		//
 		// TheTradingMachine handles the source of the ticks
@@ -85,21 +91,54 @@ public:
 
 	void tickHandler(const Tick& tick)
 	{
-
 		Bar minuteBar;
 		lastPrice = tick.price;
+		lastTick = tick;
 
 		//
-		// Cover trade based on real time prices. Only used in simulation. We use a stoploss
-		// for real trades.
+		// close all positions
 		//
-		coverTrade();
+		if (tick.time % NUM_SECONDS_DAY >= RTH_END)
+		{
+			for (auto it = openPositions.begin(); it != openPositions.end();)
+			{
+				profit += (it->entry - lastPrice) * it->size;
+				it = openPositions.erase(it);
+				std::cout << "closed position. profit = " << profit << std::endl;
+			}
+			return;
+		}
+
 
 		//
-		// Enter new trade for new candles
+		// Check if any positions need to be closed. Ideally this should be handled 
+		// by the broker by sending conditions but we need this here to be able to 
+		// run backtests.
+		//
+		//coverTrade();
+
+		static double supportBreakPrice;
+		static bool shorted = false;
+		if (tick.price < prevSupportBar.close && !shorted)
+		{
+			supportBreakPrice = tick.price;
+			std::cout << "broke support at " << tick.price << " time " << tick.time << std::endl;
+		}
+
+		//
+		// Enter new trade for closing prices (new candles)
 		//
 		if (minuteBarMaker.getRthCandle(tick, minuteBar))
 		{
+			//
+			// Check how many support breach end up in candle bar closing under the support
+			//
+			static double maxPotential = 0;
+			if (shorted)
+			{
+				maxPotential += supportBreakPrice - minuteBar.close;
+				std::cout << "max potential : " << maxPotential << std::endl;
+			}
 			//
 			// price increase, check previous direction and mark 
 			// indicators
@@ -110,6 +149,8 @@ public:
 				{
 					previousStrength = SUPPORT;
 					prevSupportBar = prevBar;
+					shorted = false;
+
 				}
 				prevDir = UP;
 			}
@@ -124,18 +165,10 @@ public:
 					prevResistanceBar = prevBar;
 				}
 				prevDir = DOWN;
-				shortTrade();
+				//shortTrade();
 			}
 			prevBar = minuteBar;
 		}
-
-		//
-		// Check if any positions need to be closed. Ideally this should be handled 
-		// by the broker by sending conditions but we need this here to be able to 
-		// run backtests.
-		//
-
-		coverTrade();
 
 	}
 
@@ -144,9 +177,27 @@ public:
 	// sorted by target prices since the highest target price are the positions
 	// that need to be closed first. 
 	//
-	void coverTrade() 
+	void coverTrade()
 	{
-
+		for (auto it = openPositions.begin(); it != openPositions.end(); )
+		{
+			if (lastPrice == it->target)
+			{
+				profit += (it->entry - lastPrice) * it->size;	
+				it = openPositions.erase(it);
+				std::cout << "hit target. profit = " << profit << std::endl;
+			}
+			else if (lastPrice == it->stoploss)
+			{
+				profit += (it->entry - lastPrice) * it->size;
+				it = openPositions.erase(it);
+				std::cout << "hit stoploss. profit = " << profit << std::endl;
+			}
+			else
+			{
+				it++;
+			}
+		}
 	}
 
 	void shortTrade()
@@ -159,11 +210,10 @@ public:
 		{
 			double targetGain = prevResistanceBar.close - prevSupportBar.close;
 			double error = lastPrice - prevSupportBar.close;
-			int toleranceFactor = 2;
+			double toleranceFactor = .3;
 
-			if (abs(error) < abs(targetGain / toleranceFactor))
+			if (abs(error) < abs(targetGain * toleranceFactor))
 			{
-				std::cout << "short at:" << lastPrice << std::endl;
 				double targetPrice = prevSupportBar.close - targetGain;
 				double stoploss = prevResistanceBar.close;
 
@@ -172,7 +222,23 @@ public:
 				newPosition.stoploss = stoploss;
 				newPosition.target = targetPrice;
 				newPosition.size = static_cast<int>(100 / abs(newPosition.entry - newPosition.stoploss));
-				openPositions.push(newPosition);
+				newPosition.entryTime = lastTick.time;
+				openPositions.push_back(newPosition);
+
+				if (openPositions.size() > 1)
+				{
+					std::cout << "nested positions" << std::endl;
+				}
+
+
+				std::cout << "new short " << std::endl;
+				std::cout << "entry: " << newPosition.entry << std::endl;
+				std::cout << "time: " << lastTick.time << std::endl;
+				std::cout << "size: " << newPosition.size << std::endl;
+				std::cout << "previous support: " << prevSupportBar.close << std::endl;
+				std::cout << "target: " << newPosition.target << std::endl;
+				std::cout << "stoploss: " << newPosition.stoploss << std::endl<<std::endl;
+
 			}
 		}
 	}
@@ -196,11 +262,11 @@ private:
 	//
 	CandleMaker minuteBarMaker;
 
-
 	//
 	// Trading data
 	//
 	double lastPrice;
+	Tick lastTick;
 
 	Bar prevBar;
 	Dir prevDir;
@@ -209,21 +275,19 @@ private:
 	Bar prevSupportBar;
 	Bar prevResistanceBar;
 
-	fstream logFile;
+	std::fstream logFile;
 
 	struct Position
 	{
-		bool operator<(const Position& other) const
-		{
-			return this->target < other.target;
-		}
 		double entry;
+		time_t entryTime;
 		double target;
 		double stoploss;
 		int size;
 	};
 
-	std::priority_queue <Position> openPositions;
+	std::list<Position> openPositions;
+	double profit;
 };
 
 #if SIM
@@ -237,9 +301,10 @@ int main(int argc, char** argv)
 	//TickRecorder record1("AMD");
 	//TickRecorder record2("NVDA");
 	//TickRecorder record3("AMZN");
+	
+	SupportBreakShort test("D:\\Users\\fobboyandy\\Desktop\\TheTradingMachine\\x64\\Debug\\Jul 19AMD.tickdat");
 
-	SupportBreakShort test("D:\\Users\\fobboyandy\\Desktop\\TheTradingMachine\\x64\\Debug\\Jul 13AMDTickData.tickdat");
-
+	std::cout << "done" << std::endl;
 	while (1)
 	{
 		Sleep(10);

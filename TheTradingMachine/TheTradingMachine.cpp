@@ -5,20 +5,16 @@
 
 #define TICK_CSV_ROW_SZ 12
 
-
-
-using namespace std;
-
 TheTradingMachine::IBInterfaceClient* TheTradingMachine::ibapi = nullptr;
 
-TheTradingMachine::TheTradingMachine(string input):realtime(true)
+TheTradingMachine::TheTradingMachine(std::string input) :realtime(true)
 {
 	//
 	// Check if it's a historical data input
 	//
-	if (input.find(".tickdat") != string::npos)
+	if (input.find(".tickdat") != std::string::npos)
 	{
-		tickDataFile.open(input, ios::in);
+		tickDataFile.open(input, std::ios::in);
 		realtime = false;
 		return;
 	}
@@ -40,7 +36,7 @@ TheTradingMachine::~TheTradingMachine()
 	}
 }
 
-void TheTradingMachine::requestTicks(function<void(const Tick& tick)> callback) 
+void TheTradingMachine::requestTicks(std::function<void(const Tick& tick)> callback) 
 {
 	//
 	// If running realtime, then we submit the request to ibapi
@@ -66,55 +62,55 @@ void TheTradingMachine::requestTicks(function<void(const Tick& tick)> callback)
 			exchangeIndex
 		};
 
-		string currLine;
+		std::string currLine;
 
 		//
 		// For each row in the csv, parse out the values in string
 		// and reconstruct the tick data.
 		//
-		vector<string> csvRow(TICK_CSV_ROW_SZ);
-		while (getline(tickDataFile, currLine))
+		std::vector<std::string> csvRow(TICK_CSV_ROW_SZ);
+		while (std::getline(tickDataFile, currLine))
 		{
-			stringstream s(currLine);
-			string token;
+			std::stringstream s(currLine);
+			std::string token;
 			Tick callbackTick;
 			//
 			// Get each token separated by , and reconstruct the tick
 			// with each csv row
 			//
-			for (size_t i = 0; getline(s, token, ','); i++)
+			for (size_t i = 0; std::getline(s, token, ','); i++)
 			{
 				switch (i)
 				{
 				case tickTypeIndex:
-					callbackTick.tickType = stoi(token);
+					callbackTick.tickType = std::stoi(token);
 					break;
 				case timeIndex:
 					callbackTick.time = static_cast<time_t>(stoll(token));
 					break;
 				case priceIndex:
-					callbackTick.price = stod(token);
+					callbackTick.price = std::stod(token);
 					break;
 				case sizeIndex:
-					callbackTick.size = stoi(token);
+					callbackTick.size = std::stoi(token);
 					break;
 				case canAutoExecuteIndex:
-					callbackTick.attributes.canAutoExecute = static_cast<bool>(stoi(token));
+					callbackTick.attributes.canAutoExecute = static_cast<bool>(std::stoi(token));
 					break;
 				case pastLimitIndex:
-					callbackTick.attributes.pastLimit = static_cast<bool>(stoi(token));
+					callbackTick.attributes.pastLimit = static_cast<bool>(std::stoi(token));
 					break;
 				case preOpenIndex:
-					callbackTick.attributes.preOpen = static_cast<bool>(stoi(token));
+					callbackTick.attributes.preOpen = static_cast<bool>(std::stoi(token));
 					break;
 				case unreportedIndex:
-					callbackTick.attributes.unreported = static_cast<bool>(stoi(token));
+					callbackTick.attributes.unreported = static_cast<bool>(std::stoi(token));
 					break;
 				case bidPastLowIndex:
-					callbackTick.attributes.bidPastLow = static_cast<bool>(stoi(token));
+					callbackTick.attributes.bidPastLow = static_cast<bool>(std::stoi(token));
 					break;
 				case askPastHIndexigh:
-					callbackTick.attributes.askPastHigh = static_cast<bool>(stoi(token));
+					callbackTick.attributes.askPastHigh = static_cast<bool>(std::stoi(token));
 					break;
 				case exchangeIndex:
 					callbackTick.exchange = token;
@@ -143,7 +139,7 @@ TheTradingMachine::IBInterfaceClient::IBInterfaceClient() :
 	}
 	else
 	{
-		messageProcess_ = new thread(&TheTradingMachine::IBInterfaceClient::messageProcess, this);
+		messageProcess_ = new std::thread(&TheTradingMachine::IBInterfaceClient::messageProcess, this);
 		while (!clientReady.load())
 		{
 			Sleep(10);
@@ -170,7 +166,7 @@ TheTradingMachine::IBInterfaceClient::~IBInterfaceClient()
 	}
 }
 
-void TheTradingMachine::IBInterfaceClient::requestRealTimeTicks(string ticker, function<void(const Tick&)> callback)
+void TheTradingMachine::IBInterfaceClient::requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback)
 {
 	client.requestRealTimeTicks(ticker, callback);
 }

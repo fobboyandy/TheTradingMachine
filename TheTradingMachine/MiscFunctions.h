@@ -2,9 +2,5 @@
 #include <vector>
 #include <string>
 
-using namespace std;
-
-void CsvReader(string filePath, vector<vector<string>>& csvVector);
-
-
-vector<double>& RunningAverage(const vector<double> input, int windowSize);
+void CsvReader(std::string filePath, std::vector<std::vector<std::string >>& csvVector);
+std::vector<double>& RunningAverage(const std::vector<double> input, int windowSize);

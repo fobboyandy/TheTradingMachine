@@ -375,10 +375,10 @@ void IBInterface::printBondContractDetailsMsg(const ContractDetails& contractDet
 	printContractDetailsSecIdList(contractDetails.secIdList);
 }
 
-void IBInterface::requestRealTimeMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback)
+void IBInterface::requestRealTimeMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback)
 {
 	OrderId oid;
-	string minString = " min";
+	std::string minString = " min";
 	if (timeFrameMinutes > 1)
 		minString.push_back('s');
 
@@ -402,7 +402,7 @@ void IBInterface::requestRealTimeMinuteBars(string ticker, int timeFrameMinutes,
 			createUsStockContract(ticker),
 			"", 
 			"1 D",
-			to_string(timeFrameMinutes) + minString,
+			std::to_string(timeFrameMinutes) + minString,
 			"TRADES", 
 			true, 
 			1, 
@@ -415,9 +415,9 @@ void IBInterface::requestRealTimeMinuteBars(string ticker, int timeFrameMinutes,
 
 }
 
-void IBInterface::requestHistoricalMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback)
+void IBInterface::requestHistoricalMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback)
 {
-	string minString = " min";
+	std::string minString = " min";
 	if (timeFrameMinutes > 1)
 		minString.push_back('s');
 	OrderId oid = m_orderId;
@@ -427,7 +427,7 @@ void IBInterface::requestHistoricalMinuteBars(string ticker, int timeFrameMinute
 		createUsStockContract(ticker),
 		"",
 		"1 D",
-		to_string(timeFrameMinutes) + minString,
+		std::to_string(timeFrameMinutes) + minString,
 		"TRADES",
 		true,
 		1,
@@ -438,7 +438,7 @@ void IBInterface::requestHistoricalMinuteBars(string ticker, int timeFrameMinute
 
 }
 
-void IBInterface::requestRealTimeTicks(string ticker, function<void(const Tick&)> callback)
+void IBInterface::requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback)
 {
 	OrderId oid;
 	if (stockTickOrderIds.find(ticker) != stockTickOrderIds.end())
@@ -467,7 +467,7 @@ void IBInterface::requestRealTimeTicks(string ticker, function<void(const Tick&)
 	stockTickCallbacks[oid].push_back(callback);
 }
 
-Contract IBInterface::createUsStockContract(string ticker)
+Contract IBInterface::createUsStockContract(std::string ticker)
 {
 	Contract c;
 	c.symbol = ticker;

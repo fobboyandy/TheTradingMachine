@@ -6,15 +6,13 @@
 #include <fstream>
 #include "IBInterface.h"
 
-using namespace std;
-
 class TheTradingMachine
 {
 
 public:
-	TheTradingMachine(string input);
+	TheTradingMachine(std::string input);
 	virtual ~TheTradingMachine();
-	void requestTicks(function<void(const Tick& tick)> callback);
+	void requestTicks(std::function<void(const Tick& tick)> callback);
 
 private:
 
@@ -23,34 +21,23 @@ private:
 	public:
 		IBInterfaceClient();
 		~IBInterfaceClient();
-		void requestRealTimeTicks(string ticker, function<void(const Tick&)> callback);
+		void requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback);
 
 	private:
 		IBInterface client;
-		thread* messageProcess_;
-		atomic<bool> threadRunning;
+		std::thread* messageProcess_;
+		std::atomic<bool> threadRunning;
 		void messageProcess(void);
-		atomic<bool> clientReady;
-		atomic<bool> clientValid;
+		std::atomic<bool> clientReady;
+		std::atomic<bool> clientValid;
 	};
 
-	class Position
-	{
-	public:
-		string ticker;
-		
-	private:
-		OrderId id;
-	};
-
-
-	fstream tickDataFile;
+	std::fstream tickDataFile;
 	bool realtime;
-	string ticker;
+	std::string ticker;
 	static IBInterfaceClient* ibapi;
 
 
 
 protected:
-
 };

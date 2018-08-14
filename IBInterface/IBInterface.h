@@ -18,8 +18,6 @@
 #include <functional>
 #include <mutex>
 
-using namespace std;
-
 const unsigned MAX_ATTEMPTS = 50;
 
 class EClientSocket;
@@ -168,9 +166,9 @@ private:
 
 public:
 
-	void requestRealTimeMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback);
-	void requestHistoricalMinuteBars(string ticker, int timeFrameMinutes, function<void(const Bar&)> callback);
-	void requestRealTimeTicks(string ticker, function<void(const Tick&)> callback);
+	void requestRealTimeMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback);
+	void requestHistoricalMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback);
+	void requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback);
 
 
 private:
@@ -179,7 +177,7 @@ private:
 	{
 		Bar callbackBar;
 		int timeFrame;
-		vector<function<void(const Bar&)>> callbackFunctions;
+		std::vector<std::function<void(const Bar&)>> callbackFunctions;
 	};
 
 	//
@@ -189,17 +187,17 @@ private:
 	// functions which need to be called.
 	//
 	// Real Time Minute Bars
-	unordered_map<string, unordered_map<int, OrderId>> stockRealTimeBarOrderIds;
-	unordered_map<OrderId, Callback> stockRealTimeBarCallbacks;
+	std::unordered_map<std::string, std::unordered_map<int, OrderId>> stockRealTimeBarOrderIds;
+	std::unordered_map<OrderId, Callback> stockRealTimeBarCallbacks;
 
 	// Historical Data
-	unordered_map<OrderId, function<void(const Bar&)>> historicalBarCallbacks;
+	std::unordered_map<OrderId, std::function<void(const Bar&)>> historicalBarCallbacks;
 
 	// Tick Data
-	unordered_map<string, OrderId> stockTickOrderIds;
-	unordered_map<OrderId, vector<function<void(const Tick&)>>> stockTickCallbacks;
+	std::unordered_map<std::string, OrderId> stockTickOrderIds;
+	std::unordered_map<OrderId, std::vector<std::function<void(const Tick&)>>> stockTickCallbacks;
 
-	Contract createUsStockContract(string ticker);
+	Contract createUsStockContract(std::string ticker);
 };
 
 #endif
