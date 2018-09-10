@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TheTradingMachine", "TheTradingMachine\TheTradingMachine.vcxproj", "{31B10F56-20CC-41F8-9A19-CE39244A7230}"
+	ProjectSection(ProjectDependencies) = postProject
+		{35F11259-7161-4001-8905-9A8CA2337215} = {35F11259-7161-4001-8905-9A8CA2337215}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IBInterface", "IBInterface\IBInterface.vcxproj", "{35F11259-7161-4001-8905-9A8CA2337215}"
 EndProject

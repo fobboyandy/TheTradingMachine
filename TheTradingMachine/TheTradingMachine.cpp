@@ -5,34 +5,41 @@
 
 #define TICK_CSV_ROW_SZ 12
 
-TheTradingMachine::IBInterfaceClient* TheTradingMachine::ibapi = nullptr;
-
-TheTradingMachine::TheTradingMachine(std::string input) :realtime(true)
+TheTradingMachine::TheTradingMachine(std::string input, IBInterfaceClient* ibApiPtr) :
+	realtime(false), 
+	ibapi(ibApiPtr)
 {
 	//
-	// Check if it's a historical data input
+	// Check if it's a recorded data input for backtesting
 	//
 	if (input.find(".tickdat") != std::string::npos)
 	{
-		tickDataFile.open(input, std::ios::in);
-		realtime = false;
-		return;
+		tickDataFile = new std::fstream(input, std::ios::in);
 	}
-	else if (ibapi == nullptr)
+	else if (ibapi != nullptr)
 	{
-		ibapi = new IBInterfaceClient;
+		//
+		// If input wasn't a tick historical file, and an ibapi was provided, then we can assume it's a ticker
+		// for real time trading.
+		//
+		ticker = new std::string(input);
+		realtime = true;
 	}
-	//
-	// If input wasn't a tick historical file, then it is a ticker
-	//
-	ticker = input;
+	else
+	{
+		throw std::runtime_error("Must provide an IB Interface or historical data!");
+	}
 }
 
 TheTradingMachine::~TheTradingMachine()
 {
-	if (realtime && tickDataFile.is_open())
+	if (tickDataFile != nullptr)
 	{
-		tickDataFile.close();
+		delete tickDataFile;
+	}
+	if (ticker != nullptr)
+	{
+		delete tickDataFile;
 	}
 }
 
@@ -44,10 +51,12 @@ void TheTradingMachine::requestTicks(std::function<void(const Tick& tick)> callb
 	//
 	if (realtime)
 	{
-		ibapi->requestRealTimeTicks(ticker, callback);
+		std::cout << "rt" << std::endl;
+		ibapi->requestRealTimeTicks(*ticker, callback);
 	}
 	else
 	{
+		std::cout << "from file" << std::endl;
 		enum CsvIndex {
 			tickTypeIndex = 0,
 			timeIndex,
@@ -63,13 +72,12 @@ void TheTradingMachine::requestTicks(std::function<void(const Tick& tick)> callb
 		};
 
 		std::string currLine;
-
 		//
 		// For each row in the csv, parse out the values in string
 		// and reconstruct the tick data.
 		//
 		std::vector<std::string> csvRow(TICK_CSV_ROW_SZ);
-		while (std::getline(tickDataFile, currLine))
+		while (std::getline(*tickDataFile, currLine))
 		{
 			std::stringstream s(currLine);
 			std::string token;
@@ -123,70 +131,97 @@ void TheTradingMachine::requestTicks(std::function<void(const Tick& tick)> callb
 	}
 }
 
-TheTradingMachine::IBInterfaceClient::IBInterfaceClient() :
-	messageProcess_(nullptr)
+IBInterfaceClient::IBInterfaceClient() :
+	messageProcess_(nullptr),
+	client(new IBInterface),
+	runThread(new std::atomic<bool>)
 {
 	std::cout << "Initializing IB Client" << std::endl;
-	clientReady.store(false);
-	clientValid.store(true);
-	threadRunning.store(false);
-	if (!client.Initialize())
+	runThread->store(false);
+
+	if (client != nullptr)
 	{
-	
-		std::cout << "Unable to connect to neither TWS nor IB Gateway!" << std::endl;
-		Sleep(10000);
-		clientValid.store(false);
-	}
-	else
-	{
-		messageProcess_ = new std::thread(&TheTradingMachine::IBInterfaceClient::messageProcess, this);
-		while (!clientReady.load())
+		//connect to ib api
+		if(client->Initialize())
 		{
-			Sleep(10);
+			messageProcess_ = new std::thread(&IBInterfaceClient::messageProcess, this);
+			//
+			// Wait for message handling thread to initialize
+			//
+			while (!runThread->load())
+			{
+				Sleep(10);
+			}
+			std::cout << "Successfully initialized IB Client." << std::endl;
+			
 		}
-		std::cout << "Successfully initialized IB Client." << std::endl;
+		else
+		{
+			std::cout << "Unable to connect to neither TWS nor IB Gateway!" << std::endl;
+			delete client;
+			client = nullptr;
+			Sleep(10000);
+		}
 	}
+
 }
 
-TheTradingMachine::IBInterfaceClient::~IBInterfaceClient()
+IBInterfaceClient::~IBInterfaceClient()
 {
-	if (threadRunning.load())
+	if (runThread != nullptr && runThread->load())
 	{
 		//
 		// Stop the thread
 		//
-		threadRunning.store(false);
+		runThread->store(false);
 		if (messageProcess_ != nullptr)
 		{
 			messageProcess_->join();
 			delete messageProcess_;
 			messageProcess_ = nullptr;
-			client.disconnect();
 		}
+		delete runThread;
+		runThread = nullptr;
+	}
+
+	if (client != nullptr)
+	{
+		client->disconnect();
+		delete client;
+		client = nullptr;
 	}
 }
 
-void TheTradingMachine::IBInterfaceClient::requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback)
+void IBInterfaceClient::requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback)
 {
-	client.requestRealTimeTicks(ticker, callback);
+	if (client != nullptr)
+	{
+		client->requestRealTimeTicks(ticker, callback);
+	}
 }
 
-void TheTradingMachine::IBInterfaceClient::messageProcess(void)
+void IBInterfaceClient::messageProcess(void)
 {
-
-	threadRunning.store(true);
-	if (client.isConnected())
+	if (client->isConnected())
 	{
 		std::cout << "IB Message Processing Thread has started." << std::endl;
+		runThread->store(true);
 	}
-
-	clientReady.store(true);
-	while (client.isConnected() && threadRunning.load())
+	//shouldnt need to check for nulls here because we can only get here if these are not nullptr
+	while (client->isConnected() && runThread->load())
 	{
-		client.processMessages();
+		client->processMessages();
 		Sleep(10);
 	}
-
-	clientValid.store(false);
 }
 
+THETRADINGMACHINEDLL IBInterfaceClient* InitializeIbInterfaceClient(void)
+{
+	static IBInterfaceClient* ibInterfaceClient = nullptr;
+	if (ibInterfaceClient == nullptr)
+	{
+		ibInterfaceClient = new IBInterfaceClient();
+	}
+
+	return ibInterfaceClient;
+}

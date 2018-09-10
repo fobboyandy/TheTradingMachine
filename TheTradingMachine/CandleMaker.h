@@ -5,8 +5,8 @@
 #include <memory>
 #include <thread>
 #include <mutex>
-#include "bar.h"
-#include "Tick.h"
+#include "../IBInterface/bar.h"
+#include "../IBInterface/Tick.h"
 
 class CandleMaker
 {

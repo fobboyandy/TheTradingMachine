@@ -22,3 +22,11 @@ x64/Debug/TheTradingMachine.exe
 *.exe
 *.ipch
 *.ipch
+*.db-shm
+*.pch
+*.dll
+*.exp
+*.lib
+*.pch
+*.lib
+*.lib
