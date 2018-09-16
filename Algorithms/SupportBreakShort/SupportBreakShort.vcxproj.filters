@@ -21,6 +21,9 @@
     <ClInclude Include="CandleMaker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="SupportBreakShortPlotData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SupportBreakShort.cpp">

@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <fstream>
-#include "CandleMaker.h"
 #include "..\..\TheTradingMachine\TheTradingMachine.h"
 
 #define NUM_SECONDS_DAY 86400

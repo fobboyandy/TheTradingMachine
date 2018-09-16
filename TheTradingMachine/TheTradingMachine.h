@@ -1,8 +1,8 @@
 #pragma once
 
-#include <queue>
-#include <vector>
+#include <thread>
 #include <memory>
+#include <functional>
 #include <atomic>
 #include <fstream>
 #include <string>
