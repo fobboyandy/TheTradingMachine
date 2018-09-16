@@ -6,6 +6,8 @@
 
 QT       += core gui widgets
 
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
+
 TARGET = TheTradingMachineApplication
 TEMPLATE = app
 
@@ -28,10 +30,12 @@ INCLUDEPATH += \
 
 SOURCES += \
         main.cpp \
-        thetradingmachineapplication.cpp
+        thetradingmachineapplication.cpp \
+    qcustomplot.cpp
 
 HEADERS += \
         thetradingmachineapplication.h \
+    qcustomplot.h
 
 FORMS += \
         thetradingmachineapplication.ui

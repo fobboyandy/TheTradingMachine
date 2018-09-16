@@ -7,14 +7,13 @@
 
 class IBInterfaceClient;
 typedef int (*InitAlgorithmFuncPtr)(std::string dataInput, IBInterfaceClient * ibInst);
-typedef bool (*GetPlotDataFuncPtr)(size_t instHandle, SupportBreakShortPlotData::PlotData** dataOut);
+typedef bool (*GetPlotDataFuncPtr)(int instHandle, SupportBreakShortPlotData::PlotData** dataOut);
 typedef bool (*CloseAlgorithmFuncPtr)(size_t instHandle);
 
 static HMODULE dllHndl = nullptr;
 static InitAlgorithmFuncPtr InitAlgorithm = nullptr;
 static GetPlotDataFuncPtr GetPlotData = nullptr;
 static CloseAlgorithmFuncPtr CloseAlgorithm = nullptr;
-
 
 bool LoadAlgorithm(LPCWSTR dllName)
 {
@@ -54,7 +53,20 @@ int main(int argc, char *argv[])
     {
         TheTradingMachineApplication w;
         w.show();
+
+        int amdSbsHandle = InitAlgorithm("D:\\Users\\fobboyandy\\Desktop\\TheTradingMachine\\outputfiles\\Jul 17AMD.tickdat", nullptr);
+        SupportBreakShortPlotData::PlotData* amdSbsPlotData = nullptr;
+        if(GetPlotData(amdSbsHandle, &amdSbsPlotData) && amdSbsPlotData != nullptr)
+        {
+            std::cout << "Got plot data" << std::endl;
+            w.initializePlotData(amdSbsPlotData);
+        }
+
         return a.exec();
+    }
+    else
+    {
+
     }
 
     return 1;

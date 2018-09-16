@@ -195,11 +195,11 @@ int InitAlgorithm(std::string dataInput, IBInterfaceClient * ibInst)
 	return static_cast<int>(SbsInsts.size() - 1);
 }
 
-bool GetPlotData(size_t instHandle, SupportBreakShortPlotData::PlotData** dataOut)
+bool GetPlotData(int instHandle, SupportBreakShortPlotData::PlotData** dataOut)
 {
 	try
 	{
-		*dataOut = SbsInsts.at(instHandle)->plotData;
+		*dataOut = SbsInsts.at(static_cast<size_t>(instHandle))->plotData;
 		return true;
 	}
 	catch (const std::out_of_range& oor)

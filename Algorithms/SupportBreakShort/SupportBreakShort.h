@@ -75,5 +75,5 @@ private:
 };
 
 extern "C" __declspec(dllexport) int InitAlgorithm(std::string dataInput, IBInterfaceClient * ibInst);
-extern "C" __declspec(dllexport) bool GetPlotData(size_t instHandle, SupportBreakShortPlotData::PlotData** dataOut);
+extern "C" __declspec(dllexport) bool GetPlotData(int instHandle, SupportBreakShortPlotData::PlotData** dataOut);
 extern "C" __declspec(dllexport) bool CloseAlgorithm(size_t instHandle);
