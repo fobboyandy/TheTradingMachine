@@ -38,11 +38,20 @@ TheTradingMachine::~TheTradingMachine()
 {
 	if (tickDataFile != nullptr)
 	{
+		tickDataFile->close();
 		delete tickDataFile;
+		tickDataFile = nullptr;
 	}
 	if (ticker != nullptr)
 	{
-		delete tickDataFile;
+		delete ticker;
+		ticker = nullptr;
+	}
+	if (readTickDataThread != nullptr)
+	{
+		readTickDataThread->join();
+		delete readTickDataThread;
+		readTickDataThread = nullptr;
 	}
 }
 
@@ -61,7 +70,7 @@ void TheTradingMachine::requestTicks(std::function<void(const Tick& tick)> callb
 	else
 	{
 		std::cout << "from file" << std::endl;
-		readTickDataThread = std::unique_ptr<std::thread>(new std::thread([&] {readTickFile(callback); }));
+		readTickDataThread = new std::thread([&] {readTickFile(callback); });
 	}
 }
 

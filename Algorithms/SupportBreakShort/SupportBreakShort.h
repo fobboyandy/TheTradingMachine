@@ -74,5 +74,6 @@ private:
 	double profit;
 };
 
-extern "C" __declspec(dllexport) bool InitAlgorithm(std::string dataInput, IBInterfaceClient* ibInst);
-extern "C" __declspec(dllexport) bool GetPlotData(PlotData** dataOut);
+extern "C" __declspec(dllexport) int InitAlgorithm(std::string dataInput, IBInterfaceClient * ibInst);
+extern "C" __declspec(dllexport) bool GetPlotData(size_t instHandle, SupportBreakShortPlotData::PlotData** dataOut);
+extern "C" __declspec(dllexport) bool CloseAlgorithm(size_t instHandle);
