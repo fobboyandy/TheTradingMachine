@@ -4,21 +4,13 @@
 #include <functional>
 #include <list>
 #include "CandleMaker.h"
-#include "..\..\TheTradingMachine\TheTradingMachine.h"
+#include "TheTradingMachine.h"
+#include "SupportBreakShortPlotData.h"
 
 #define NUM_SECONDS_DAY 86400
 #define RTH_SECONDS 48600
 #define RTH_START 48600
 #define RTH_END 72000
-
-// Plot data stored for the GUI to plot. Data is stored into vectors and it is
-// up to the GUI to keep manage the data. GUI must redefine the struct. This header
-// file is not meant to be shared.
-struct PlotData
-{
-	std::vector<Tick>* ticks;
-	std::vector<std::string>* action;
-};
 
 class SupportBreakShort : public TheTradingMachine
 {
@@ -33,7 +25,7 @@ public:
 	//
 	void coverTrade();
 	void shortTrade();
-	PlotData plotData;
+	SupportBreakShortPlotData::PlotData* plotData;
 
 private:
 	enum Dir

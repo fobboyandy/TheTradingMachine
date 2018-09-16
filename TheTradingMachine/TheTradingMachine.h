@@ -77,6 +77,8 @@ private:
 	bool realtime;
 	std::string* ticker;
 	IBInterfaceClient* ibapi;
+	std::unique_ptr<std::thread> readTickDataThread;
+	void readTickFile(std::function<void(const Tick& tick)> callback);
 };
 
 THETRADINGMACHINEDLL IBInterfaceClient* InitializeIbInterfaceClient(void);

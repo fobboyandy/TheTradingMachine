@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "..\..\TheTradingMachine\TheTradingMachine.h"
+#include "TheTradingMachine.h"
 
 #define NUM_SECONDS_DAY 86400
 #define RTH_SECONDS 48600

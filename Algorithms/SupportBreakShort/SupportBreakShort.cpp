@@ -10,7 +10,9 @@ SupportBreakShort::SupportBreakShort(std::string input, IBInterfaceClient* ibIns
 	profit(0)
 {
 
-	plotData.ticks = new std::vector<Tick>();
+	plotData = new SupportBreakShortPlotData::PlotData;
+	plotData->ticks = new std::vector<Tick>;
+	plotData->action = new std::vector<std::string>;
 
 	//
 	// Register callback functions for new ticks.
@@ -26,7 +28,7 @@ SupportBreakShort::~SupportBreakShort()
 void SupportBreakShort::tickHandler(const Tick & tick)
 {
 	//test by simply exporting the plot data
-	plotData.ticks->push_back(tick);
+	plotData->ticks->emplace_back(tick);
 
 
 	//Bar minuteBar;
@@ -192,11 +194,11 @@ bool InitAlgorithm(std::string dataInput, IBInterfaceClient * ibInst)
 	return true;
 }
 
-bool GetPlotData(PlotData** dataOut)
+bool GetPlotData(SupportBreakShortPlotData::PlotData** dataOut)
 {
 	if (SbsInst != nullptr)
 	{
-		*dataOut = &SbsInst->plotData;
+		*dataOut = SbsInst->plotData;
 		return true;
 	}
 	return false;
