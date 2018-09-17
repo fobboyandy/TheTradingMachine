@@ -1,8 +1,8 @@
 #pragma once
 
-#include <queue>
-#include <vector>
+#include <thread>
 #include <memory>
+#include <functional>
 #include <atomic>
 #include <fstream>
 #include <string>
@@ -77,6 +77,8 @@ private:
 	bool realtime;
 	std::string* ticker;
 	IBInterfaceClient* ibapi;
+	std::thread* readTickDataThread;
+	void readTickFile(std::function<void(const Tick& tick)> callback);
 };
 
 THETRADINGMACHINEDLL IBInterfaceClient* InitializeIbInterfaceClient(void);

@@ -1,6 +1,8 @@
+#include <memory>
+#include <windows.h>
 #include "SupportBreakShort.h"
 
-static SupportBreakShort* SbsInst = nullptr;
+static std::vector<std::unique_ptr<SupportBreakShort>> SbsInsts;
 
 SupportBreakShort::SupportBreakShort(std::string input, IBInterfaceClient* ibInst) :
 	TheTradingMachine(input, ibInst),
@@ -10,7 +12,9 @@ SupportBreakShort::SupportBreakShort(std::string input, IBInterfaceClient* ibIns
 	profit(0)
 {
 
-	plotData.ticks = new std::vector<Tick>();
+	plotData = new SupportBreakShortPlotData::PlotData;
+	plotData->ticks = new std::vector<Tick>;
+	plotData->action = new std::vector<std::string>;
 
 	//
 	// Register callback functions for new ticks.
@@ -26,7 +30,7 @@ SupportBreakShort::~SupportBreakShort()
 void SupportBreakShort::tickHandler(const Tick & tick)
 {
 	//test by simply exporting the plot data
-	plotData.ticks->push_back(tick);
+	plotData->ticks->push_back(tick);
 
 
 	//Bar minuteBar;
@@ -179,25 +183,46 @@ void SupportBreakShort::shortTrade()
 	}
 }
 
-bool InitAlgorithm(std::string dataInput, IBInterfaceClient * ibInst)
+// int represents a handle to the instantiation of the algorithm corresponding to the input ticker
+// this handle needs to be stored by the caller for destruction and calling algorithm
+// specific functions. This is necessary because multiple tickers can be running on the same
+// algorithm and we only have a single instance of the dll file
+int InitAlgorithm(std::string dataInput, IBInterfaceClient * ibInst)
 {
-	if(SbsInst == nullptr)
-	{
-		SbsInst = new SupportBreakShort(dataInput, ibInst);
-		if (SbsInst != nullptr)
-			return true;
-		return false;
-	}
-	
-	return true;
+	// each time we initialize an algorithm, the size increases by 1
+	// the size is returned as a handle to the call for future use
+	SbsInsts.push_back(std::unique_ptr<SupportBreakShort>(new SupportBreakShort(dataInput, ibInst)));
+	return static_cast<int>(SbsInsts.size() - 1);
 }
 
-bool GetPlotData(PlotData** dataOut)
+bool GetPlotData(int instHandle, SupportBreakShortPlotData::PlotData** dataOut)
 {
-	if (SbsInst != nullptr)
+	try
 	{
-		*dataOut = &SbsInst->plotData;
+		*dataOut = SbsInsts.at(static_cast<size_t>(instHandle))->plotData;
 		return true;
 	}
+	catch (const std::out_of_range& oor)
+	{
+		*dataOut = nullptr;
+		UNREFERENCED_PARAMETER(oor);
+	}
+
 	return false;
+}
+
+bool CloseAlgorithm(size_t instHandle)
+{
+	try 
+	{
+		SbsInsts.at(instHandle).reset();
+		return true;
+	}
+	catch (const std::out_of_range& oor)
+	{
+		UNREFERENCED_PARAMETER(oor);
+		//nothing
+	}
+	return false;
+
 }

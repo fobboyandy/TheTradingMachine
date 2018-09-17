@@ -1,13 +1,16 @@
 #include <iostream>
 #include <functional>
 #include <sstream>
+#include <thread>
 #include "TheTradingMachine.h"
+
 
 #define TICK_CSV_ROW_SZ 12
 
 TheTradingMachine::TheTradingMachine(std::string input, IBInterfaceClient* ibApiPtr) :
 	realtime(false), 
-	ibapi(ibApiPtr)
+	ibapi(ibApiPtr),
+	readTickDataThread(nullptr)
 {
 	//
 	// Check if it's a recorded data input for backtesting
@@ -35,11 +38,20 @@ TheTradingMachine::~TheTradingMachine()
 {
 	if (tickDataFile != nullptr)
 	{
+		tickDataFile->close();
 		delete tickDataFile;
+		tickDataFile = nullptr;
 	}
 	if (ticker != nullptr)
 	{
-		delete tickDataFile;
+		delete ticker;
+		ticker = nullptr;
+	}
+	if (readTickDataThread != nullptr)
+	{
+		readTickDataThread->join();
+		delete readTickDataThread;
+		readTickDataThread = nullptr;
 	}
 }
 
@@ -47,7 +59,8 @@ void TheTradingMachine::requestTicks(std::function<void(const Tick& tick)> callb
 {
 	//
 	// If running realtime, then we submit the request to ibapi
-	// Otherwise, we load the ticks from the file. 
+	// Otherwise, we load the ticks from the file and return the 
+	// data to the callback function using a thread
 	//
 	if (realtime)
 	{
@@ -57,77 +70,80 @@ void TheTradingMachine::requestTicks(std::function<void(const Tick& tick)> callb
 	else
 	{
 		std::cout << "from file" << std::endl;
-		enum CsvIndex {
-			tickTypeIndex = 0,
-			timeIndex,
-			priceIndex = 3,
-			sizeIndex,
-			canAutoExecuteIndex,
-			pastLimitIndex,
-			preOpenIndex,
-			unreportedIndex,
-			bidPastLowIndex,
-			askPastHIndexigh,
-			exchangeIndex
-		};
+		readTickDataThread = new std::thread([&] {readTickFile(callback); });
+	}
+}
 
-		std::string currLine;
+void TheTradingMachine::readTickFile(std::function<void(const Tick&tick)> callback)
+{
+	enum CsvIndex {
+		tickTypeIndex = 0,
+		timeIndex,
+		priceIndex = 3,
+		sizeIndex,
+		canAutoExecuteIndex,
+		pastLimitIndex,
+		preOpenIndex,
+		unreportedIndex,
+		bidPastLowIndex,
+		askPastHIndexigh,
+		exchangeIndex
+	};
+	std::string currLine;
+	std::vector<std::string> csvRow(TICK_CSV_ROW_SZ);
+	//
+	// For each row in the csv, parse out the values in string
+	// and reconstruct the tick data.
+	//
+	while (std::getline(*tickDataFile, currLine))
+	{
+		std::stringstream s(currLine);
+		std::string token;
+		Tick callbackTick;
 		//
-		// For each row in the csv, parse out the values in string
-		// and reconstruct the tick data.
+		// Get each token separated by , and reconstruct the tick
+		// with each csv row
 		//
-		std::vector<std::string> csvRow(TICK_CSV_ROW_SZ);
-		while (std::getline(*tickDataFile, currLine))
+		for (size_t i = 0; std::getline(s, token, ','); i++)
 		{
-			std::stringstream s(currLine);
-			std::string token;
-			Tick callbackTick;
-			//
-			// Get each token separated by , and reconstruct the tick
-			// with each csv row
-			//
-			for (size_t i = 0; std::getline(s, token, ','); i++)
+			switch (static_cast<CsvIndex>(i))
 			{
-				switch (i)
-				{
-				case tickTypeIndex:
-					callbackTick.tickType = std::stoi(token);
-					break;
-				case timeIndex:
-					callbackTick.time = static_cast<time_t>(stoll(token));
-					break;
-				case priceIndex:
-					callbackTick.price = std::stod(token);
-					break;
-				case sizeIndex:
-					callbackTick.size = std::stoi(token);
-					break;
-				case canAutoExecuteIndex:
-					callbackTick.attributes.canAutoExecute = static_cast<bool>(std::stoi(token));
-					break;
-				case pastLimitIndex:
-					callbackTick.attributes.pastLimit = static_cast<bool>(std::stoi(token));
-					break;
-				case preOpenIndex:
-					callbackTick.attributes.preOpen = static_cast<bool>(std::stoi(token));
-					break;
-				case unreportedIndex:
-					callbackTick.attributes.unreported = static_cast<bool>(std::stoi(token));
-					break;
-				case bidPastLowIndex:
-					callbackTick.attributes.bidPastLow = static_cast<bool>(std::stoi(token));
-					break;
-				case askPastHIndexigh:
-					callbackTick.attributes.askPastHigh = static_cast<bool>(std::stoi(token));
-					break;
-				case exchangeIndex:
-					callbackTick.exchange = token;
-					break;
-				}
+			case tickTypeIndex:
+				callbackTick.tickType = std::stoi(token);
+				break;
+			case timeIndex:
+				callbackTick.time = static_cast<time_t>(stoll(token));
+				break;
+			case priceIndex:
+				callbackTick.price = std::stod(token);
+				break;
+			case sizeIndex:
+				callbackTick.size = std::stoi(token);
+				break;
+			case canAutoExecuteIndex:
+				callbackTick.attributes.canAutoExecute = static_cast<bool>(std::stoi(token));
+				break;
+			case pastLimitIndex:
+				callbackTick.attributes.pastLimit = static_cast<bool>(std::stoi(token));
+				break;
+			case preOpenIndex:
+				callbackTick.attributes.preOpen = static_cast<bool>(std::stoi(token));
+				break;
+			case unreportedIndex:
+				callbackTick.attributes.unreported = static_cast<bool>(std::stoi(token));
+				break;
+			case bidPastLowIndex:
+				callbackTick.attributes.bidPastLow = static_cast<bool>(std::stoi(token));
+				break;
+			case askPastHIndexigh:
+				callbackTick.attributes.askPastHigh = static_cast<bool>(std::stoi(token));
+				break;
+			case exchangeIndex:
+				callbackTick.exchange = token;
+				break;
 			}
-
-			callback(callbackTick);	
 		}
+		callback(callbackTick);
 	}
 }
 
