@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
         TheTradingMachineApplication w;
         w.show();
 
-        int amdSbsHandle = InitAlgorithm("D:\\Users\\fobboyandy\\Desktop\\TheTradingMachine\\outputfiles\\Jul 17AMD.tickdat", nullptr);
+        int amdSbsHandle = InitAlgorithm("C:\\Users\\Andy\\Desktop\\TheTradingMachine\\outputfiles\\Jul 24AMD.tickdat", nullptr);
         SupportBreakShortPlotData::PlotData* amdSbsPlotData = nullptr;
         if(GetPlotData(amdSbsHandle, &amdSbsPlotData) && amdSbsPlotData != nullptr)
         {
@@ -63,10 +63,6 @@ int main(int argc, char *argv[])
         }
 
         return a.exec();
-    }
-    else
-    {
-
     }
 
     return 1;

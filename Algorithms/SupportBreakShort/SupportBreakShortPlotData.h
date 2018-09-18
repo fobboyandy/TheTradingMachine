@@ -11,6 +11,8 @@ namespace SupportBreakShortPlotData
 {
 	struct PlotData
 	{
+		std::mutex plotDataMtx;
+		std::condition_variable plotDataCv;
 		std::vector<Tick>* ticks;
 		std::vector<std::string>* action;
 	};

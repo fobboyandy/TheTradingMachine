@@ -31,11 +31,11 @@ INCLUDEPATH += \
 SOURCES += \
         main.cpp \
         thetradingmachineapplication.cpp \
-    qcustomplot.cpp
+        qcustomplot.cpp
 
 HEADERS += \
         thetradingmachineapplication.h \
-    qcustomplot.h
+        qcustomplot.h
 
 FORMS += \
         thetradingmachineapplication.ui

@@ -145,6 +145,7 @@ void TheTradingMachine::readTickFile(std::function<void(const Tick&tick)> callba
 		}
 		callback(callbackTick);
 	}
+	std::cout << "done reading from file" << std::endl;
 }
 
 IBInterfaceClient::IBInterfaceClient() :
