@@ -15,6 +15,7 @@
 // The Trading Machine
 #include "TheTradingMachine.h"
 #include "SupportBreakShort/SupportBreakShortPlotData.h"
+#include "thetradingmachinetabs.h"
 
 
 namespace Ui {
@@ -30,13 +31,6 @@ public:
     ~TheTradingMachineMainWindow();
     bool valid();
 
-
-    void operator delete(void * p)
-     {
-        static int i = 0;
-         qDebug(std::string(std::string("delete") + std::to_string(++i)).c_str());
-     }
-
 private slots:
     void newSession();
     void play();
@@ -44,6 +38,8 @@ private slots:
     void connectInteractiveBroker();
     void closeAll();
 
+
+//members
 private:
     Ui::TheTradingMachineMainWindow *ui;
 
@@ -51,14 +47,19 @@ private:
     static IBInterfaceClient* ibInterface_;
     static std::unordered_set<std::wstring> algorithmInstances_;
 
+    // dll interface
     std::wstring dllFile_;
     HMODULE dllHndl_;
-
     std::function<int(std::string, IBInterfaceClient*)> playAlgorithm;
     std::function<bool(int, SupportBreakShortPlotData::PlotData**)> getPlotData;
     std::function<bool(int)> stopAlgorithm;
 
     bool valid_;
+
+    void connectDefaulSlots();
+
+//functions
+    bool promptLoadAlgorithm();
 };
 
 #endif // THETRADINGMACHINEMAINWINDOW_H

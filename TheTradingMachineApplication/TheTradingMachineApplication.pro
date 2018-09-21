@@ -31,13 +31,15 @@ INCLUDEPATH += \
 SOURCES += \
         main.cpp \
         qcustomplot.cpp \
-    thetradingmachinemainwindow.cpp
+    thetradingmachinemainwindow.cpp \
+    thetradingmachinetabs.cpp
 
 HEADERS += \
         qcustomplot.h \
     thetradingmachinemainwindow.h \
     ../TheTradingMachine/TheTradingMachine.h \
-    ../Algorithms/SupportBreakShort/SupportBreakShortPlotData.h
+    ../Algorithms/SupportBreakShort/SupportBreakShortPlotData.h \
+    thetradingmachinetabs.h
 
 FORMS += \
     thetradingmachinemainwindow.ui

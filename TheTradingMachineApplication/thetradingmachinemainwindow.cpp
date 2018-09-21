@@ -3,6 +3,7 @@
 
 #include <Windows.h>
 #include <QString>
+#include <QInputDialog>
 
 #include <type_traits>
 
@@ -14,9 +15,12 @@ TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::TheTradingMachineMainWindow),
     dllHndl_(nullptr),
-    valid_(true)
+    valid_(false)
 {
     ui->setupUi(this);
+    // the tab was created in qt designer as a template. we will use the generated code
+    // to programmatically add/remove tabs
+    ui->tabWidget->removeTab(0);
     this->show();
 
     // We set this attribute because we don't keep a handle to each new window.
@@ -25,77 +29,12 @@ TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
     // the destructor and properly destruct the members.
     this->setAttribute(Qt::WA_DeleteOnClose);
 
-    connect(ui->actionNew_Session, &QAction::triggered, this, &TheTradingMachineMainWindow::newSession);
-
-    dllFile_ = QFileDialog::getOpenFileName(this, "Load Algorithm", QString(), "*.dll").toStdWString();
-
-    auto displayMessageBox = [&](const QString&& msg)
+    if(promptLoadAlgorithm())
     {
-        QMessageBox prompt;
-        prompt.setText(msg);
-        prompt.exec();
-    };
-
-    if(dllFile_.length() > 0)
-    {
-        if(algorithmInstances_.find(dllFile_) != algorithmInstances_.end())
-        {
-            displayMessageBox("A session with this algorithm is already open!");
-            valid_ = false;
-            return;
-        }
-
-        algorithmInstances_.insert(dllFile_);
-
-        dllHndl_ = LoadLibrary(dllFile_.c_str());
-
-        if(dllHndl_ != nullptr)
-        {
-            using PlayAlgorithmFnPtr = int (*)(std::string, IBInterfaceClient*);
-            using GetPlotDataFn = bool (*)(int, SupportBreakShortPlotData::PlotData**);
-            using StopAlgorithmFnPtr = bool (*)(int);
-
-            PlayAlgorithmFnPtr playAlgorithmProcAddr = reinterpret_cast<PlayAlgorithmFnPtr>(GetProcAddress(dllHndl_, "PlayAlgorithm"));
-            GetPlotDataFn getPlotDataProcAddr = reinterpret_cast<GetPlotDataFn>(GetProcAddress(dllHndl_, "GetPlotData"));
-            StopAlgorithmFnPtr stopAlgorithmProcAddr = reinterpret_cast<StopAlgorithmFnPtr>(GetProcAddress(dllHndl_, "StopAlgorithm"));
-
-            if(playAlgorithmProcAddr == nullptr ||
-               getPlotDataProcAddr == nullptr ||
-               stopAlgorithmProcAddr == nullptr)
-            {
-                displayMessageBox("Failed to load all the necessary functions from the provided algorithm.");
-                valid_ = false;
-            }
-
-            else
-            {
-                playAlgorithm = [=](std::string ticker, IBInterfaceClient* ibIntf)
-                {
-                    return playAlgorithmProcAddr(ticker, ibIntf);
-                };
-
-                getPlotData = [=](int inst, SupportBreakShortPlotData::PlotData** plotDataOut)
-                {
-                    return getPlotDataProcAddr(inst, plotDataOut);
-                };
-
-                stopAlgorithm = [=](int inst)
-                {
-                    return stopAlgorithmProcAddr(inst);
-                };
-                displayMessageBox("Succcessfully loaded the algorithm!");
-            }
-        }
-        else
-        {
-            displayMessageBox("Failed to load algorithm.");
-            valid_ = false;
-        }
-    }
-    else
-    {
-        displayMessageBox("An algorithm was not provided.");
-        valid_ = false;
+        // valid_ is used in promptLoadAlgorithm as if it was a local variable. setting here
+        // to increase readability
+        valid_ = true;
+        connectDefaulSlots();
     }
 }
 
@@ -115,13 +54,16 @@ void TheTradingMachineMainWindow::newSession()
     auto newWindowSession = new TheTradingMachineMainWindow;
     if(!newWindowSession->valid())
     {
+        //dont need to delete memory. handled by Qapplication
         newWindowSession->close();
     }
 }
 
 void TheTradingMachineMainWindow::play()
 {
+    TheTradingMachineTabs* newTab = new TheTradingMachineTabs(nullptr);
 
+    ui->tabWidget->addTab(newTab, QString());
 }
 
 void TheTradingMachineMainWindow::stopCurrentSession()
@@ -139,4 +81,79 @@ void TheTradingMachineMainWindow::closeAll()
 
 }
 
+void TheTradingMachineMainWindow::connectDefaulSlots()
+{
+    connect(ui->actionNew_Session, &QAction::triggered, this, &TheTradingMachineMainWindow::newSession);
+    connect(ui->actionPlay, &QAction::triggered, this, &TheTradingMachineMainWindow::play);
+}
 
+bool TheTradingMachineMainWindow::promptLoadAlgorithm()
+{
+    valid_ = false;
+    // capture by reference since this lambda only used in this scope
+    auto displayMessageBox = [&](const QString&& msg)
+    {
+        QMessageBox prompt;
+        prompt.setText(msg);
+        prompt.exec();
+    };
+
+    dllFile_ = QFileDialog::getOpenFileName(this, "Load Algorithm", QString(), "*.dll").toStdWString();
+    if(algorithmInstances_.find(dllFile_) != algorithmInstances_.end())
+    {
+        displayMessageBox("A session with this algorithm is already open!");
+    }
+    else if(dllFile_.length() > 0)
+    {
+        dllHndl_ = LoadLibrary(dllFile_.c_str());
+        if(dllHndl_ != nullptr)
+        {
+            using PlayAlgorithmFnPtr = int (*)(std::string, IBInterfaceClient*);
+            using GetPlotDataFn = bool (*)(int, SupportBreakShortPlotData::PlotData**);
+            using StopAlgorithmFnPtr = bool (*)(int);
+
+            PlayAlgorithmFnPtr playAlgorithmProcAddr = reinterpret_cast<PlayAlgorithmFnPtr>(GetProcAddress(dllHndl_, "PlayAlgorithm"));
+            GetPlotDataFn getPlotDataProcAddr = reinterpret_cast<GetPlotDataFn>(GetProcAddress(dllHndl_, "GetPlotData"));
+            StopAlgorithmFnPtr stopAlgorithmProcAddr = reinterpret_cast<StopAlgorithmFnPtr>(GetProcAddress(dllHndl_, "StopAlgorithm"));
+
+            //check if any functions are invalid
+            if(playAlgorithmProcAddr == nullptr ||
+               getPlotDataProcAddr == nullptr ||
+               stopAlgorithmProcAddr == nullptr)
+            {
+                displayMessageBox("Failed to load all the necessary functions from the provided algorithm.");
+            }
+            else
+            {
+                playAlgorithm = [=](std::string ticker, IBInterfaceClient* ibIntf)
+                {
+                    return playAlgorithmProcAddr(ticker, ibIntf);
+                };
+
+                getPlotData = [=](int inst, SupportBreakShortPlotData::PlotData** plotDataOut)
+                {
+                    return getPlotDataProcAddr(inst, plotDataOut);
+                };
+
+                stopAlgorithm = [=](int inst)
+                {
+                    return stopAlgorithmProcAddr(inst);
+                };
+                displayMessageBox("Succcessfully loaded the algorithm!");
+                // only mark the algorithm in the set if we succesfully loaded.
+                algorithmInstances_.insert(dllFile_);
+                valid_ = true;
+            }
+        }
+        else
+        {
+            displayMessageBox("Failed to load algorithm.");
+        }
+    }
+    else
+    {
+        displayMessageBox("An algorithm was not provided.");
+    }
+
+    return valid_;
+}
