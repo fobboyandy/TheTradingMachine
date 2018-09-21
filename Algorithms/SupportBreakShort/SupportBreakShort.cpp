@@ -187,7 +187,7 @@ void SupportBreakShort::shortTrade()
 // this handle needs to be stored by the caller for destruction and calling algorithm
 // specific functions. This is necessary because multiple tickers can be running on the same
 // algorithm and we only have a single instance of the dll file
-int InitAlgorithm(std::string dataInput, IBInterfaceClient * ibInst)
+int PlayAlgorithm(std::string dataInput, IBInterfaceClient * ibInst)
 {
 	// each time we initialize an algorithm, the size increases by 1
 	// the size is returned as a handle to the call for future use
@@ -211,7 +211,7 @@ bool GetPlotData(int instHandle, SupportBreakShortPlotData::PlotData** dataOut)
 	return false;
 }
 
-bool CloseAlgorithm(size_t instHandle)
+bool StopAlgorithm(size_t instHandle)
 {
 	try 
 	{

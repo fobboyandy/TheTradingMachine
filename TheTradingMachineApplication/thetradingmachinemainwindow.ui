@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>TheTradingMachineMainWindow</class>
+ <widget class="QMainWindow" name="TheTradingMachineMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>The Trading Machine</string>
+  </property>
+  <property name="toolButtonStyle">
+   <enum>Qt::ToolButtonTextBesideIcon</enum>
+  </property>
+  <property name="tabShape">
+   <enum>QTabWidget::Triangular</enum>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <property name="tabsClosable">
+       <bool>false</bool>
+      </property>
+      <property name="movable">
+       <bool>true</bool>
+      </property>
+      <property name="tabBarAutoHide">
+       <bool>false</bool>
+      </property>
+      <widget class="QWidget" name="tab">
+       <attribute name="title">
+        <string>Page</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="1" column="0">
+         <widget class="QScrollBar" name="horizontalScrollBar">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QCustomPlot" name="plot" native="true"/>
+        </item>
+        <item row="0" column="1">
+         <widget class="QScrollBar" name="verticalScrollBar">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionNew_Ticker"/>
+    <addaction name="actionDelete_Ticker"/>
+    <addaction name="actionStop"/>
+    <addaction name="separator"/>
+    <addaction name="actionConnect_Interactive_Broker"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuStudy">
+    <property name="title">
+     <string>Indicators</string>
+    </property>
+    <addaction name="actionSMA"/>
+    <addaction name="actionVolume"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuStudy"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionNew_Session"/>
+   <addaction name="actionPlay"/>
+   <addaction name="actionStop_Current_Session"/>
+   <addaction name="separator"/>
+   <addaction name="actionConnect"/>
+  </widget>
+  <action name="actionNew_Ticker">
+   <property name="text">
+    <string>New Session</string>
+   </property>
+  </action>
+  <action name="actionDelete_Ticker">
+   <property name="text">
+    <string>Play</string>
+   </property>
+  </action>
+  <action name="actionSMA">
+   <property name="text">
+    <string>SMA</string>
+   </property>
+  </action>
+  <action name="actionVolume">
+   <property name="text">
+    <string>Volume</string>
+   </property>
+  </action>
+  <action name="actionNew_Session">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/rec/resources/load.png</normaloff>:/rec/resources/load.png</iconset>
+   </property>
+   <property name="text">
+    <string>New Session</string>
+   </property>
+  </action>
+  <action name="actionStop_Current_Session">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/rec/resources/stop.png</normaloff>:/rec/resources/stop.png</iconset>
+   </property>
+   <property name="text">
+    <string>Stop Current Session</string>
+   </property>
+  </action>
+  <action name="actionPlay">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/rec/resources/play.png</normaloff>:/rec/resources/play.png</iconset>
+   </property>
+   <property name="text">
+    <string>Play</string>
+   </property>
+  </action>
+  <action name="actionStop">
+   <property name="text">
+    <string>Stop</string>
+   </property>
+  </action>
+  <action name="actionConnect">
+   <property name="icon">
+    <iconset resource="resource.qrc">
+     <normaloff>:/rec/resources/connect.png</normaloff>:/rec/resources/connect.png</iconset>
+   </property>
+   <property name="text">
+    <string>Connect</string>
+   </property>
+  </action>
+  <action name="actionConnect_Interactive_Broker">
+   <property name="text">
+    <string>Connect Interactive Broker</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header>qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources>
+  <include location="resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>

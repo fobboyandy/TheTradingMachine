@@ -30,17 +30,22 @@ INCLUDEPATH += \
 
 SOURCES += \
         main.cpp \
-        thetradingmachineapplication.cpp \
-        qcustomplot.cpp
+        qcustomplot.cpp \
+    thetradingmachinemainwindow.cpp
 
 HEADERS += \
-        thetradingmachineapplication.h \
-        qcustomplot.h
+        qcustomplot.h \
+    thetradingmachinemainwindow.h \
+    ../TheTradingMachine/TheTradingMachine.h \
+    ../Algorithms/SupportBreakShort/SupportBreakShortPlotData.h
 
 FORMS += \
-        thetradingmachineapplication.ui
+    thetradingmachinemainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    resource.qrc
