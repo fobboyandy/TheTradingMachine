@@ -15,7 +15,7 @@
 class SupportBreakShort : public TheTradingMachine
 {
 public:
-	explicit SupportBreakShort(std::string input, IBInterfaceClient* ibInst);
+	explicit SupportBreakShort(std::string input, IBInterfaceClient* ibInst = nullptr);
 	~SupportBreakShort();
 	void tickHandler(const Tick& tick);
 	//
@@ -25,7 +25,7 @@ public:
 	//
 	void coverTrade();
 	void shortTrade();
-	SupportBreakShortPlotData::PlotData* plotData;
+	PlotData* plotData;
 
 private:
 	enum Dir
@@ -77,6 +77,6 @@ private:
 extern "C"
 {
 	__declspec(dllexport) int PlayAlgorithm(std::string dataInput, IBInterfaceClient * ibInst);
-	__declspec(dllexport) bool GetPlotData(int instHandle, SupportBreakShortPlotData::PlotData** dataOut);
+	__declspec(dllexport) bool GetPlotData(int instHandle, PlotData** dataOut);
 	__declspec(dllexport) bool StopAlgorithm(size_t instHandle);
 }

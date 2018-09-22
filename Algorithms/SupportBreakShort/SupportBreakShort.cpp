@@ -12,7 +12,7 @@ SupportBreakShort::SupportBreakShort(std::string input, IBInterfaceClient* ibIns
 	profit(0)
 {
 
-	plotData = new SupportBreakShortPlotData::PlotData;
+	plotData = new PlotData;
 	plotData->ticks = new std::vector<Tick>;
 	plotData->action = new std::vector<std::string>;
 
@@ -195,7 +195,7 @@ int PlayAlgorithm(std::string dataInput, IBInterfaceClient * ibInst)
 	return static_cast<int>(SbsInsts.size() - 1);
 }
 
-bool GetPlotData(int instHandle, SupportBreakShortPlotData::PlotData** dataOut)
+bool GetPlotData(int instHandle, PlotData** dataOut)
 {
 	try
 	{

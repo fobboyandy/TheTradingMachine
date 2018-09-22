@@ -45,15 +45,14 @@ private:
     Ui::TheTradingMachineMainWindow *ui;
 
     // IB Connection. Only one allowed for all sessions
-    static std::unique_ptr<IBInterfaceClient> ibInterface_;
+    static IBInterfaceClient* ibInterface_;
     static std::unordered_set<std::wstring> algorithmInstances_;
-
 
     // dll interface
     std::wstring dllFile_;
     HMODULE dllHndl_;
     std::function<int(std::string, IBInterfaceClient*)> playAlgorithm;
-    std::function<bool(int, SupportBreakShortPlotData::PlotData**)> getPlotData;
+    std::function<bool(int, PlotData**)> getPlotData;
     std::function<bool(int)> stopAlgorithm;
 
     bool valid_;

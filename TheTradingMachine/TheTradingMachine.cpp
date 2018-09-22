@@ -10,7 +10,8 @@
 TheTradingMachine::TheTradingMachine(std::string input, IBInterfaceClient* ibApiPtr) :
 	realtime(false), 
 	ibapi(ibApiPtr),
-	readTickDataThread(nullptr)
+	readTickDataThread(nullptr),
+	runReadTickDataThread(nullptr)
 {
 	//
 	// Check if it's a recorded data input for backtesting
@@ -36,6 +37,35 @@ TheTradingMachine::TheTradingMachine(std::string input, IBInterfaceClient* ibApi
 
 TheTradingMachine::~TheTradingMachine()
 {
+	// make sure we try to stop the thread before we
+	// delete pointers because the thread might still be
+	// using them
+	if (readTickDataThread != nullptr)
+	{
+		//signal the current thread to stop running
+		if (runReadTickDataThread != nullptr)
+		{
+			runReadTickDataThread->store(false);
+		}
+
+		if (readTickDataThread->joinable())
+			readTickDataThread->join();
+
+		//delete the atomic variable only after the other thread has been joined
+		delete runReadTickDataThread;
+		runReadTickDataThread = nullptr;
+
+		delete readTickDataThread;
+		readTickDataThread = nullptr;
+	}
+
+	// independently delete this pointer in case the above case failed
+	if (runReadTickDataThread != nullptr)
+	{
+		delete runReadTickDataThread;
+		runReadTickDataThread = nullptr;
+	}
+
 	if (tickDataFile != nullptr)
 	{
 		tickDataFile->close();
@@ -47,12 +77,7 @@ TheTradingMachine::~TheTradingMachine()
 		delete ticker;
 		ticker = nullptr;
 	}
-	if (readTickDataThread != nullptr)
-	{
-		readTickDataThread->join();
-		delete readTickDataThread;
-		readTickDataThread = nullptr;
-	}
+
 }
 
 void TheTradingMachine::requestTicks(std::function<void(const Tick& tick)> callback) 
@@ -70,7 +95,10 @@ void TheTradingMachine::requestTicks(std::function<void(const Tick& tick)> callb
 	else
 	{
 		std::cout << "from file" << std::endl;
-		readTickDataThread = new std::thread([&] {readTickFile(callback); });
+		runReadTickDataThread = new std::atomic<bool>;
+		runReadTickDataThread->store(true);
+		readTickDataThread = new std::thread([=] {readTickFile(callback); });
+		//don't detach thread. we want control to be able to terminate it
 	}
 }
 
@@ -95,7 +123,7 @@ void TheTradingMachine::readTickFile(std::function<void(const Tick&tick)> callba
 	// For each row in the csv, parse out the values in string
 	// and reconstruct the tick data.
 	//
-	while (std::getline(*tickDataFile, currLine))
+	while (std::getline(*tickDataFile, currLine) && runReadTickDataThread->load())
 	{
 		std::stringstream s(currLine);
 		std::string token;
@@ -145,7 +173,10 @@ void TheTradingMachine::readTickFile(std::function<void(const Tick&tick)> callba
 		}
 		callback(callbackTick);
 	}
-	std::cout << "done reading from file" << std::endl;
+	if (runReadTickDataThread->load())
+		std::cout << "done reading from file" << std::endl;
+	else
+		std::cout << "terminated" << std::endl;
 }
 
 IBInterfaceClient::IBInterfaceClient() :

@@ -78,6 +78,7 @@ private:
 	std::string* ticker;
 	IBInterfaceClient* ibapi;
 	std::thread* readTickDataThread;
+	std::atomic<bool>* runReadTickDataThread;
 	void readTickFile(std::function<void(const Tick& tick)> callback);
 };
 

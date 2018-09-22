@@ -1,12 +1,15 @@
 #include "thetradingmachinetabs.h"
 
+//static class instantiation
+QTimer TheTradingMachineTabs::replotTimer_;
 
 TheTradingMachineTabs::TheTradingMachineTabs(QWidget* parent) :
     QWidget(parent),
     gridLayout_(nullptr),
     horizontalScrollBar_(nullptr),
     verticalScrollBar_(nullptr),
-    plot_(nullptr)
+    plot_(nullptr),
+    plotData_(nullptr)
 
 {
     this->setObjectName(QStringLiteral("tab"));
@@ -39,6 +42,30 @@ TheTradingMachineTabs::~TheTradingMachineTabs()
 QCustomPlot* TheTradingMachineTabs::plot()
 {
     return plot_;
+}
+
+void TheTradingMachineTabs::setPlotData(int instHandle, const PlotData* plotdata)
+{
+    plotData_ = plotdata;
+    algorithmHandle_ = instHandle;
+}
+
+void TheTradingMachineTabs::run()
+{
+    //starts the timer if it hasn't been started. otherwise
+    // it gets restarted
+    replotTimer_.start(0);
+    connect(&replotTimer_, &QTimer::timeout, this, &TheTradingMachineTabs::updatePlot);
+}
+
+int TheTradingMachineTabs::getHandle()
+{
+    return algorithmHandle_;
+}
+
+void TheTradingMachineTabs::updatePlot()
+{
+    //qDebug("timer fired");
 }
 
 
