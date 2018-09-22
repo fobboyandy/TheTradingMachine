@@ -35,6 +35,7 @@ private:
     // all tabs share a single qtimer. all tab replot slots are connected to this timer's signal
     static QTimer replotTimer_;
     const PlotData* plotData_;
+    std::vector<double>::size_type lastPlotDataIndex_;
 
 private slots:
     void updatePlot();

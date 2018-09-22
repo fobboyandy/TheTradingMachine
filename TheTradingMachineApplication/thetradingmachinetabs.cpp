@@ -9,7 +9,8 @@ TheTradingMachineTabs::TheTradingMachineTabs(QWidget* parent) :
     horizontalScrollBar_(nullptr),
     verticalScrollBar_(nullptr),
     plot_(nullptr),
-    plotData_(nullptr)
+    plotData_(nullptr),
+    lastPlotDataIndex_(0)
 
 {
     this->setObjectName(QStringLiteral("tab"));
@@ -66,6 +67,14 @@ int TheTradingMachineTabs::getHandle()
 void TheTradingMachineTabs::updatePlot()
 {
     //qDebug("timer fired");
+    const size_t maxNumPoints = 100;
+    const size_t currentPlotDataSz = plotData_->ticks->size();
+    for(size_t i = 0; i < 100 && lastPlotDataIndex_ < currentPlotDataSz; ++i, ++lastPlotDataIndex_)
+    {
+        plot_->graph()->addData(lastPlotDataIndex_, (*(plotData_->ticks))[lastPlotDataIndex_].price);
+    }
+    plot_->replot();
+    plot_->rescaleAxes();
 }
 
 
