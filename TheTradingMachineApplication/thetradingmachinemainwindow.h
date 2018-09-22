@@ -45,7 +45,7 @@ private:
     Ui::TheTradingMachineMainWindow *ui;
 
     // IB Connection. Only one allowed for all sessions
-    static std::shared_ptr<IBInterfaceClient> ibInterface_;    
+    static std::unique_ptr<IBInterfaceClient> ibInterface_;
     static std::unordered_set<std::wstring> algorithmInstances_;
 
 

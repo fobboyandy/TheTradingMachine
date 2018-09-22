@@ -8,7 +8,7 @@
 #include <type_traits>
 
 // instantiation of static members
-IBInterfaceClient* TheTradingMachineMainWindow::ibInterface_ = nullptr;
+std::unique_ptr<IBInterfaceClient> TheTradingMachineMainWindow::ibInterface_ = std::unique_ptr<IBInterfaceClient>(nullptr);
 std::unordered_set<std::wstring> TheTradingMachineMainWindow::algorithmInstances_;
 
 TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
@@ -65,6 +65,7 @@ void TheTradingMachineMainWindow::play()
     TheTradingMachineTabs* newTab = new TheTradingMachineTabs(nullptr);
     static int tabNum = 0;
     ui->tabWidget->addTab(newTab, std::to_string(tabNum++).c_str());
+    newTab->plot()->addGraph();
 }
 
 void TheTradingMachineMainWindow::stopCurrentSession()

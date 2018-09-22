@@ -54,3 +54,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     resource.qrc
+
+win32: LIBS += -L$$PWD/../x64/Debug/ -lTheTradingMachine
+
+INCLUDEPATH += $$PWD/../x64/Debug
+DEPENDPATH += $$PWD/../x64/Debug
