@@ -8,6 +8,7 @@
 #include <string>
 #include <functional>
 #include <unordered_set>
+#include <memory>
 
 // Windows
 #include <Windows.h>
@@ -37,15 +38,16 @@ private slots:
     void stopCurrentSession();
     void connectInteractiveBroker();
     void closeAll();
-
+    void closeTab(int tabIndex);
 
 //members
 private:
     Ui::TheTradingMachineMainWindow *ui;
 
     // IB Connection. Only one allowed for all sessions
-    static IBInterfaceClient* ibInterface_;
+    static std::shared_ptr<IBInterfaceClient> ibInterface_;    
     static std::unordered_set<std::wstring> algorithmInstances_;
+
 
     // dll interface
     std::wstring dllFile_;
@@ -56,10 +58,10 @@ private:
 
     bool valid_;
 
-    void connectDefaulSlots();
 
 //functions
     bool promptLoadAlgorithm();
+    void connectDefaulSlots();
 };
 
 #endif // THETRADINGMACHINEMAINWINDOW_H

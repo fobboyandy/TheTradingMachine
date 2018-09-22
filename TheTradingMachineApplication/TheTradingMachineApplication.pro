@@ -32,17 +32,20 @@ SOURCES += \
         main.cpp \
         qcustomplot.cpp \
     thetradingmachinemainwindow.cpp \
-    thetradingmachinetabs.cpp
+    thetradingmachinetabs.cpp \
+    playdialog.cpp
 
 HEADERS += \
         qcustomplot.h \
     thetradingmachinemainwindow.h \
     ../TheTradingMachine/TheTradingMachine.h \
     ../Algorithms/SupportBreakShort/SupportBreakShortPlotData.h \
-    thetradingmachinetabs.h
+    thetradingmachinetabs.h \
+    playdialog.h
 
 FORMS += \
-    thetradingmachinemainwindow.ui
+    thetradingmachinemainwindow.ui \
+    playdialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

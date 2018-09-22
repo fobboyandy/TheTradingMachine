@@ -3,36 +3,42 @@
 
 TheTradingMachineTabs::TheTradingMachineTabs(QWidget* parent) :
     QWidget(parent),
-    gridLayout(nullptr),
-    horizontalScrollBar(nullptr),
-    verticalScrollBar(nullptr),
-    plot(nullptr)
+    gridLayout_(nullptr),
+    horizontalScrollBar_(nullptr),
+    verticalScrollBar_(nullptr),
+    plot_(nullptr)
 
 {
     this->setObjectName(QStringLiteral("tab"));
-    gridLayout = new QGridLayout(this);
-    gridLayout->setObjectName(QStringLiteral("gridLayout"));
-    horizontalScrollBar = new QScrollBar(this);
-    horizontalScrollBar->setObjectName(QStringLiteral("horizontalScrollBar"));
-    horizontalScrollBar->setOrientation(Qt::Horizontal);
+    gridLayout_ = new QGridLayout(this);
+    gridLayout_->setObjectName(QStringLiteral("gridLayout"));
+    horizontalScrollBar_ = new QScrollBar(this);
+    horizontalScrollBar_->setObjectName(QStringLiteral("horizontalScrollBar"));
+    horizontalScrollBar_->setOrientation(Qt::Horizontal);
 
-    gridLayout->addWidget(horizontalScrollBar, 1, 0, 1, 1);
+    gridLayout_->addWidget(horizontalScrollBar_, 1, 0, 1, 1);
 
-    plot = new QCustomPlot(this);
-    plot->setObjectName(QStringLiteral("plot"));
+    plot_ = new QCustomPlot(this);
+    plot_->setObjectName(QStringLiteral("plot"));
 
-    gridLayout->addWidget(plot, 0, 0, 1, 1);
+    gridLayout_->addWidget(plot_, 0, 0, 1, 1);
 
-    verticalScrollBar = new QScrollBar(this);
-    verticalScrollBar->setObjectName(QStringLiteral("verticalScrollBar"));
-    verticalScrollBar->setOrientation(Qt::Vertical);
+    verticalScrollBar_ = new QScrollBar(this);
+    verticalScrollBar_->setObjectName(QStringLiteral("verticalScrollBar"));
+    verticalScrollBar_->setOrientation(Qt::Vertical);
 
-    gridLayout->addWidget(verticalScrollBar, 0, 1, 1, 1);
+    gridLayout_->addWidget(verticalScrollBar_, 0, 1, 1, 1);
 }
 
 TheTradingMachineTabs::~TheTradingMachineTabs()
 {
+    qDebug("destruct tab");
     //parent will free
+}
+
+QCustomPlot* TheTradingMachineTabs::plot()
+{
+    return plot_;
 }
 
 

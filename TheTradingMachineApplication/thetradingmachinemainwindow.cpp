@@ -40,8 +40,9 @@ TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
 
 TheTradingMachineMainWindow::~TheTradingMachineMainWindow()
 {
-    qDebug("destructing");
     delete ui;
+    if(dllHndl_ != nullptr)
+        FreeLibrary(dllHndl_);
 }
 
 bool TheTradingMachineMainWindow::valid()
@@ -62,8 +63,8 @@ void TheTradingMachineMainWindow::newSession()
 void TheTradingMachineMainWindow::play()
 {
     TheTradingMachineTabs* newTab = new TheTradingMachineTabs(nullptr);
-
-    ui->tabWidget->addTab(newTab, QString());
+    static int tabNum = 0;
+    ui->tabWidget->addTab(newTab, std::to_string(tabNum++).c_str());
 }
 
 void TheTradingMachineMainWindow::stopCurrentSession()
@@ -81,10 +82,21 @@ void TheTradingMachineMainWindow::closeAll()
 
 }
 
+void TheTradingMachineMainWindow::closeTab(int tabIndex)
+{
+    //also need to unregister the algorithm interactive broker as appropriate
+
+    qDebug(std::to_string(tabIndex).c_str());
+    auto tabPtr = ui->tabWidget->widget(tabIndex);
+    if(tabPtr != nullptr)
+        delete tabPtr;
+}
+
 void TheTradingMachineMainWindow::connectDefaulSlots()
 {
     connect(ui->actionNew_Session, &QAction::triggered, this, &TheTradingMachineMainWindow::newSession);
     connect(ui->actionPlay, &QAction::triggered, this, &TheTradingMachineMainWindow::play);
+    connect(ui->tabWidget, &QTabWidget::tabCloseRequested, this, &TheTradingMachineMainWindow::closeTab);
 }
 
 bool TheTradingMachineMainWindow::promptLoadAlgorithm()

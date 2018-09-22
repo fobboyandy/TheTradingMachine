@@ -18,11 +18,13 @@ public:
     TheTradingMachineTabs(const TheTradingMachineTabs&& other) = delete;
     TheTradingMachineTabs& operator=(const TheTradingMachineTabs& other) = delete;
 
+    QCustomPlot* plot(void);
+
 private:
-    QGridLayout *gridLayout;
-    QScrollBar *horizontalScrollBar;
-    QScrollBar *verticalScrollBar;
-    QCustomPlot *plot;
+    QGridLayout *gridLayout_;
+    QScrollBar *horizontalScrollBar_;
+    QScrollBar *verticalScrollBar_;
+    QCustomPlot *plot_;
 };
 
 #endif // THETRADINGMACHINETABS_H
