@@ -16,12 +16,11 @@ TickRecorder::TickRecorder(std::string t, IBInterfaceClient * ibapi) : TheTradin
 		return;
 	}
 
-	//remove the newline 
+	//remove the newline from TimeToString return value
 	std::string filename = TimeToString(time(nullptr)).substr(4, 6) + ticker + ".tickdat";
 	tickoutput.open(filename, std::ios::trunc | std::ios::out);
-
-	std::cout << "requesting ticks for " << ticker << std::endl;
-	requestTicks([this](const Tick& tick) {this->tickHandler(tick); });
+	
+	// all tick data is handled in the tickHandler function
 }
 
 TickRecorder::~TickRecorder()

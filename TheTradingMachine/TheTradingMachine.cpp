@@ -2,59 +2,28 @@
 #include <functional>
 #include <sstream>
 #include <thread>
+#include <assert.h>
 #include "TheTradingMachine.h"
-
 
 #define TICK_CSV_ROW_SZ 12
 
-TheTradingMachine::TheTradingMachine(std::string input, IBInterfaceClient* ibApiPtr) :
-	realtime(false), 
+TheTradingMachine::TheTradingMachine(std::string in, IBInterfaceClient* ibApiPtr) :
+	realtime(false),
+	input(new std::string(in)),
+	tickDataFile(nullptr),
 	ibapi(ibApiPtr),
 	readTickDataThread(nullptr),
-	runReadTickDataThread(nullptr)
+	runReadTickDataThread(new std::atomic<bool>(false)),
+	plotData(new std::shared_ptr<PlotData>(new PlotData))
 {
-	//
-	// Check if it's a recorded data input for backtesting
-	//
-	if (input.find(".tickdat") != std::string::npos)
-	{
-		tickDataFile = new std::fstream(input, std::ios::in);
-	}
-	else if (ibapi != nullptr)
-	{
-		//
-		// If input wasn't a tick historical file, and an ibapi was provided, then we can assume it's a ticker
-		// for real time trading.
-		//
-		ticker = new std::string(input);
-		realtime = true;
-	}
-	else
-	{
-		throw std::runtime_error("Must provide an IB Interface or historical data!");
-	}
+	
 }
 
 TheTradingMachine::~TheTradingMachine()
 {
-	// make sure we try to stop the thread before we
-	// delete pointers because the thread might still be
-	// using them
+	// stop should have been called so simply delete variables at this point
 	if (readTickDataThread != nullptr)
 	{
-		//signal the current thread to stop running
-		if (runReadTickDataThread != nullptr)
-		{
-			runReadTickDataThread->store(false);
-		}
-
-		if (readTickDataThread->joinable())
-			readTickDataThread->join();
-
-		//delete the atomic variable only after the other thread has been joined
-		delete runReadTickDataThread;
-		runReadTickDataThread = nullptr;
-
 		delete readTickDataThread;
 		readTickDataThread = nullptr;
 	}
@@ -72,37 +41,37 @@ TheTradingMachine::~TheTradingMachine()
 		delete tickDataFile;
 		tickDataFile = nullptr;
 	}
-	if (ticker != nullptr)
+
+	if (input != nullptr)
 	{
-		delete ticker;
-		ticker = nullptr;
+		delete input;
+		input = nullptr;
 	}
 
+	// this is a pointer to a shared pointer. only if the last owner
+	// deletes the shared pointer will it be destructed.
+	if (plotData != nullptr)
+	{
+		delete plotData;
+		plotData = nullptr;
+	}
 }
 
-void TheTradingMachine::requestTicks(std::function<void(const Tick& tick)> callback) 
+// this function is used to handle any base class tick handling before passing it
+// to derived algorithm for specific tick handling. eg. every algorithm must save
+// plot data before processing so it is handled here
+void TheTradingMachine::preTickHandler(const Tick & tick)
 {
-	//
-	// If running realtime, then we submit the request to ibapi
-	// Otherwise, we load the ticks from the file and return the 
-	// data to the callback function using a thread
-	//
-	if (realtime)
+	if (*plotData != nullptr)
 	{
-		std::cout << "rt" << std::endl;
-		ibapi->requestRealTimeTicks(*ticker, callback);
+		PlotData& plotDataRef = **plotData;
+		plotDataRef.ticks.push_back(tick);
 	}
-	else
-	{
-		std::cout << "from file" << std::endl;
-		runReadTickDataThread = new std::atomic<bool>;
-		runReadTickDataThread->store(true);
-		readTickDataThread = new std::thread([=] {readTickFile(callback); });
-		//don't detach thread. we want control to be able to terminate it
-	}
+	//algorithm specific callback
+	tickHandler(tick);
 }
 
-void TheTradingMachine::readTickFile(std::function<void(const Tick&tick)> callback)
+void TheTradingMachine::readTickFile(void)
 {
 	enum CsvIndex {
 		tickTypeIndex = 0,
@@ -171,12 +140,66 @@ void TheTradingMachine::readTickFile(std::function<void(const Tick&tick)> callba
 				break;
 			}
 		}
-		callback(callbackTick);
+		preTickHandler(callbackTick);
+		std::this_thread::yield();
 	}
 	if (runReadTickDataThread->load())
 		std::cout << "done reading from file" << std::endl;
 	else
 		std::cout << "terminated" << std::endl;
+}
+
+void TheTradingMachine::start(void)
+{
+	//
+	// Check if it's a recorded data input for backtesting
+	//
+	if (input->find(".tickdat") != std::string::npos)
+	{
+		tickDataFile = new std::fstream(*input, std::ios::in);
+		std::cout << "from file" << std::endl;
+		runReadTickDataThread->store(true);
+		readTickDataThread = new std::thread([this] 
+		{
+			// new thread that reads tick data from a file and calls derived
+			// classes' tickhandler (calls preTickHandler first)
+			readTickFile();
+		});
+	}
+	else if (ibapi != nullptr && ibapi->isReady())
+	{
+		//
+		// If input wasn't a tick historical file, and an ibapi was provided, then we can assume it's a ticker
+		// for real time trading.
+		//
+		realtime = true;
+		ibapi->requestRealTimeTicks(*input, [this](const Tick& tick) {preTickHandler(tick); });
+	}
+	else
+	{
+		throw std::runtime_error("Must provide a valid Interactive Broker Connection or historical data file!");
+	}
+}
+
+void TheTradingMachine::stop(void)
+{
+	// signal the file reading thread to stop running
+	if (readTickDataThread != nullptr)
+	{
+		assert(runReadTickDataThread != nullptr);
+		runReadTickDataThread->store(false);
+		if (readTickDataThread->joinable())
+			readTickDataThread->join();
+	}
+	else if (ibapi != nullptr && ibapi->isReady())
+	{
+		//make sure all positions are closed and unregister tick handlers
+	}
+	else
+	{
+		assert(false);
+	}
+
 }
 
 IBInterfaceClient::IBInterfaceClient() :
@@ -246,6 +269,13 @@ void IBInterfaceClient::requestRealTimeTicks(std::string ticker, std::function<v
 	{
 		client->requestRealTimeTicks(ticker, callback);
 	}
+}
+
+bool IBInterfaceClient::isReady(void)
+{
+	// runThread is true when the connection has been initialized and the 
+	// messaging thread has started
+	return runThread->load();
 }
 
 void IBInterfaceClient::messageProcess(void)

@@ -5,8 +5,10 @@
 #include <QtWidgets/QScrollBar>
 #include <QtWidgets/QGridLayout>
 #include <QTimer>
+#include <memory>
+#include <thread>
 #include "qcustomplot.h"
-#include "SupportBreakShort/SupportBreakShortPlotData.h"
+#include "TheTradingMachine.h"
 
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTabs : public QWidget
@@ -20,9 +22,7 @@ public:
     TheTradingMachineTabs(const TheTradingMachineTabs&& other) = delete;
     TheTradingMachineTabs& operator=(const TheTradingMachineTabs& other) = delete;
 
-    QCustomPlot* plot(void);
-    void setPlotData(int instHandle, const PlotData* plotdata);
-    void run();
+    void playPlotData(int instHandle, std::shared_ptr<PlotData> plotdata);
     int getHandle(void);
 
 private:
@@ -32,13 +32,16 @@ private:
     QCustomPlot *plot_;
     int algorithmHandle_;
 
-    // all tabs share a single qtimer. all tab replot slots are connected to this timer's signal
-    static QTimer replotTimer_;
-    const PlotData* plotData_;
+    std::shared_ptr<PlotData> plotData_;
     std::vector<double>::size_type lastPlotDataIndex_;
 
+    std::unique_ptr<std::thread> plotThread_;
+    std::atomic<bool> runPlotThread_;
+
+    QTimer replotTimer_;
+
 private slots:
-    void updatePlot();
+    void updatePlot(void);
 };
 
 #endif // THETRADINGMACHINETABS_H

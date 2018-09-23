@@ -1,8 +1,5 @@
 #include "thetradingmachinetabs.h"
 
-//static class instantiation
-QTimer TheTradingMachineTabs::replotTimer_;
-
 TheTradingMachineTabs::TheTradingMachineTabs(QWidget* parent) :
     QWidget(parent),
     gridLayout_(nullptr),
@@ -10,8 +7,8 @@ TheTradingMachineTabs::TheTradingMachineTabs(QWidget* parent) :
     verticalScrollBar_(nullptr),
     plot_(nullptr),
     plotData_(nullptr),
-    lastPlotDataIndex_(0)
-
+    lastPlotDataIndex_(0),
+    plotThread_(nullptr)
 {
     this->setObjectName(QStringLiteral("tab"));
     gridLayout_ = new QGridLayout(this);
@@ -24,6 +21,7 @@ TheTradingMachineTabs::TheTradingMachineTabs(QWidget* parent) :
 
     plot_ = new QCustomPlot(this);
     plot_->setObjectName(QStringLiteral("plot"));
+    plot_->addGraph();
 
     gridLayout_->addWidget(plot_, 0, 0, 1, 1);
 
@@ -32,31 +30,38 @@ TheTradingMachineTabs::TheTradingMachineTabs(QWidget* parent) :
     verticalScrollBar_->setOrientation(Qt::Vertical);
 
     gridLayout_->addWidget(verticalScrollBar_, 0, 1, 1, 1);
+    runPlotThread_.store(false);
 }
 
 TheTradingMachineTabs::~TheTradingMachineTabs()
 {
     qDebug("destruct tab");
-    //parent will free
+
+    //signal the thread to stop so we can join it back
+    runPlotThread_.store(false);
+    if(plotThread_ != nullptr)
+    {
+        if(plotThread_->joinable())
+        {
+            qDebug("joining");
+            plotThread_->join();
+
+            qDebug("joined");
+        }
+
+    }
 }
 
-QCustomPlot* TheTradingMachineTabs::plot()
+void TheTradingMachineTabs::playPlotData(int instHandle, std::shared_ptr<PlotData> plotdata)
 {
-    return plot_;
-}
-
-void TheTradingMachineTabs::setPlotData(int instHandle, const PlotData* plotdata)
-{
+    qDebug("playPlotData");
     plotData_ = plotdata;
     algorithmHandle_ = instHandle;
-}
+    runPlotThread_.store(true);
 
-void TheTradingMachineTabs::run()
-{
-    //starts the timer if it hasn't been started. otherwise
-    // it gets restarted
-    replotTimer_.start(0);
     connect(&replotTimer_, &QTimer::timeout, this, &TheTradingMachineTabs::updatePlot);
+    replotTimer_.start(0);
+    //plotThread_ = std::unique_ptr<std::thread>(new std::thread([this]{this->updatePlot();}));
 }
 
 int TheTradingMachineTabs::getHandle()
@@ -64,17 +69,16 @@ int TheTradingMachineTabs::getHandle()
     return algorithmHandle_;
 }
 
-void TheTradingMachineTabs::updatePlot()
+void TheTradingMachineTabs::updatePlot(void)
 {
-    //qDebug("timer fired");
-    const size_t maxNumPoints = 100;
-    const size_t currentPlotDataSz = plotData_->ticks->size();
-    for(size_t i = 0; i < 100 && lastPlotDataIndex_ < currentPlotDataSz; ++i, ++lastPlotDataIndex_)
+    const size_t plotDataSz = plotData_->ticks.size();
+    for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
     {
-        plot_->graph()->addData(lastPlotDataIndex_, (*(plotData_->ticks))[lastPlotDataIndex_].price);
+        plot_->graph()->addData(lastPlotDataIndex_, plotData_->ticks[lastPlotDataIndex_].price);
     }
     plot_->replot();
     plot_->rescaleAxes();
 }
+
 
 

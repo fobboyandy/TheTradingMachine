@@ -6,6 +6,10 @@
 #include <atomic>
 #include <fstream>
 #include <string>
+#include <mutex>
+#include <condition_variable>
+#include <vector>
+#include <queue>
 
 #ifdef EXPORTTHETRADINGMACHINEDLL
 #define THETRADINGMACHINEDLL __declspec(dllexport)
@@ -52,12 +56,26 @@ class IBInterfaceClient;
 class TheTradingMachine;
 #endif
 
+// plot data structure shared with the gui. plot data is stored in this format.
+// the gui is provided an address to the plot data struct and notified upon 
+// new data
+struct PlotData
+{
+	std::mutex plotDataMtx;
+	bool newData = false;
+	std::condition_variable plotDataCv;
+	std::queue<Tick> buffer;
+	std::vector<Tick> ticks;
+	std::vector<std::string> action;
+};
+
 class THETRADINGMACHINEDLL IBInterfaceClient
 {
 public:
-	IBInterfaceClient();
+	IBInterfaceClient();	
 	~IBInterfaceClient();
 	void requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback);
+	bool isReady(void);
 
 private:
 	IBInterface* client;
@@ -69,17 +87,24 @@ private:
 class THETRADINGMACHINEDLL TheTradingMachine
 {
 public:
-	explicit TheTradingMachine(std::string input, IBInterfaceClient* ibApiPtr = nullptr);
+	explicit TheTradingMachine(std::string in, IBInterfaceClient* ibApiPtr = nullptr);
 	virtual ~TheTradingMachine();
-	void requestTicks(std::function<void(const Tick& tick)> callback);
+	// we need to create a pointer of shared pointer because it is not safe to dll export stl objects
+	std::shared_ptr<PlotData>* plotData;
 private:
+	void preTickHandler(const Tick& tick);
 	std::fstream* tickDataFile;
 	bool realtime;
-	std::string* ticker;
+	std::string* input;
 	IBInterfaceClient* ibapi;
 	std::thread* readTickDataThread;
 	std::atomic<bool>* runReadTickDataThread;
-	void readTickFile(std::function<void(const Tick& tick)> callback);
+	void readTickFile(void);
+
+protected:
+	void start(void);
+	void stop(void);
+	virtual void tickHandler(const Tick& tick) = 0;
 };
 
 THETRADINGMACHINEDLL IBInterfaceClient* InitializeIbInterfaceClient(void);

@@ -1,6 +1,7 @@
 #include <memory>
 #include <windows.h>
 #include "SupportBreakShort.h"
+#include "TheTradingMachine.h"
 
 static std::vector<std::unique_ptr<SupportBreakShort>> SbsInsts;
 
@@ -11,27 +12,17 @@ SupportBreakShort::SupportBreakShort(std::string input, IBInterfaceClient* ibIns
 	previousStrength(NONE),
 	profit(0)
 {
-
-	plotData = new PlotData;
-	plotData->ticks = new std::vector<Tick>;
-	plotData->action = new std::vector<std::string>;
-
-	//
-	// Register callback functions for new ticks.
-	//
-	requestTicks([this](const Tick& tick) {this->tickHandler(tick); });
-
+	start();
 }
 
 SupportBreakShort::~SupportBreakShort()
 {
+	stop();
 }
 
 void SupportBreakShort::tickHandler(const Tick & tick)
 {
-	//test by simply exporting the plot data
-	plotData->ticks->push_back(tick);
-
+	// does nothing for now. all plot data is handled in base class
 
 	//Bar minuteBar;
 	//lastPrice = tick.price;
@@ -195,7 +186,7 @@ int PlayAlgorithm(std::string dataInput, IBInterfaceClient * ibInst)
 	return static_cast<int>(SbsInsts.size() - 1);
 }
 
-bool GetPlotData(int instHandle, PlotData** dataOut)
+bool GetPlotData(int instHandle, std::shared_ptr<PlotData>** dataOut)
 {
 	try
 	{

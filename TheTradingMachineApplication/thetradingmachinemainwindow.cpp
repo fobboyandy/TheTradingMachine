@@ -15,7 +15,8 @@ TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::TheTradingMachineMainWindow),
     dllHndl_(nullptr),
-    valid_(false)
+    valid_(false),
+    tabsCount_(0)
 {
     ui->setupUi(this);
     // the tab was created in qt designer as a template. we will use the generated code
@@ -70,19 +71,20 @@ void TheTradingMachineMainWindow::play()
     int algorithmHandle = playAlgorithm(fpTest, ibInterface_);
 
     // retrieve the plot data and assign it to the tab
-    PlotData* plotDataOut = nullptr;
+    std::shared_ptr<PlotData>* plotDataOut;
     if(getPlotData(algorithmHandle, &plotDataOut) && plotDataOut != nullptr)
     {
         // set up a tab for the current algorithm
         std::string tabname("Jul 17AMD");
         TheTradingMachineTabs* newTab = new TheTradingMachineTabs(nullptr);
-        newTab->setPlotData(algorithmHandle, plotDataOut);
-        newTab->plot()->addGraph();
-
         ui->tabWidget->addTab(newTab, tabname.c_str());
-
-        // start the plot
-        newTab->run();
+        qDebug("play");
+        //begin playing data
+        newTab->playPlotData(algorithmHandle, *plotDataOut);
+        // if this is the first tab opened
+        if(tabsCount_ == 0)
+            tabReplotTimer_.start(0);
+        ++tabsCount_;
     }
 }
 
@@ -113,6 +115,8 @@ void TheTradingMachineMainWindow::closeTab(int tabIndex)
         if(stopAlgorithm(algorithmHandle))
         {
             tabPtr->deleteLater(); //safer way of deleting an object since there may be pending events in the event queue
+            if(--tabsCount_ == 0)
+                tabReplotTimer_.stop();
             qDebug("Successfully ended algorithm");
         }
         else
@@ -120,7 +124,6 @@ void TheTradingMachineMainWindow::closeTab(int tabIndex)
             qDebug("Unable to stop algorithm!!!");
         }
     }
-
 }
 
 void TheTradingMachineMainWindow::connectDefaulSlots()
@@ -152,11 +155,11 @@ bool TheTradingMachineMainWindow::promptLoadAlgorithm()
         if(dllHndl_ != nullptr)
         {
             using PlayAlgorithmFnPtr = int (*)(std::string, IBInterfaceClient*);
-            using GetPlotDataFn = bool (*)(int, PlotData**);
+            using GetPlotDataFnPtr = bool (*)(int, std::shared_ptr<PlotData>**);
             using StopAlgorithmFnPtr = bool (*)(int);
 
             PlayAlgorithmFnPtr playAlgorithmProcAddr = reinterpret_cast<PlayAlgorithmFnPtr>(GetProcAddress(dllHndl_, "PlayAlgorithm"));
-            GetPlotDataFn getPlotDataProcAddr = reinterpret_cast<GetPlotDataFn>(GetProcAddress(dllHndl_, "GetPlotData"));
+            GetPlotDataFnPtr getPlotDataProcAddr = reinterpret_cast<GetPlotDataFnPtr>(GetProcAddress(dllHndl_, "GetPlotData"));
             StopAlgorithmFnPtr stopAlgorithmProcAddr = reinterpret_cast<StopAlgorithmFnPtr>(GetProcAddress(dllHndl_, "StopAlgorithm"));
 
             //check if any functions are invalid
@@ -173,7 +176,7 @@ bool TheTradingMachineMainWindow::promptLoadAlgorithm()
                     return playAlgorithmProcAddr(ticker, ibIntf);
                 };
 
-                getPlotData = [=](int inst, PlotData** plotDataOut)
+                getPlotData = [=](int inst, std::shared_ptr<PlotData>** plotDataOut)
                 {
                     return getPlotDataProcAddr(inst, plotDataOut);
                 };

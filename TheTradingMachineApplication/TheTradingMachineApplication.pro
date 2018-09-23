@@ -39,7 +39,6 @@ HEADERS += \
         qcustomplot.h \
     thetradingmachinemainwindow.h \
     ../TheTradingMachine/TheTradingMachine.h \
-    ../Algorithms/SupportBreakShort/SupportBreakShortPlotData.h \
     thetradingmachinetabs.h \
     playdialog.h
 

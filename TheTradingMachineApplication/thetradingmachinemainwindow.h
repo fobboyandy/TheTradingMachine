@@ -3,6 +3,7 @@
 
 // Qt
 #include <QMainWindow>
+#include <QTimer>
 
 // STL
 #include <string>
@@ -15,7 +16,6 @@
 
 // The Trading Machine
 #include "TheTradingMachine.h"
-#include "SupportBreakShort/SupportBreakShortPlotData.h"
 #include "thetradingmachinetabs.h"
 
 
@@ -52,11 +52,20 @@ private:
     std::wstring dllFile_;
     HMODULE dllHndl_;
     std::function<int(std::string, IBInterfaceClient*)> playAlgorithm;
-    std::function<bool(int, PlotData**)> getPlotData;
+    std::function<bool(int, std::shared_ptr<PlotData>**)> getPlotData;
     std::function<bool(int)> stopAlgorithm;
 
     bool valid_;
+    QTimer tabReplotTimer_;
 
+    // We need this variable to keep track of number of tabs
+    // so that we can stop the timer. Because we use deleteLater
+    // to close a tab, using the count() function from the tabs
+    // widget will be insufficient since we don't know when
+    // the delete occurs. Count() may return a value > 0 even though
+    // tabs are already scheduled for deletion. This would cause a false
+    // condition to be true and the timer never stops.
+    int tabsCount_;
 
 //functions
     bool promptLoadAlgorithm();

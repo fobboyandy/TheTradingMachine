@@ -5,7 +5,6 @@
 #include <list>
 #include "CandleMaker.h"
 #include "TheTradingMachine.h"
-#include "SupportBreakShortPlotData.h"
 
 #define NUM_SECONDS_DAY 86400
 #define RTH_SECONDS 48600
@@ -17,7 +16,6 @@ class SupportBreakShort : public TheTradingMachine
 public:
 	explicit SupportBreakShort(std::string input, IBInterfaceClient* ibInst = nullptr);
 	~SupportBreakShort();
-	void tickHandler(const Tick& tick);
 	//
 	// Check the openPositions for the top most position. The positions are 
 	// sorted by target prices since the highest target price are the positions
@@ -25,7 +23,6 @@ public:
 	//
 	void coverTrade();
 	void shortTrade();
-	PlotData* plotData;
 
 private:
 	enum Dir
@@ -72,11 +69,16 @@ private:
 
 	std::list<Position> openPositions;
 	double profit;
+
+protected:
+	// this function must be implemented because the base class automatically calls
+	// this pure virtual function to handle new ticks
+	void tickHandler(const Tick& tick) override;
 };
 
 extern "C"
 {
 	__declspec(dllexport) int PlayAlgorithm(std::string dataInput, IBInterfaceClient * ibInst);
-	__declspec(dllexport) bool GetPlotData(int instHandle, PlotData** dataOut);
+	__declspec(dllexport) bool GetPlotData(int instHandle, std::shared_ptr<PlotData>** dataOut);
 	__declspec(dllexport) bool StopAlgorithm(size_t instHandle);
 }

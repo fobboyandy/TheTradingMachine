@@ -152,7 +152,6 @@
   <ItemGroup>
     <ClInclude Include="CandleMaker.h" />
     <ClInclude Include="SupportBreakShort.h" />
-    <ClInclude Include="SupportBreakShortPlotData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CandleMaker.cpp" />
