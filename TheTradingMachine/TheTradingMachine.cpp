@@ -16,7 +16,7 @@ TheTradingMachine::TheTradingMachine(std::string in, IBInterfaceClient* ibApiPtr
 	runReadTickDataThread(new std::atomic<bool>(false)),
 	plotData(new std::shared_ptr<PlotData>(new PlotData))
 {
-	
+	(**plotData).finished = false;
 }
 
 TheTradingMachine::~TheTradingMachine()
@@ -62,13 +62,28 @@ TheTradingMachine::~TheTradingMachine()
 // plot data before processing so it is handled here
 void TheTradingMachine::preTickHandler(const Tick & tick)
 {
-	if (*plotData != nullptr)
-	{
-		PlotData& plotDataRef = **plotData;
-		plotDataRef.ticks.push_back(tick);
-	}
-	//algorithm specific callback
+	// first handle the tick algorithm specific callback
 	tickHandler(tick);
+
+	// in case if gui is sometimes slow and is holding the lock, we don't want to block this thread
+	// therefore, if we fail to retrieve the lock immediately, we push the data into a secondary buffer.
+	// when we successfully get the lock, we simply have to move the data into plotData. this will allow
+	// the algorithm to be more overall responsive .
+	std::unique_lock<std::mutex> lock((*plotData)->plotDataMtx, std::defer_lock);
+	PlotData& plotDataRef = **plotData;
+	//this is the only thread that accesses buffer no synchronization needed
+	plotDataRef.buffer.push(tick);
+	// if it was able to lock the lock, then unload everything from the buffer into the plotData
+	// the buffer should usually 
+	if (lock.try_lock())
+	{
+		while (!plotDataRef.buffer.empty())
+		{
+			plotDataRef.ticks.push_back(plotDataRef.buffer.front());
+			plotDataRef.buffer.pop();
+		}
+		lock.unlock();
+	}
 }
 
 void TheTradingMachine::readTickFile(void)
@@ -146,6 +161,17 @@ void TheTradingMachine::readTickFile(void)
 		std::cout << "done reading from file" << std::endl;
 	else
 		std::cout << "terminated" << std::endl;
+
+	// we need to indicate that this is the end of the algorithm. we need to block here to unload
+	// any remaining plot data left in the buffer
+	std::unique_lock<std::mutex> lock((*plotData)->plotDataMtx);
+
+	while (!(**plotData).buffer.empty())
+	{
+		(**plotData).ticks.push_back((**plotData).buffer.front());
+		(**plotData).buffer.pop();
+	}
+	(**plotData).finished = true;
 }
 
 void TheTradingMachine::start(void)

@@ -34,7 +34,7 @@ private:
 
     std::shared_ptr<PlotData> plotData_;
     std::vector<double>::size_type lastPlotDataIndex_;
-    QTimer replotTimer_;
+    QTimer* replotTimer_;
 
 private slots:
     void updatePlot(void);

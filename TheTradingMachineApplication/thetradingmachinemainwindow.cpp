@@ -15,8 +15,7 @@ TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::TheTradingMachineMainWindow),
     dllHndl_(nullptr),
-    valid_(false),
-    tabsCount_(0)
+    valid_(false)
 {
     ui->setupUi(this);
     // the tab was created in qt designer as a template. we will use the generated code
@@ -81,10 +80,6 @@ void TheTradingMachineMainWindow::play()
         qDebug("play");
         //begin playing data
         newTab->playPlotData(algorithmHandle, *plotDataOut);
-        // if this is the first tab opened
-        if(tabsCount_ == 0)
-            tabReplotTimer_.start(0);
-        ++tabsCount_;
     }
 }
 
@@ -115,9 +110,6 @@ void TheTradingMachineMainWindow::closeTab(int tabIndex)
         if(stopAlgorithm(algorithmHandle))
         {
             tabPtr->deleteLater(); //safer way of deleting an object since there may be pending events in the event queue
-            if(--tabsCount_ == 0)
-                tabReplotTimer_.stop();
-            qDebug("Successfully ended algorithm");
         }
         else
         {

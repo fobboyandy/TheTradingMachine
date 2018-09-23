@@ -7,7 +7,8 @@ TheTradingMachineTabs::TheTradingMachineTabs(QWidget* parent) :
     verticalScrollBar_(nullptr),
     plot_(nullptr),
     plotData_(nullptr),
-    lastPlotDataIndex_(0)
+    lastPlotDataIndex_(0),
+    replotTimer_(new QTimer(this))
 {
     this->setObjectName(QStringLiteral("tab"));
     gridLayout_ = new QGridLayout(this);
@@ -42,9 +43,8 @@ void TheTradingMachineTabs::playPlotData(int instHandle, std::shared_ptr<PlotDat
     plotData_ = plotdata;
     algorithmHandle_ = instHandle;
 
-    connect(&replotTimer_, &QTimer::timeout, this, &TheTradingMachineTabs::updatePlot);
-    replotTimer_.start(0);
-    //plotThread_ = std::unique_ptr<std::thread>(new std::thread([this]{this->updatePlot();}));
+    connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTabs::updatePlot);
+    replotTimer_->start(0);
 }
 
 int TheTradingMachineTabs::getHandle()
@@ -54,13 +54,28 @@ int TheTradingMachineTabs::getHandle()
 
 void TheTradingMachineTabs::updatePlot(void)
 {
-    const size_t plotDataSz = plotData_->ticks.size();
-    for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
+    std::unique_lock<std::mutex> lock(plotData_->plotDataMtx, std::defer_lock);
+
+    // if gui was running on a faster thread for some reason than the algorithm
+    // then simply let the gui do something else while the algorithm is operating
+    // on the plotData buffer. neither side has to block
+    if(lock.try_lock())
     {
-        plot_->graph()->addData(lastPlotDataIndex_, plotData_->ticks[lastPlotDataIndex_].price);
+        const size_t plotDataSz = plotData_->ticks.size();
+        bool finished = plotData_->finished;
+        lock.unlock();
+
+        for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
+        {
+            plot_->graph()->addData(lastPlotDataIndex_, plotData_->ticks[lastPlotDataIndex_].price);
+        }
+        plot_->replot();
+        plot_->rescaleAxes();
+        if(finished)
+        {
+            replotTimer_->stop();
+        }
     }
-    plot_->replot();
-    plot_->rescaleAxes();
 }
 
 

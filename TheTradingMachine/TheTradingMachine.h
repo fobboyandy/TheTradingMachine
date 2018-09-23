@@ -62,8 +62,7 @@ class TheTradingMachine;
 struct PlotData
 {
 	std::mutex plotDataMtx;
-	bool newData = false;
-	std::condition_variable plotDataCv;
+	bool finished;
 	std::queue<Tick> buffer;
 	std::vector<Tick> ticks;
 	std::vector<std::string> action;
