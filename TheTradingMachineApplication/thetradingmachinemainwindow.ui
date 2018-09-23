@@ -139,7 +139,7 @@
   <action name="actionNew_Session">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/resources/load.png</normaloff>:/rec/resources/load.png</iconset>
+     <normaloff>:/resource/resources/load.png</normaloff>:/resource/resources/load.png</iconset>
    </property>
    <property name="text">
     <string>New Session</string>
@@ -148,7 +148,7 @@
   <action name="actionStop_Current_Session">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/resources/stop.png</normaloff>:/rec/resources/stop.png</iconset>
+     <normaloff>:/resource/resources/stop.png</normaloff>:/resource/resources/stop.png</iconset>
    </property>
    <property name="text">
     <string>Stop Current Session</string>
@@ -157,7 +157,7 @@
   <action name="actionPlay">
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/resources/play.png</normaloff>:/rec/resources/play.png</iconset>
+     <normaloff>:/resource/resources/play.png</normaloff>:/resource/resources/play.png</iconset>
    </property>
    <property name="text">
     <string>Play</string>
@@ -174,7 +174,7 @@
    </property>
    <property name="icon">
     <iconset resource="resource.qrc">
-     <normaloff>:/rec/resources/connect.png</normaloff>:/rec/resources/connect.png</iconset>
+     <normaloff>:/resource/resources/connect.png</normaloff>:/resource/resources/connect.png</iconset>
    </property>
    <property name="text">
     <string>Connect</string>
