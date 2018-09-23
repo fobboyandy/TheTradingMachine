@@ -34,10 +34,6 @@ private:
 
     std::shared_ptr<PlotData> plotData_;
     std::vector<double>::size_type lastPlotDataIndex_;
-
-    std::unique_ptr<std::thread> plotThread_;
-    std::atomic<bool> runPlotThread_;
-
     QTimer replotTimer_;
 
 private slots:

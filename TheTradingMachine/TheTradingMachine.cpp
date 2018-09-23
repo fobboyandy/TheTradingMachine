@@ -141,7 +141,6 @@ void TheTradingMachine::readTickFile(void)
 			}
 		}
 		preTickHandler(callbackTick);
-		std::this_thread::yield();
 	}
 	if (runReadTickDataThread->load())
 		std::cout << "done reading from file" << std::endl;
@@ -188,6 +187,10 @@ void TheTradingMachine::stop(void)
 	{
 		assert(runReadTickDataThread != nullptr);
 		runReadTickDataThread->store(false);
+		// we have to join the function instead of detaching because the thread
+		// runs on a derived member class. therefore, we must guarantee to the
+		// caller that the thread has stopped and that the derived class can be 
+		// destroyed after this function returns
 		if (readTickDataThread->joinable())
 			readTickDataThread->join();
 	}

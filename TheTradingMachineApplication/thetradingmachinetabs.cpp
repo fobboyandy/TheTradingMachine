@@ -7,8 +7,7 @@ TheTradingMachineTabs::TheTradingMachineTabs(QWidget* parent) :
     verticalScrollBar_(nullptr),
     plot_(nullptr),
     plotData_(nullptr),
-    lastPlotDataIndex_(0),
-    plotThread_(nullptr)
+    lastPlotDataIndex_(0)
 {
     this->setObjectName(QStringLiteral("tab"));
     gridLayout_ = new QGridLayout(this);
@@ -30,26 +29,11 @@ TheTradingMachineTabs::TheTradingMachineTabs(QWidget* parent) :
     verticalScrollBar_->setOrientation(Qt::Vertical);
 
     gridLayout_->addWidget(verticalScrollBar_, 0, 1, 1, 1);
-    runPlotThread_.store(false);
 }
 
 TheTradingMachineTabs::~TheTradingMachineTabs()
 {
     qDebug("destruct tab");
-
-    //signal the thread to stop so we can join it back
-    runPlotThread_.store(false);
-    if(plotThread_ != nullptr)
-    {
-        if(plotThread_->joinable())
-        {
-            qDebug("joining");
-            plotThread_->join();
-
-            qDebug("joined");
-        }
-
-    }
 }
 
 void TheTradingMachineTabs::playPlotData(int instHandle, std::shared_ptr<PlotData> plotdata)
@@ -57,7 +41,6 @@ void TheTradingMachineTabs::playPlotData(int instHandle, std::shared_ptr<PlotDat
     qDebug("playPlotData");
     plotData_ = plotdata;
     algorithmHandle_ = instHandle;
-    runPlotThread_.store(true);
 
     connect(&replotTimer_, &QTimer::timeout, this, &TheTradingMachineTabs::updatePlot);
     replotTimer_.start(0);
