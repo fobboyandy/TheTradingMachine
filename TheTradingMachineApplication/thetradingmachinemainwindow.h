@@ -16,7 +16,7 @@
 
 // The Trading Machine
 #include "TheTradingMachine.h"
-#include "thetradingmachinetabs.h"
+#include "thetradingmachinetab.h"
 
 
 namespace Ui {
@@ -45,15 +45,13 @@ private:
     Ui::TheTradingMachineMainWindow *ui;
 
     // IB Connection. Only one allowed for all sessions
-    static IBInterfaceClient* ibInterface_;
+    static IBInterfaceClient* client_;
     static std::unordered_set<std::wstring> algorithmInstances_;
 
     // dll interface
     std::wstring dllFile_;
     HMODULE dllHndl_;
-    std::function<int(std::string, IBInterfaceClient*)> playAlgorithm;
-    std::function<bool(int, std::shared_ptr<PlotData>**)> getPlotData;
-    std::function<bool(int)> stopAlgorithm;
+    TheTradingMachineTab::AlgorithmApi api_;
 
     bool valid_;
 

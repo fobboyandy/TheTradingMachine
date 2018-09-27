@@ -8,7 +8,7 @@
 #include <type_traits>
 
 // instantiation of static members
-IBInterfaceClient* TheTradingMachineMainWindow::ibInterface_ = nullptr;
+IBInterfaceClient* TheTradingMachineMainWindow::client_ = nullptr;
 std::unordered_set<std::wstring> TheTradingMachineMainWindow::algorithmInstances_;
 
 TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
@@ -40,6 +40,7 @@ TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
 
 TheTradingMachineMainWindow::~TheTradingMachineMainWindow()
 {
+    qDebug("window destruct");
     delete ui;
     if(dllHndl_ != nullptr)
         FreeLibrary(dllHndl_);
@@ -62,25 +63,14 @@ void TheTradingMachineMainWindow::newSession()
 
 void TheTradingMachineMainWindow::play()
 {
-    //prompt user for the input method. real time or historical ticks
-    std::string fpTest("D:\\Users\\fobboyandy\\Desktop\\TheTradingMachine\\outputfiles\\Jul 17AMD.tickdat");
-    //if real time, check for ib connection
+    auto objects = ui->tabWidget->children();
 
-    // instantiate the algorithm for this ticker    
-    int algorithmHandle = playAlgorithm(fpTest, ibInterface_);
+    qDebug(std::to_string(objects.size()).c_str());
+    TheTradingMachineTab* newTab = new TheTradingMachineTab(api_, client_, nullptr);
+    ui->tabWidget->addTab(newTab, std::string("test").c_str());
 
-    // retrieve the plot data and assign it to the tab
-    std::shared_ptr<PlotData>* plotDataOut;
-    if(getPlotData(algorithmHandle, &plotDataOut) && plotDataOut != nullptr)
-    {
-        // set up a tab for the current algorithm
-        std::string tabname("Jul 17AMD");
-        TheTradingMachineTabs* newTab = new TheTradingMachineTabs(nullptr);
-        ui->tabWidget->addTab(newTab, tabname.c_str());
-        qDebug("play");
-        //begin playing data
-        newTab->playPlotData(algorithmHandle, *plotDataOut);
-    }
+    qDebug(std::to_string(objects.size()).c_str());
+
 }
 
 void TheTradingMachineMainWindow::stopCurrentSession()
@@ -100,29 +90,15 @@ void TheTradingMachineMainWindow::closeAll()
 
 void TheTradingMachineMainWindow::closeTab(int tabIndex)
 {
-    // todo: need to unregister the algorithm interactive broker as appropriate
-    // maybe this should be handled in the algorithm side
-    qDebug(std::to_string(tabIndex).c_str());
     auto tabPtr = ui->tabWidget->widget(tabIndex);
-    if(tabPtr != nullptr)
-    {
-        int algorithmHandle = reinterpret_cast<TheTradingMachineTabs*>(tabPtr)->getHandle();
-        if(stopAlgorithm(algorithmHandle))
-        {
-            tabPtr->deleteLater(); //safer way of deleting an object since there may be pending events in the event queue
-        }
-        else
-        {
-            qDebug("Unable to stop algorithm!!!");
-        }
-    }
+    tabPtr->deleteLater();
 }
 
 void TheTradingMachineMainWindow::connectDefaulSlots()
 {
     connect(ui->actionNew_Session, &QAction::triggered, this, &TheTradingMachineMainWindow::newSession);
     connect(ui->actionPlay, &QAction::triggered, this, &TheTradingMachineMainWindow::play);
-    connect(ui->tabWidget, &QTabWidget::tabCloseRequested, this, &TheTradingMachineMainWindow::closeTab);
+    //connect(ui->tabWidget, &QTabWidget::tabCloseRequested, this, &TheTradingMachineMainWindow::closeTab);
 }
 
 bool TheTradingMachineMainWindow::promptLoadAlgorithm()
@@ -163,17 +139,17 @@ bool TheTradingMachineMainWindow::promptLoadAlgorithm()
             }
             else
             {
-                playAlgorithm = [=](std::string ticker, IBInterfaceClient* ibIntf)
+                api_.playAlgorithm = [=](std::string ticker, IBInterfaceClient* ibIntf)
                 {
                     return playAlgorithmProcAddr(ticker, ibIntf);
                 };
 
-                getPlotData = [=](int inst, std::shared_ptr<PlotData>** plotDataOut)
+                api_.getPlotData = [=](int inst, std::shared_ptr<PlotData>** plotDataOut)
                 {
                     return getPlotDataProcAddr(inst, plotDataOut);
                 };
 
-                stopAlgorithm = [=](int inst)
+                api_.stopAlgorithm = [=](int inst)
                 {
                     return stopAlgorithmProcAddr(inst);
                 };
