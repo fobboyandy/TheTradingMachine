@@ -19,6 +19,7 @@ public:
         std::function<int(std::string, IBInterfaceClient*)> playAlgorithm;
         std::function<bool(int, std::shared_ptr<PlotData>**)> getPlotData;
         std::function<bool(int)> stopAlgorithm;
+        std::function<bool(void)> unloadAlgorithm;
     };
 
     TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceClient* client, QWidget* parent = nullptr);

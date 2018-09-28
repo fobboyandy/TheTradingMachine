@@ -40,6 +40,15 @@ TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
 
 TheTradingMachineMainWindow::~TheTradingMachineMainWindow()
 {
+    // if we are destructing main window, we need to unload the library
+    // right here. Therefore, we cannot defer the destruction of the tabs
+    // because TheTradingMachineTabs might try to access deleted memory
+    // (result of FreeLibrary)
+
+    // deleting children explicitly is not recommended but necessary here
+    // deleting the tabWidget will remove all the tabs
+    delete ui->tabWidget;
+
     qDebug("window destruct");
     delete ui;
     if(dllHndl_ != nullptr)
