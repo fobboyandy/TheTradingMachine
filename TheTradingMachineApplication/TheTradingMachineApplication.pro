@@ -32,15 +32,15 @@ SOURCES += \
         main.cpp \
         qcustomplot.cpp \
     thetradingmachinemainwindow.cpp \
-    thetradingmachinetabs.cpp \
-    playdialog.cpp
+    playdialog.cpp \
+    thetradingmachinetab.cpp
 
 HEADERS += \
         qcustomplot.h \
     thetradingmachinemainwindow.h \
     ../TheTradingMachine/TheTradingMachine.h \
-    thetradingmachinetabs.h \
-    playdialog.h
+    playdialog.h \
+    thetradingmachinetab.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \
