@@ -73,12 +73,8 @@ void TheTradingMachineMainWindow::newSession()
 void TheTradingMachineMainWindow::play()
 {
     auto objects = ui->tabWidget->children();
-
-    qDebug(std::to_string(objects.size()).c_str());
     TheTradingMachineTab* newTab = new TheTradingMachineTab(api_, client_, nullptr);
     ui->tabWidget->addTab(newTab, std::string("test").c_str());
-
-    qDebug(std::to_string(objects.size()).c_str());
 
 }
 
@@ -107,7 +103,7 @@ void TheTradingMachineMainWindow::connectDefaulSlots()
 {
     connect(ui->actionNew_Session, &QAction::triggered, this, &TheTradingMachineMainWindow::newSession);
     connect(ui->actionPlay, &QAction::triggered, this, &TheTradingMachineMainWindow::play);
-    //connect(ui->tabWidget, &QTabWidget::tabCloseRequested, this, &TheTradingMachineMainWindow::closeTab);
+    connect(ui->tabWidget, &QTabWidget::tabCloseRequested, this, &TheTradingMachineMainWindow::closeTab);
 }
 
 bool TheTradingMachineMainWindow::promptLoadAlgorithm()

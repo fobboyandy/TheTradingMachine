@@ -40,7 +40,6 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
 
 TheTradingMachineTab::~TheTradingMachineTab()
 {
-    qDebug("tab destruct");
     if(!api_.stopAlgorithm(algorithmHandle_))
     {
         qDebug("Unable to stop algorithm!!!");
