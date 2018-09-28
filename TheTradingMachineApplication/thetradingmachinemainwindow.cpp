@@ -42,7 +42,7 @@ TheTradingMachineMainWindow::~TheTradingMachineMainWindow()
 {
     // if we are destructing main window, we need to unload the library
     // right here. Therefore, we cannot defer the destruction of the tabs
-    // because TheTradingMachineTabs might try to access deleted memory
+    // because TheTradingMachineTabs will try to access deleted memory
     // (result of FreeLibrary)
 
     // deleting children explicitly is not recommended but necessary here
