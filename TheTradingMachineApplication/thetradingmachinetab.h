@@ -38,12 +38,17 @@ private:
 
 
     // plot data
+    std::shared_ptr<PlotData> plotData_;
+
+    // candle sticks data
     Bar currentCandle_;
     CandleMaker candleMaker_;
-    std::shared_ptr<PlotData> plotData_;
     std::vector<double>::size_type lastPlotDataIndex_;
-    QSharedPointer<QCPGraphDataContainer> candleDataContainer_;
-    QSharedPointer<QCPFinancial> candleData_;
+    QSharedPointer<QCPFinancialDataContainer> candleBarsDataContainer_;
+
+    // volume bars data
+    QSharedPointer<QCPBarsDataContainer> volumePositiveBarsContainer_;
+    QSharedPointer<QCPBarsDataContainer> volumeNegativeBarsContainer_;
 
     //algorithm api
     AlgorithmApi api_;
@@ -51,11 +56,13 @@ private:
     IBInterfaceClient* client_;
 
     //plot control
+    //candle sticks
     QCPAxisRect* candleSticksAxisRect_;
     QCPFinancial* candleSticksGraph_;
-
+    //volume
     QCPAxisRect* volumeAxisRect_;
-    QCPBars* volumeBarsGraph_;
+    QCPBars* volumePositiveBarsGraph_;
+    QCPBars* volumeNegativeBarsGraph_;
 
 
 private slots:
