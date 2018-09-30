@@ -9,6 +9,7 @@
 #include <thread>
 #include "qcustomplot.h"
 #include "TheTradingMachine.h"
+#include "CandleMaker.h"
 
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTab : public QWidget
@@ -33,14 +34,29 @@ public:
 private:
     QGridLayout *gridLayout_;
     QCustomPlot *plot_;
-    int algorithmHandle_;
-
-    std::shared_ptr<PlotData> plotData_;
-    std::vector<double>::size_type lastPlotDataIndex_;
     QTimer* replotTimer_;
 
+
+    // plot data
+    Bar currentCandle_;
+    CandleMaker candleMaker_;
+    std::shared_ptr<PlotData> plotData_;
+    std::vector<double>::size_type lastPlotDataIndex_;
+    QSharedPointer<QCPGraphDataContainer> candleDataContainer_;
+    QSharedPointer<QCPFinancial> candleData_;
+
+    //algorithm api
     AlgorithmApi api_;
+    int algorithmHandle_;
     IBInterfaceClient* client_;
+
+    //plot control
+    QCPAxisRect* candleSticksAxisRect_;
+    QCPFinancial* candleSticksGraph_;
+
+    QCPAxisRect* volumeAxisRect_;
+    QCPBars* volumeBarsGraph_;
+
 
 private slots:
     void updatePlot(void);
