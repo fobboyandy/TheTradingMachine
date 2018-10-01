@@ -64,7 +64,7 @@ private:
 
     //plot scale control
     bool autoScale_;
-    bool plotActive;
+    bool plotActive_;
 
 private slots:
     void updatePlot(void);

@@ -15,7 +15,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
     candleSticksGraph_(nullptr),
     volumeAxisRect_(nullptr),
     autoScale_(true),
-    plotActive(false)
+    plotActive_(false)
 {
     this->setObjectName(QStringLiteral("TheTradingMachineTab"));
     gridLayout_ = new QGridLayout(this);
@@ -114,7 +114,7 @@ void TheTradingMachineTab::updatePlot(void)
     if(lock.try_lock())
     {
         const size_t plotDataSz = plotData_->ticks.size();
-        plotActive = !plotData_->finished;
+        plotActive_ = !plotData_->finished;
         // according to stl, "Concurrently accessing or modifying different elements is safe."
         // as long as other thread is always pushing to the end and we are accessing the middle,
         // the rule is satisfied
@@ -142,7 +142,7 @@ void TheTradingMachineTab::updatePlot(void)
             volumeBarsGraph_->rescaleAxes();
         }
 
-        if(!plotActive)
+        if(!plotActive_)
         {
             replotTimer_->stop();
         }
