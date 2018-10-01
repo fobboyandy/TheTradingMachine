@@ -62,6 +62,10 @@ private:
     QCPAxisRect* volumeAxisRect_;
     QCPBars* volumeBarsGraph_;
 
+    //plot scale control
+    bool autoScale_;
+    bool plotActive;
+
 private slots:
     void updatePlot(void);
     void xAxisChanged(QCPRange range);

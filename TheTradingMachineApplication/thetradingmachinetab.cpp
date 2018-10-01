@@ -13,7 +13,9 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
     client_(client),
     candleSticksAxisRect_(nullptr),
     candleSticksGraph_(nullptr),
-    volumeAxisRect_(nullptr)
+    volumeAxisRect_(nullptr),
+    autoScale_(true),
+    plotActive(false)
 {
     this->setObjectName(QStringLiteral("TheTradingMachineTab"));
     gridLayout_ = new QGridLayout(this);
@@ -21,8 +23,8 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
     plot_ = new QCustomPlot(this);
     plot_->plotLayout()->clear(); //remove all layouts so we can start from scratch
     plot_->setObjectName(QStringLiteral("plot"));
-//    plot_->setInteraction(QCP::iRangeDrag);
-//    plot_->setInteraction(QCP::iRangeZoom);
+    plot_->setInteraction(QCP::iRangeDrag);
+    plot_->setInteraction(QCP::iRangeZoom);
     gridLayout_->addWidget(plot_, 0, 0, 1, 1);
 
     //set up Candle Stick Graph
@@ -72,6 +74,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
     // interconnect x axis ranges of main and bottom axis rects:
     connect(candleSticksAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), volumeAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
     connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), candleSticksAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
+    connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
 
     //prompt user for the input method. real time or historical ticks
     std::string fpTest("..\\outputfiles\\Jul 24AMD.tickdat");
@@ -111,7 +114,7 @@ void TheTradingMachineTab::updatePlot(void)
     if(lock.try_lock())
     {
         const size_t plotDataSz = plotData_->ticks.size();
-        bool finished = plotData_->finished;
+        plotActive = !plotData_->finished;
         // according to stl, "Concurrently accessing or modifying different elements is safe."
         // as long as other thread is always pushing to the end and we are accessing the middle,
         // the rule is satisfied
@@ -131,25 +134,38 @@ void TheTradingMachineTab::updatePlot(void)
                 volumeBarsDataContainer_->add(QCPBarsData(candleBarsDataContainer_->size(), currentCandle_.volume));
             }
         }
-        candleSticksGraph_->rescaleAxes();
-        volumeBarsGraph_->rescaleAxes();
-        plot_->replot();
 
-        if(finished)
+        if(autoScale_)
+        {
+            plot_->replot();
+            candleSticksGraph_->rescaleAxes();
+            volumeBarsGraph_->rescaleAxes();
+        }
+
+        if(!plotActive)
         {
             replotTimer_->stop();
-            connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
-            plot_->setInteraction(QCP::iRangeDrag);
-            plot_->setInteraction(QCP::iRangeZoom);
         }
     }
 }
 
 void TheTradingMachineTab::xAxisChanged(QCPRange range)
 {
-    UNREFERENCED_PARAMETER(range);
-    candleSticksGraph_->rescaleValueAxis(false, true);
-    volumeBarsGraph_->rescaleValueAxis(false, true);
+    std::string rangeStr = "lower: " + std::to_string(range.lower) + " upper: " + std::to_string(range.upper) + " graph size: " + std::to_string(candleSticksGraph_->data()->size());
+    qDebug(rangeStr.c_str());
+
+    if((floor(range.lower) <= 0 && ceil(range.upper) >= candleSticksGraph_->data()->size()))
+    {
+        autoScale_ = true;
+        qDebug("autoscaling on");
+    }
+    else
+    {
+        qDebug("autoscaling off");
+        autoScale_ = false;
+        candleSticksGraph_->rescaleValueAxis(false, true);
+        volumeBarsGraph_->rescaleValueAxis(false, true);
+    }
 }
 
 

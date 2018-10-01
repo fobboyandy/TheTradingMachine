@@ -155,7 +155,7 @@ void TheTradingMachine::readTickFile(void)
 				break;
 			}
 		}
-		preTickHandler(callbackTick);
+		preTickHandler(callbackTick); 
 	}
 	if (runReadTickDataThread->load())
 		std::cout << "done reading from file" << std::endl;
