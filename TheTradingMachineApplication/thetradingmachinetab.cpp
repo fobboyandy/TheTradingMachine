@@ -15,14 +15,14 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
     candleSticksGraph_(nullptr),
     volumeAxisRect_(nullptr)
 {
-    this->setObjectName(QStringLiteral("tab"));
+    this->setObjectName(QStringLiteral("TheTradingMachineTab"));
     gridLayout_ = new QGridLayout(this);
     gridLayout_->setObjectName(QStringLiteral("gridLayout"));
     plot_ = new QCustomPlot(this);
     plot_->plotLayout()->clear(); //remove all layouts so we can start from scratch
     plot_->setObjectName(QStringLiteral("plot"));
-    plot_->setInteraction(QCP::iRangeDrag);
-    plot_->setInteraction(QCP::iRangeZoom);
+//    plot_->setInteraction(QCP::iRangeDrag);
+//    plot_->setInteraction(QCP::iRangeZoom);
     gridLayout_->addWidget(plot_, 0, 0, 1, 1);
 
     //set up Candle Stick Graph
@@ -30,6 +30,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
     candleSticksAxisRect_->setRangeDrag(Qt::Horizontal);
     candleSticksAxisRect_->setRangeZoom(Qt::Horizontal);
     candleSticksGraph_ = new QCPFinancial(candleSticksAxisRect_->axis(QCPAxis::atBottom), candleSticksAxisRect_->axis(QCPAxis::atLeft));
+    candleSticksGraph_->setWidthType(QCPFinancial::WidthType::wtPlotCoords);
     // sentinel element so that we can always replace the previous element instead of adding an if statement
     // which will be evaluated every time
     candleBarsDataContainer_ = QSharedPointer<QCPFinancialDataContainer>(new QCPFinancialDataContainer);
@@ -46,19 +47,16 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
     volumeAxisRect_->axis(QCPAxis::atBottom)->grid()->setLayer("grid");
 
     // create two bar plottables, for positive (green) and negative (red) volume bars:
-    volumePositiveBarsGraph_ = new QCPBars(volumeAxisRect_->axis(QCPAxis::atBottom), volumeAxisRect_->axis(QCPAxis::atLeft));
-    volumeNegativeBarsGraph_ = new QCPBars(volumeAxisRect_->axis(QCPAxis::atBottom), volumeAxisRect_->axis(QCPAxis::atLeft));
-
-    volumePositiveBarsGraph_->setWidth(3600*4);
-    volumePositiveBarsGraph_->setPen(Qt::NoPen);
-    volumePositiveBarsGraph_->setBrush(QColor(100, 180, 110));
-    //volumeNegativeBarsGraph_->setWidth(3600*4);
-    volumeNegativeBarsGraph_->setPen(Qt::NoPen);
-    volumeNegativeBarsGraph_->setBrush(QColor(180, 90, 90));
-    volumePositiveBarsContainer_ = QSharedPointer<QCPBarsDataContainer>(new QCPBarsDataContainer);
-    volumeNegativeBarsContainer_ = QSharedPointer<QCPBarsDataContainer>(new QCPBarsDataContainer);
-    volumePositiveBarsGraph_->setData(volumePositiveBarsContainer_);
-    volumeNegativeBarsGraph_->setData(volumeNegativeBarsContainer_);
+    volumeBarsGraph_ = new QCPBars(volumeAxisRect_->axis(QCPAxis::atBottom), volumeAxisRect_->axis(QCPAxis::atLeft));
+    // set the width of each bar to match the candle sticks
+    volumeBarsGraph_->setWidth(candleSticksGraph_->width());
+    volumeBarsGraph_->setWidthType(QCPBars::WidthType::wtPlotCoords);
+    volumeBarsGraph_->setPen(Qt::NoPen);
+    volumeBarsGraph_->setBrush(QColor(30, 144, 255));
+    volumeBarsDataContainer_ = QSharedPointer<QCPBarsDataContainer>(new QCPBarsDataContainer);
+    //sentinel used to replace the last item without a non 0 condition
+    volumeBarsDataContainer_->add(QCPBarsData(0, 0));
+    volumeBarsGraph_->setData(volumeBarsDataContainer_);
     plot_->plotLayout()->addElement(1, 0, volumeAxisRect_);
 
     // bring bottom and main axis rect closer together:
@@ -71,9 +69,9 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
     candleSticksAxisRect_->setMarginGroup(QCP::msLeft|QCP::msRight, group);
     volumeAxisRect_->setMarginGroup(QCP::msLeft|QCP::msRight, group);
 
-//    // interconnect x axis ranges of main and bottom axis rects:
-//    connect(plot_->xAxis, SIGNAL(rangeChanged(QCPRange)), volumeAxisRect->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
-//    connect(volumeAxisRect->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), plot_->xAxis, SLOT(setRange(QCPRange)));
+    // interconnect x axis ranges of main and bottom axis rects:
+    connect(candleSticksAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), volumeAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
+    connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), candleSticksAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
 
     //prompt user for the input method. real time or historical ticks
     std::string fpTest("..\\outputfiles\\Jul 24AMD.tickdat");
@@ -92,8 +90,6 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
         connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
         replotTimer_->start(0);
     }
-
-    qDebug("constructor done");
 }
 
 TheTradingMachineTab::~TheTradingMachineTab()
@@ -125,20 +121,35 @@ void TheTradingMachineTab::updatePlot(void)
         {
             bool newCandle = candleMaker_.getClosingCandle(plotData_->ticks[lastPlotDataIndex_], currentCandle_);
 
+            //the key for the plots are currently the index, but should change to time later
             candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(candleBarsDataContainer_->size() - 1, currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
+            volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(volumeBarsDataContainer_->size() - 1, currentCandle_.volume));
 
             if(newCandle)
+            {
                 candleBarsDataContainer_->add(QCPFinancialData(candleBarsDataContainer_->size(), currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
+                volumeBarsDataContainer_->add(QCPBarsData(candleBarsDataContainer_->size(), currentCandle_.volume));
+            }
         }
-        plot_->replot();
         candleSticksGraph_->rescaleAxes();
+        volumeBarsGraph_->rescaleAxes();
+        plot_->replot();
 
         if(finished)
         {
             replotTimer_->stop();
+            connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
+            plot_->setInteraction(QCP::iRangeDrag);
+            plot_->setInteraction(QCP::iRangeZoom);
         }
     }
 }
 
+void TheTradingMachineTab::xAxisChanged(QCPRange range)
+{
+    UNREFERENCED_PARAMETER(range);
+    candleSticksGraph_->rescaleValueAxis(false, true);
+    volumeBarsGraph_->rescaleValueAxis(false, true);
+}
 
 

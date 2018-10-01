@@ -14,6 +14,7 @@
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTab : public QWidget
 {
+    Q_OBJECT
 public:
     struct AlgorithmApi
     {
@@ -36,7 +37,6 @@ private:
     QCustomPlot *plot_;
     QTimer* replotTimer_;
 
-
     // plot data
     std::shared_ptr<PlotData> plotData_;
 
@@ -47,8 +47,7 @@ private:
     QSharedPointer<QCPFinancialDataContainer> candleBarsDataContainer_;
 
     // volume bars data
-    QSharedPointer<QCPBarsDataContainer> volumePositiveBarsContainer_;
-    QSharedPointer<QCPBarsDataContainer> volumeNegativeBarsContainer_;
+    QSharedPointer<QCPBarsDataContainer> volumeBarsDataContainer_;
 
     //algorithm api
     AlgorithmApi api_;
@@ -61,12 +60,11 @@ private:
     QCPFinancial* candleSticksGraph_;
     //volume
     QCPAxisRect* volumeAxisRect_;
-    QCPBars* volumePositiveBarsGraph_;
-    QCPBars* volumeNegativeBarsGraph_;
-
+    QCPBars* volumeBarsGraph_;
 
 private slots:
     void updatePlot(void);
+    void xAxisChanged(QCPRange range);
 };
 
 #endif // THETRADINGMACHINETAB_H
