@@ -66,6 +66,12 @@ private:
     bool autoScale_;
     bool plotActive_;
 
+private:
+    void candleGraphSetup(void);
+    void volumeGraphSetup(void);
+    void spacingSetup(void);
+    void legendSetup(void);
+
 private slots:
     void updatePlot(void);
     void xAxisChanged(QCPRange range);
