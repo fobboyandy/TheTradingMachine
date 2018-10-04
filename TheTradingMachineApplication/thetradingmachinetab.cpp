@@ -29,6 +29,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
 
     candleGraphSetup();
     volumeGraphSetup();
+    legendSetup();
     spacingSetup();
 
     // interconnect x axis ranges of main and bottom axis rects:
@@ -79,6 +80,13 @@ void TheTradingMachineTab::candleGraphSetup()
     candleBarsDataContainer_->add(QCPFinancialData(0, 0, 0, 0, 0));
     candleSticksGraph_->setData(candleBarsDataContainer_);
     plot_->plotLayout()->addElement(0, 0, candleSticksAxisRect_);
+
+    progressWindow_ = new QCPLayoutInset();
+    auto title = new QCPTextElement(plot_);
+    title->setText("Title");
+    progressWindow_->addElement(title, Qt::AlignTop | Qt::AlignHCenter);
+    candleSticksAxisRect_->insetLayout()->addElement(progressWindow_, Qt::AlignTop | Qt::AlignHCenter);
+
 }
 
 void TheTradingMachineTab::volumeGraphSetup()
@@ -120,7 +128,10 @@ void TheTradingMachineTab::spacingSetup()
 
 void TheTradingMachineTab::legendSetup()
 {
-
+    candleGraphLegend_ = new QCPLegend();
+    candleSticksAxisRect_->insetLayout()->addElement(candleGraphLegend_, Qt::AlignTop | Qt::AlignRight);
+    plot_->setAutoAddPlottableToLegend(false);
+    candleGraphLegend_->addItem(new QCPPlottableLegendItem(candleGraphLegend_, candleSticksGraph_));
 }
 
 void TheTradingMachineTab::updatePlot(void)
@@ -153,9 +164,10 @@ void TheTradingMachineTab::updatePlot(void)
             }
         }
 
+        //replot should always be happening to update the drawing
+        plot_->replot();
         if(autoScale_)
         {
-            plot_->replot();
             candleSticksGraph_->rescaleAxes();
             volumeBarsGraph_->rescaleAxes();
         }

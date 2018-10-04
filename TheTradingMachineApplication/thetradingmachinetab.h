@@ -37,30 +37,27 @@ private:
     QCustomPlot *plot_;
     QTimer* replotTimer_;
 
-    // plot data
-    std::shared_ptr<PlotData> plotData_;
-
-    // candle sticks data
-    Bar currentCandle_;
-    CandleMaker candleMaker_;
-    std::vector<double>::size_type lastPlotDataIndex_;
-    QSharedPointer<QCPFinancialDataContainer> candleBarsDataContainer_;
-
-    // volume bars data
-    QSharedPointer<QCPBarsDataContainer> volumeBarsDataContainer_;
-
     //algorithm api
     AlgorithmApi api_;
     int algorithmHandle_;
     IBInterfaceClient* client_;
+    std::shared_ptr<PlotData> plotData_;
 
-    //plot control
-    //candle sticks
+    //inside candle graph rect
     QCPAxisRect* candleSticksAxisRect_;
     QCPFinancial* candleSticksGraph_;
-    //volume
+    QCPLegend* candleGraphLegend_;
+    QCPTextElement* candleGraphTitle;
+    QSharedPointer<QCPFinancialDataContainer> candleBarsDataContainer_;
+    Bar currentCandle_;
+    CandleMaker candleMaker_;
+    std::vector<double>::size_type lastPlotDataIndex_;
+    QCPLayoutInset* progressWindow_;
+
+    //inside volume graph rect
     QCPAxisRect* volumeAxisRect_;
     QCPBars* volumeBarsGraph_;
+    QSharedPointer<QCPBarsDataContainer> volumeBarsDataContainer_;
 
     //plot scale control
     bool autoScale_;
