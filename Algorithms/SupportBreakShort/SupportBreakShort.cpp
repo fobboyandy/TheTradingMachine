@@ -5,7 +5,7 @@
 
 static std::vector<std::unique_ptr<SupportBreakShort>> SbsInsts;
 
-SupportBreakShort::SupportBreakShort(std::string input, IBInterfaceClient* ibInst) :
+SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst) :
 	TheTradingMachine(input, ibInst),
 	minuteBarMaker(60),
 	prevDir(UNDEFINED),
@@ -178,7 +178,7 @@ void SupportBreakShort::shortTrade()
 // this handle needs to be stored by the caller for destruction and calling algorithm
 // specific functions. This is necessary because multiple tickers can be running on the same
 // algorithm and we only have a single instance of the dll file
-int PlayAlgorithm(std::string dataInput, IBInterfaceClient * ibInst)
+int PlayAlgorithm(std::string dataInput, std::shared_ptr<IBInterfaceClient> ibInst)
 {
 	// each time we initialize an algorithm, the size increases by 1
 	// the size is returned as a handle to the call for future use
@@ -186,16 +186,16 @@ int PlayAlgorithm(std::string dataInput, IBInterfaceClient * ibInst)
 	return static_cast<int>(SbsInsts.size() - 1);
 }
 
-bool GetPlotData(int instHandle, std::shared_ptr<PlotData>** dataOut)
+bool GetPlotData(int instHandle, std::shared_ptr<PlotData>* dataOut)
 {
 	try
 	{
-		*dataOut = SbsInsts.at(static_cast<size_t>(instHandle))->plotData;
-		return true;
+		*dataOut = SbsInsts.at(static_cast<size_t>(instHandle))->getPlotPlotData();
+		return (*dataOut != nullptr);
 	}
 	catch (const std::out_of_range& oor)
 	{
-		*dataOut = nullptr;
+		// don't need to set dataOut to nullptr. let the caller decide from the return status
 		UNREFERENCED_PARAMETER(oor);
 	}
 

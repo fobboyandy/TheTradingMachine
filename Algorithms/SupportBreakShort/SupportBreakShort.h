@@ -14,7 +14,7 @@
 class SupportBreakShort : public TheTradingMachine
 {
 public:
-	explicit SupportBreakShort(std::string input, IBInterfaceClient* ibInst = nullptr);
+	explicit SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst = std::shared_ptr<IBInterfaceClient>(nullptr));
 	~SupportBreakShort();
 	//
 	// Check the openPositions for the top most position. The positions are 
@@ -78,7 +78,7 @@ protected:
 
 extern "C"
 {
-	__declspec(dllexport) int PlayAlgorithm(std::string dataInput, IBInterfaceClient * ibInst);
-	__declspec(dllexport) bool GetPlotData(int instHandle, std::shared_ptr<PlotData>** dataOut);
+	__declspec(dllexport) int PlayAlgorithm(std::string dataInput, std::shared_ptr<IBInterfaceClient> ibInst = std::shared_ptr<IBInterfaceClient>(nullptr));
+	__declspec(dllexport) bool GetPlotData(int instHandle, std::shared_ptr<PlotData>* dataOut);
 	__declspec(dllexport) bool StopAlgorithm(size_t instHandle);
 }

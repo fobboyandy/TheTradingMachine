@@ -15,7 +15,8 @@
 #include <Windows.h>
 
 // The Trading Machine
-#include "TheTradingMachine.h"
+#include "../TheTradingMachine/TheTradingMachine.h"
+#include "../IBInterfaceClient/IBInterfaceClient.h"
 #include "thetradingmachinetab.h"
 
 
@@ -45,7 +46,7 @@ private:
     Ui::TheTradingMachineMainWindow *ui;
 
     // IB Connection. Only one allowed for all sessions
-    static IBInterfaceClient* client_;
+    static std::shared_ptr<IBInterfaceClient> client_;
     static std::unordered_set<std::wstring> algorithmInstances_;
 
     // dll interface
