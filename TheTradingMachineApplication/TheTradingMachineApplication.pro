@@ -33,7 +33,8 @@ SOURCES += \
         qcustomplot.cpp \
     thetradingmachinemainwindow.cpp \
     playdialog.cpp \
-    thetradingmachinetab.cpp
+    thetradingmachinetab.cpp \
+    CandleMaker.cpp
 
 HEADERS += \
         qcustomplot.h \
@@ -41,7 +42,8 @@ HEADERS += \
     ../TheTradingMachine/TheTradingMachine.h \
     playdialog.h \
     thetradingmachinetab.h \
-    ../IBInterfaceClient/IBInterfaceClient.h
+    ../IBInterfaceClient/IBInterfaceClient.h \
+    CandleMaker.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \

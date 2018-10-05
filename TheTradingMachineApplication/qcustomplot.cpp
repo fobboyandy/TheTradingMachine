@@ -30212,3 +30212,4 @@ QPen QCPItemBracket::mainPen() const
 /* end of 'src/items/item-bracket.cpp' */
 
 
+

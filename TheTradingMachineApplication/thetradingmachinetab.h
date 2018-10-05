@@ -10,10 +10,12 @@
 #include "qcustomplot.h"
 #include "../TheTradingMachine/TheTradingMachine.h"
 #include "../IBInterfaceClient/IBInterfaceClient.h"
+#include "CandleMaker.h"
 
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTab : public QWidget
 {
+    Q_OBJECT
 public:
     struct AlgorithmApi
     {
@@ -37,17 +39,43 @@ public:
 private:
     QGridLayout *gridLayout_;
     QCustomPlot *plot_;
-    int algorithmHandle_;
-
-    std::shared_ptr<PlotData> plotData_;
-    std::vector<double>::size_type lastPlotDataIndex_;
     QTimer* replotTimer_;
 
+    //algorithm api
     AlgorithmApi api_;
+    int algorithmHandle_;
     std::shared_ptr<IBInterfaceClient> client_;
+    std::shared_ptr<PlotData> plotData_;
+
+    //inside candle graph rect
+    QCPAxisRect* candleSticksAxisRect_;
+    QCPFinancial* candleSticksGraph_;
+    QCPLegend* candleGraphLegend_;
+    QCPTextElement* candleGraphTitle;
+    QSharedPointer<QCPFinancialDataContainer> candleBarsDataContainer_;
+    Bar currentCandle_;
+    CandleMaker candleMaker_;
+    std::vector<double>::size_type lastPlotDataIndex_;
+    QCPLayoutInset* progressWindow_;
+
+    //inside volume graph rect
+    QCPAxisRect* volumeAxisRect_;
+    QCPBars* volumeBarsGraph_;
+    QSharedPointer<QCPBarsDataContainer> volumeBarsDataContainer_;
+
+    //plot scale control
+    bool autoScale_;
+    bool plotActive_;
+
+private:
+    void candleGraphSetup(void);
+    void volumeGraphSetup(void);
+    void spacingSetup(void);
+    void legendSetup(void);
 
 private slots:
     void updatePlot(void);
+    void xAxisChanged(QCPRange range);
 };
 
 #endif // THETRADINGMACHINETAB_H

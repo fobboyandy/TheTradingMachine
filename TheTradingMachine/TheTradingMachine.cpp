@@ -215,7 +215,7 @@ void TheTradingMachine::TheTradingMachineImpl::readTickFile(void)
 				break;
 			}
 		}
-		preTickHandler(callbackTick);
+		preTickHandler(callbackTick); 
 	}
 	
 	//if threadcancellation was toggled, then it was forcefully terminated

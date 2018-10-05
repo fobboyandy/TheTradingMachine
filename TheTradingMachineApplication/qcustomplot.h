@@ -2428,6 +2428,7 @@ public:
   // non-virtual methods:
   void set(const QCPDataContainer<DataType> &data);
   void set(const QVector<DataType> &data, bool alreadySorted=false);
+  void set(int index, const DataType& data);
   void add(const QCPDataContainer<DataType> &data);
   void add(const QVector<DataType> &data, bool alreadySorted=false);
   void add(const DataType &data);
@@ -2661,6 +2662,13 @@ void QCPDataContainer<DataType>::set(const QVector<DataType> &data, bool already
   if (!alreadySorted)
     sort();
 }
+
+template<class DataType>
+void QCPDataContainer<DataType>::set(int index, const DataType& data)
+{
+    mData[index] = data;
+}
+
 
 /*! \overload
   
