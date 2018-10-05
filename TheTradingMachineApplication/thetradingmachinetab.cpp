@@ -20,7 +20,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     gridLayout_->addWidget(plot_, 0, 0, 1, 1);
 
     //prompt user for the input method. real time or historical ticks
-    std::string fpTest("D:\\Users\\fobboyandy\\Desktop\\TheTradingMachine\\outputfiles\\Jul 19AMD.tickdat");
+    std::string fpTest("..\\outputfiles\\Jul 19AMD.tickdat");
     //if real time, check for ib connection
 
     // instantiate the algorithm for this ticker
