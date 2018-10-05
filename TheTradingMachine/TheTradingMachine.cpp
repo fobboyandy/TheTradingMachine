@@ -1,6 +1,8 @@
 #include <iostream>
 #include <functional>
+#include <atomic>
 #include <sstream>
+#include <fstream>
 #include <thread>
 #include <assert.h>
 #include "TheTradingMachine.h"

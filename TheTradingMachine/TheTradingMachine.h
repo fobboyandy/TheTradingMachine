@@ -1,15 +1,10 @@
 #pragma once
 
-#include <thread>
 #include <memory>
-#include <functional>
-#include <atomic>
-#include <fstream>
 #include <string>
 #include <mutex>
-#include <condition_variable>
-#include <vector>
 #include <queue>
+#include <vector>
 #include "../IBInterface/Tick.h"
 #include "../IBInterface/bar.h"
 #include "../IBInterfaceClient/IBInterfaceClient.h"
