@@ -8,7 +8,8 @@
 #include <memory>
 #include <thread>
 #include "qcustomplot.h"
-#include "TheTradingMachine.h"
+#include "../TheTradingMachine/TheTradingMachine.h"
+#include "../IBInterfaceClient/IBInterfaceClient.h"
 
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTab : public QWidget
@@ -16,13 +17,16 @@ class TheTradingMachineTab : public QWidget
 public:
     struct AlgorithmApi
     {
-        std::function<int(std::string, IBInterfaceClient*)> playAlgorithm;
-        std::function<bool(int, std::shared_ptr<PlotData>**)> getPlotData;
+        using PlayAlgorithmFnPtr = int (*)(std::string, std::shared_ptr<IBInterfaceClient>);
+        using GetPlotDataFnPtr = bool (*)(int, std::shared_ptr<PlotData>*);
+        using StopAlgorithmFnPtr = bool (*)(int);
+
+        std::function<int(std::string, std::shared_ptr<IBInterfaceClient>)> playAlgorithm;
+        std::function<bool(int, std::shared_ptr<PlotData>*)> getPlotData;
         std::function<bool(int)> stopAlgorithm;
-        std::function<bool(void)> unloadAlgorithm;
     };
 
-    TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceClient* client, QWidget* parent = nullptr);
+    TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<IBInterfaceClient> client, QWidget* parent = nullptr);
     ~TheTradingMachineTab();
 
     // deleted functions because there is no need to duplicate a tab that looks like another
@@ -40,7 +44,7 @@ private:
     QTimer* replotTimer_;
 
     AlgorithmApi api_;
-    IBInterfaceClient* client_;
+    std::shared_ptr<IBInterfaceClient> client_;
 
 private slots:
     void updatePlot(void);

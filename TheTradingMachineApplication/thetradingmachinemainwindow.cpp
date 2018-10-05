@@ -8,7 +8,7 @@
 #include <type_traits>
 
 // instantiation of static members
-IBInterfaceClient* TheTradingMachineMainWindow::client_ = nullptr;
+std::shared_ptr<IBInterfaceClient> TheTradingMachineMainWindow::client_ = nullptr;
 std::unordered_set<std::wstring> TheTradingMachineMainWindow::algorithmInstances_;
 
 TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
@@ -127,13 +127,9 @@ bool TheTradingMachineMainWindow::promptLoadAlgorithm()
         dllHndl_ = LoadLibrary(dllFile_.c_str());
         if(dllHndl_ != nullptr)
         {
-            using PlayAlgorithmFnPtr = int (*)(std::string, IBInterfaceClient*);
-            using GetPlotDataFnPtr = bool (*)(int, std::shared_ptr<PlotData>**);
-            using StopAlgorithmFnPtr = bool (*)(int);
-
-            PlayAlgorithmFnPtr playAlgorithmProcAddr = reinterpret_cast<PlayAlgorithmFnPtr>(GetProcAddress(dllHndl_, "PlayAlgorithm"));
-            GetPlotDataFnPtr getPlotDataProcAddr = reinterpret_cast<GetPlotDataFnPtr>(GetProcAddress(dllHndl_, "GetPlotData"));
-            StopAlgorithmFnPtr stopAlgorithmProcAddr = reinterpret_cast<StopAlgorithmFnPtr>(GetProcAddress(dllHndl_, "StopAlgorithm"));
+            TheTradingMachineTab::AlgorithmApi::PlayAlgorithmFnPtr playAlgorithmProcAddr = reinterpret_cast<TheTradingMachineTab::AlgorithmApi::PlayAlgorithmFnPtr>(GetProcAddress(dllHndl_, "PlayAlgorithm"));
+            TheTradingMachineTab::AlgorithmApi::GetPlotDataFnPtr getPlotDataProcAddr = reinterpret_cast<TheTradingMachineTab::AlgorithmApi::GetPlotDataFnPtr>(GetProcAddress(dllHndl_, "GetPlotData"));
+            TheTradingMachineTab::AlgorithmApi::StopAlgorithmFnPtr stopAlgorithmProcAddr = reinterpret_cast<TheTradingMachineTab::AlgorithmApi::StopAlgorithmFnPtr>(GetProcAddress(dllHndl_, "StopAlgorithm"));
 
             //check if any functions are invalid
             if(playAlgorithmProcAddr == nullptr ||
@@ -144,12 +140,12 @@ bool TheTradingMachineMainWindow::promptLoadAlgorithm()
             }
             else
             {
-                api_.playAlgorithm = [=](std::string ticker, IBInterfaceClient* ibIntf)
+                api_.playAlgorithm = [=](std::string ticker, std::shared_ptr<IBInterfaceClient> ibIntf)
                 {
                     return playAlgorithmProcAddr(ticker, ibIntf);
                 };
 
-                api_.getPlotData = [=](int inst, std::shared_ptr<PlotData>** plotDataOut)
+                api_.getPlotData = [=](int inst, std::shared_ptr<PlotData>* plotDataOut)
                 {
                     return getPlotDataProcAddr(inst, plotDataOut);
                 };

@@ -1,6 +1,6 @@
 #include "thetradingmachinetab.h"
 
-TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceClient* client, QWidget* parent) :
+TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<IBInterfaceClient> client, QWidget* parent) :
     QWidget(parent),
     gridLayout_(nullptr),
     plot_(nullptr),
@@ -26,13 +26,8 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, IBInterfaceC
     // instantiate the algorithm for this ticker
     algorithmHandle_ = api_.playAlgorithm(fpTest, client_);
 
-    // retrieve the plot data and assign it to the tab
-    std::shared_ptr<PlotData>* plotDataOut = nullptr;
-    if(api_.getPlotData(algorithmHandle_, &plotDataOut) && plotDataOut != nullptr)
+    if(api_.getPlotData(algorithmHandle_, &plotData_) && plotData_ != nullptr)
     {
-        // plotData_ is a shared pointer and will now have ownership to the shared_ptr
-        // created from the dll
-        plotData_ = *plotDataOut;
         connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
         replotTimer_->start(0);
     }

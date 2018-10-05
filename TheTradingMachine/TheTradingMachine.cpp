@@ -7,70 +7,129 @@
 
 #define TICK_CSV_ROW_SZ 12
 
-TheTradingMachine::TheTradingMachine(std::string in, IBInterfaceClient* ibApiPtr) :
-	realtime(false),
-	input(new std::string(in)),
-	tickDataFile(nullptr),
-	ibapi(ibApiPtr),
-	readTickDataThread(nullptr),
-	runReadTickDataThread(new std::atomic<bool>(false)),
-	plotData(new std::shared_ptr<PlotData>(new PlotData))
+class TheTradingMachine::TheTradingMachineImpl
 {
-	(**plotData).finished = false;
+public:
+	explicit TheTradingMachineImpl(TheTradingMachine* parent, std::string in, std::shared_ptr<IBInterfaceClient> ibApiPtr);
+	~TheTradingMachineImpl();
+	std::shared_ptr<PlotData> plotData;
+
+	void start(void);
+	void stop(void);
+
+private:
+
+	enum class Mode
+	{
+		REALTIME,
+		PLAYBACK
+	};
+
+	TheTradingMachine* parent;
+
+	void preTickHandler(const Tick& tick);
+	Mode operationMode;
+	std::string input;
+	std::shared_ptr<IBInterfaceClient> ibApi;
+	std::thread readTickDataThread;
+	std::atomic<bool> threadCancellationToken;
+	void readTickFile(void);
+};
+
+TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(TheTradingMachine* parentIn, std::string in, std::shared_ptr<IBInterfaceClient> ibApiPtr):
+	parent(parentIn),
+	input(in),
+	ibApi(ibApiPtr),
+	plotData(std::shared_ptr<PlotData>(new PlotData())),
+	threadCancellationToken(false)
+{
+	// should be impossible if nobody has access to TheTradingMachine's implementation
+	if (parent == nullptr)
+	{
+		throw std::runtime_error("TheTradingMachine Implementation Was Unable to Access Parent.");
+	}
+
+	//
+	// Check if it's a recorded data input for backtesting
+	//
+	if (input.find(".tickdat") != std::string::npos)
+	{
+		operationMode = Mode::PLAYBACK;
+	}
+	else if (ibApi != nullptr && ibApi->isReady())
+	{
+		operationMode = Mode::REALTIME;
+	}
+	else
+	{
+		throw std::runtime_error("Must provide a valid Interactive Broker Connection or historical data file!");
+	}
 }
 
-TheTradingMachine::~TheTradingMachine()
+TheTradingMachine::TheTradingMachineImpl::~TheTradingMachineImpl()
 {
-	// stop should have been called so simply delete variables at this point
-	if (readTickDataThread != nullptr)
-	{
-		delete readTickDataThread;
-		readTickDataThread = nullptr;
-	}
+	stop();
+}
 
-	// independently delete this pointer in case the above case failed
-	if (runReadTickDataThread != nullptr)
+void TheTradingMachine::TheTradingMachineImpl::start(void)
+{
+	switch (operationMode)
 	{
-		delete runReadTickDataThread;
-		runReadTickDataThread = nullptr;
-	}
+		case Mode::REALTIME:
+			ibApi->requestRealTimeTicks(input, [this](const Tick& tick) {preTickHandler(tick); });
+			break;
 
-	if (tickDataFile != nullptr)
-	{
-		tickDataFile->close();
-		delete tickDataFile;
-		tickDataFile = nullptr;
-	}
+		case Mode::PLAYBACK:
+			//start a thread to read file
+			readTickDataThread = std::thread([this]
+			{
+				// new thread that reads tick data from a file and calls derived
+				// classes' tickhandler (calls preTickHandler first)
+				readTickFile();
+			});
+			break;
 
-	if (input != nullptr)
-	{
-		delete input;
-		input = nullptr;
-	}
-
-	// this is a pointer to a shared pointer. only if the last owner
-	// deletes the shared pointer will it be destructed.
-	if (plotData != nullptr)
-	{
-		delete plotData;
-		plotData = nullptr;
+		default:
+			break;
 	}
 }
 
-// this function is used to handle any base class tick handling before passing it
-// to derived algorithm for specific tick handling. eg. every algorithm must save
-// plot data before processing so it is handled here
-void TheTradingMachine::preTickHandler(const Tick & tick)
+void TheTradingMachine::TheTradingMachineImpl::stop(void)
+{
+	switch (operationMode)
+	{
+		case Mode::REALTIME:			
+			// need to unregister the ticker from ibapi. in ibapi, need to keep
+			// count of how many registered the same ticker or else it might unregister
+			// someone else's
+			break;
+
+		case Mode::PLAYBACK:
+			//stop the thread
+			threadCancellationToken = true;
+			if (readTickDataThread.joinable())
+			{
+				readTickDataThread.join();
+			}
+			break;
+
+		default:
+			break;
+	}
+
+}
+
+void TheTradingMachine::TheTradingMachineImpl::preTickHandler(const Tick & tick)
 {
 	// first handle the tick algorithm specific callback
-	tickHandler(tick);
+	parent->tickHandler(tick);
 
 	// in case if gui is sometimes slow and is holding the lock, we don't want to block this thread
 	// therefore, if we fail to retrieve the lock immediately, we push the data into a secondary buffer.
 	// when we successfully get the lock, we simply have to move the data into plotData. this will allow
 	// the algorithm to be more overall responsive .
-	std::unique_lock<std::mutex> lock((*plotData)->plotDataMtx, std::defer_lock);
-	PlotData& plotDataRef = **plotData;
+	std::unique_lock<std::mutex> lock(plotData->plotDataMtx, std::defer_lock);
+	PlotData& plotDataRef = *plotData;
 	//this is the only thread that accesses buffer no synchronization needed
 	plotDataRef.buffer.push(tick);
 	// if it was able to lock the lock, then unload everything from the buffer into the plotData
@@ -86,20 +145,21 @@ void TheTradingMachine::preTickHandler(const Tick & tick)
 	}
 }
 
-void TheTradingMachine::readTickFile(void)
+void TheTradingMachine::TheTradingMachineImpl::readTickFile(void)
 {
-	enum CsvIndex {
-		tickTypeIndex = 0,
-		timeIndex,
-		priceIndex = 3,
-		sizeIndex,
-		canAutoExecuteIndex,
-		pastLimitIndex,
-		preOpenIndex,
-		unreportedIndex,
-		bidPastLowIndex,
-		askPastHIndexigh,
-		exchangeIndex
+	std::fstream tickDataFile(input, std::ios::in);
+	enum class CsvIndex {
+		TICKTYPEINDEX = 0,
+		TIMEINDEX,
+		PRICEINDEX = 3,
+		SIZEINDEX,
+		CANAUTOEXECUTEINDEX,
+		PASTLIMITINDEX,
+		PREOPENINDEX,
+		UNREPORTEDINDEX,
+		BIDPASTLOWINDEX,
+		ASKPASTHINDEXIGH,
+		EXCHANGEINDEX
 	};
 	std::string currLine;
 	std::vector<std::string> csvRow(TICK_CSV_ROW_SZ);
@@ -107,7 +167,7 @@ void TheTradingMachine::readTickFile(void)
 	// For each row in the csv, parse out the values in string
 	// and reconstruct the tick data.
 	//
-	while (std::getline(*tickDataFile, currLine) && runReadTickDataThread->load())
+	while (std::getline(tickDataFile, currLine) && !threadCancellationToken)
 	{
 		std::stringstream s(currLine);
 		std::string token;
@@ -120,215 +180,88 @@ void TheTradingMachine::readTickFile(void)
 		{
 			switch (static_cast<CsvIndex>(i))
 			{
-			case tickTypeIndex:
+			case CsvIndex::TICKTYPEINDEX:
 				callbackTick.tickType = std::stoi(token);
 				break;
-			case timeIndex:
+			case CsvIndex::TIMEINDEX:
 				callbackTick.time = static_cast<time_t>(stoll(token));
 				break;
-			case priceIndex:
+			case CsvIndex::PRICEINDEX:
 				callbackTick.price = std::stod(token);
 				break;
-			case sizeIndex:
+			case CsvIndex::SIZEINDEX:
 				callbackTick.size = std::stoi(token);
 				break;
-			case canAutoExecuteIndex:
+			case CsvIndex::CANAUTOEXECUTEINDEX:
 				callbackTick.attributes.canAutoExecute = static_cast<bool>(std::stoi(token));
 				break;
-			case pastLimitIndex:
+			case CsvIndex::PASTLIMITINDEX:
 				callbackTick.attributes.pastLimit = static_cast<bool>(std::stoi(token));
 				break;
-			case preOpenIndex:
+			case CsvIndex::PREOPENINDEX:
 				callbackTick.attributes.preOpen = static_cast<bool>(std::stoi(token));
 				break;
-			case unreportedIndex:
+			case CsvIndex::UNREPORTEDINDEX:
 				callbackTick.attributes.unreported = static_cast<bool>(std::stoi(token));
 				break;
-			case bidPastLowIndex:
+			case CsvIndex::BIDPASTLOWINDEX:
 				callbackTick.attributes.bidPastLow = static_cast<bool>(std::stoi(token));
 				break;
-			case askPastHIndexigh:
+			case CsvIndex::ASKPASTHINDEXIGH:
 				callbackTick.attributes.askPastHigh = static_cast<bool>(std::stoi(token));
 				break;
-			case exchangeIndex:
+			case CsvIndex::EXCHANGEINDEX:
 				callbackTick.exchange = token;
 				break;
 			}
 		}
 		preTickHandler(callbackTick);
 	}
-	if (runReadTickDataThread->load())
+	
+	//if threadcancellation was toggled, then it was forcefully terminated
+	if (!threadCancellationToken)
 		std::cout << "done reading from file" << std::endl;
 	else
 		std::cout << "terminated" << std::endl;
 
 	// we need to indicate that this is the end of the algorithm. we need to block here to unload
 	// any remaining plot data left in the buffer
-	std::unique_lock<std::mutex> lock((*plotData)->plotDataMtx);
+	std::lock_guard<std::mutex> lock(plotData->plotDataMtx);
 
-	while (!(**plotData).buffer.empty())
+	while (!plotData->buffer.empty())
 	{
-		(**plotData).ticks.push_back((**plotData).buffer.front());
-		(**plotData).buffer.pop();
+		plotData->ticks.push_back(plotData->buffer.front());
+		plotData->buffer.pop();
 	}
-	(**plotData).finished = true;
+
+	plotData->finished = true;
+}
+
+TheTradingMachine::TheTradingMachine(std::string in, std::shared_ptr<IBInterfaceClient> ibApiPtr) :
+	impl_(new TheTradingMachineImpl(this, in, ibApiPtr))
+{
+}
+
+TheTradingMachine::~TheTradingMachine()
+{
+	if (impl_ != nullptr)
+	{
+		delete impl_;
+		impl_ = nullptr;
+	}
 }
 
 void TheTradingMachine::start(void)
 {
-	//
-	// Check if it's a recorded data input for backtesting
-	//
-	if (input->find(".tickdat") != std::string::npos)
-	{
-		tickDataFile = new std::fstream(*input, std::ios::in);
-		std::cout << "from file" << std::endl;
-		runReadTickDataThread->store(true);
-		readTickDataThread = new std::thread([this] 
-		{
-			// new thread that reads tick data from a file and calls derived
-			// classes' tickhandler (calls preTickHandler first)
-			readTickFile();
-		});
-	}
-	else if (ibapi != nullptr && ibapi->isReady())
-	{
-		//
-		// If input wasn't a tick historical file, and an ibapi was provided, then we can assume it's a ticker
-		// for real time trading.
-		//
-		realtime = true;
-		ibapi->requestRealTimeTicks(*input, [this](const Tick& tick) {preTickHandler(tick); });
-	}
-	else
-	{
-		throw std::runtime_error("Must provide a valid Interactive Broker Connection or historical data file!");
-	}
+	impl_->start();
 }
 
 void TheTradingMachine::stop(void)
 {
-	// signal the file reading thread to stop running
-	if (readTickDataThread != nullptr)
-	{
-		assert(runReadTickDataThread != nullptr);
-		runReadTickDataThread->store(false);
-		// we have to join the function instead of detaching because the thread
-		// runs on a derived member class. therefore, we must guarantee to the
-		// caller that the thread has stopped and that the derived class can be 
-		// destroyed after this function returns
-		if (readTickDataThread->joinable())
-			readTickDataThread->join();
-	}
-	else if (ibapi != nullptr && ibapi->isReady())
-	{
-		//make sure all positions are closed and unregister tick handlers
-	}
-	else
-	{
-		assert(false);
-	}
-
+	impl_->stop();
 }
 
-IBInterfaceClient::IBInterfaceClient() :
-	messageProcess_(nullptr),
-	client(new IBInterface),
-	runThread(new std::atomic<bool>)
+std::shared_ptr<PlotData> TheTradingMachine::getPlotPlotData()
 {
-	std::cout << "Initializing IB Client" << std::endl;
-	runThread->store(false);
-
-	if (client != nullptr)
-	{
-		//connect to ib api
-		if(client->Initialize())
-		{
-			messageProcess_ = new std::thread(&IBInterfaceClient::messageProcess, this);
-			//
-			// Wait for message handling thread to initialize
-			//
-			while (!runThread->load())
-			{
-				Sleep(10);
-			}
-			std::cout << "Successfully initialized IB Client." << std::endl;
-			
-		}
-		else
-		{
-			std::cout << "Unable to connect to neither TWS nor IB Gateway!" << std::endl;
-			delete client;
-			client = nullptr;
-			Sleep(10000);
-		}
-	}
-
-}
-
-IBInterfaceClient::~IBInterfaceClient()
-{
-	if (runThread != nullptr && runThread->load())
-	{
-		//
-		// Stop the thread
-		//
-		runThread->store(false);
-		if (messageProcess_ != nullptr)
-		{
-			messageProcess_->join();
-			delete messageProcess_;
-			messageProcess_ = nullptr;
-		}
-		delete runThread;
-		runThread = nullptr;
-	}
-
-	if (client != nullptr)
-	{
-		client->disconnect();
-		delete client;
-		client = nullptr;
-	}
-}
-
-void IBInterfaceClient::requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback)
-{
-	if (client != nullptr)
-	{
-		client->requestRealTimeTicks(ticker, callback);
-	}
-}
-
-bool IBInterfaceClient::isReady(void)
-{
-	// runThread is true when the connection has been initialized and the 
-	// messaging thread has started
-	return runThread->load();
-}
-
-void IBInterfaceClient::messageProcess(void)
-{
-	if (client->isConnected())
-	{
-		std::cout << "IB Message Processing Thread has started." << std::endl;
-		runThread->store(true);
-	}
-	//shouldnt need to check for nulls here because we can only get here if these are not nullptr
-	while (client->isConnected() && runThread->load())
-	{
-		client->processMessages();
-		Sleep(10);
-	}
-}
-
-THETRADINGMACHINEDLL IBInterfaceClient* InitializeIbInterfaceClient(void)
-{
-	static IBInterfaceClient* ibInterfaceClient = nullptr;
-	if (ibInterfaceClient == nullptr)
-	{
-		ibInterfaceClient = new IBInterfaceClient();
-	}
-
-	return ibInterfaceClient;
+	return impl_->plotData;
 }
