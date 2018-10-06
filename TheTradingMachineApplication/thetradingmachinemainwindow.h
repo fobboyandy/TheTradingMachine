@@ -15,7 +15,6 @@
 #include <Windows.h>
 
 // The Trading Machine
-#include "../TheTradingMachine/TheTradingMachine.h"
 #include "../IBInterfaceClient/IBInterfaceClient.h"
 #include "thetradingmachinetab.h"
 
@@ -41,12 +40,17 @@ private slots:
     void closeAll();
     void closeTab(int tabIndex);
 
+    void checkInteractiveBrokerConnection();
+
+
 //members
 private:
     Ui::TheTradingMachineMainWindow *ui;
 
-    // IB Connection. Only one allowed for all sessions
+    // IB Connection. we only need one for all sessions
     static std::shared_ptr<IBInterfaceClient> client_;
+    static QTimer clientReadyTimer_;
+
     static std::unordered_set<std::wstring> algorithmInstances_;
 
     // dll interface

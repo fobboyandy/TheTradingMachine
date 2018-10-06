@@ -39,10 +39,10 @@ SOURCES += \
 HEADERS += \
         qcustomplot.h \
     thetradingmachinemainwindow.h \
-    ../TheTradingMachine/TheTradingMachine.h \
     playdialog.h \
     thetradingmachinetab.h \
     ../IBInterfaceClient/IBInterfaceClient.h \
+    ../TheTradingMachine/TheTradingMachine.h \
     CandleMaker.h
 
 FORMS += \
@@ -55,10 +55,9 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RESOURCES += \
-    resource.qrc \
     resource.qrc
-
-win32: LIBS += -L$$PWD/../x64/Debug/ -lTheTradingMachine
 
 INCLUDEPATH += $$PWD/../x64/Debug
 DEPENDPATH += $$PWD/../x64/Debug
+
+win32: LIBS += -L$$PWD/../x64/Debug/ -lIBInterfaceClient

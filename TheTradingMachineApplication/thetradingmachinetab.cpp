@@ -160,8 +160,7 @@ void TheTradingMachineTab::updatePlot(void)
             }
         }
 
-        //replot should always be happening to update the drawing
-        plot_->replot();
+
         if(autoScale_)
         {
             candleSticksGraph_->rescaleAxes();
@@ -172,6 +171,8 @@ void TheTradingMachineTab::updatePlot(void)
         {
             replotTimer_->stop();
         }
+        //replot should always be happening to update the drawing
+        plot_->replot();
     }
 }
 

@@ -56,7 +56,7 @@ private:
 	Bar prevSupportBar;
 	Bar prevResistanceBar;
 
-	std::fstream logFile;
+	//std::fstream logFile;
 
 	struct Position
 	{

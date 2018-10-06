@@ -8,7 +8,6 @@
 #include <memory>
 #include <thread>
 #include "qcustomplot.h"
-#include "../TheTradingMachine/TheTradingMachine.h"
 #include "../IBInterfaceClient/IBInterfaceClient.h"
 #include "CandleMaker.h"
 
