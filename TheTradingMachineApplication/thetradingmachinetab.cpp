@@ -1,5 +1,6 @@
 #include "thetradingmachinetab.h"
 #include "CandleMaker.h"
+#include "playdialog.h"
 
 TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<IBInterfaceClient> client, QWidget* parent) :
     QWidget(parent),
@@ -38,12 +39,15 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
 
     //prompt user for the input method. real time or historical ticks
-    std::string fpTest("..\\outputfiles\\Jul 19AMD.tickdat");
+//    std::wstring fpTest("..\\outputfiles\\Jul 19AMD.tickdat");
+    PlayDialog loadInput(this);
+    loadInput.exec();
+    auto input = loadInput.getInput();
+    name_ = formatTabName(input);
 
     //if real time, check for ib connection
-
     // instantiate the algorithm for this ticker
-    algorithmHandle_ = api_.playAlgorithm(fpTest, client_);
+    algorithmHandle_ = api_.playAlgorithm(input.toStdString(), client_);
 
     if(api_.getPlotData(algorithmHandle_, &plotData_) && plotData_ != nullptr)
     {
@@ -60,6 +64,11 @@ TheTradingMachineTab::~TheTradingMachineTab()
         qDebug("Unable to stop algorithm!!!");
         assert(false);
     }
+}
+
+QString TheTradingMachineTab::tabName()
+{
+    return name_;
 }
 
 void TheTradingMachineTab::candleGraphSetup()
@@ -130,6 +139,27 @@ void TheTradingMachineTab::legendSetup()
     candleGraphLegend_->addItem(new QCPPlottableLegendItem(candleGraphLegend_, candleSticksGraph_));
 }
 
+QString TheTradingMachineTab::formatTabName(const QString &input)
+{
+    QString inputFormatted;
+    // for recorded files, strip away the directory names by adding
+    // characters from the back to the front of the buffer
+    auto extensionIndex = input.toStdWString().find(L".tickdat");
+    if(extensionIndex != std::wstring::npos)
+    {
+        for(auto i = static_cast<QString::size_type>(extensionIndex) - 1; i >= 0 && input[i] != '\\' && input[i] != '/'; --i)
+        {
+            inputFormatted.push_front(input[i]);
+        }
+    }
+    else
+    {
+        inputFormatted = input;
+    }
+    qDebug(inputFormatted.toStdString().c_str());
+    return inputFormatted;
+}
+
 void TheTradingMachineTab::updatePlot(void)
 {
     std::unique_lock<std::mutex> lock(plotData_->plotDataMtx, std::defer_lock);
@@ -189,5 +219,4 @@ void TheTradingMachineTab::xAxisChanged(QCPRange range)
         volumeBarsGraph_->rescaleValueAxis(false, true);
     }
 }
-
 

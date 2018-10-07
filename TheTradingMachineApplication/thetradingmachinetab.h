@@ -35,10 +35,13 @@ public:
     TheTradingMachineTab(const TheTradingMachineTab&& other) = delete;
     TheTradingMachineTab& operator=(const TheTradingMachineTab& other) = delete;
 
+    QString tabName();
+
 private:
     QGridLayout *gridLayout_;
     QCustomPlot *plot_;
     QTimer* replotTimer_;
+    QString name_;
 
     //algorithm api
     AlgorithmApi api_;
@@ -71,6 +74,8 @@ private:
     void volumeGraphSetup(void);
     void spacingSetup(void);
     void legendSetup(void);
+
+    QString formatTabName(const QString& input);
 
 private slots:
     void updatePlot(void);

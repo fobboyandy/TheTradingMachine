@@ -4,7 +4,6 @@
 #include <Windows.h>
 #include <QString>
 #include <QInputDialog>
-
 #include <type_traits>
 
 // instantiation of static members
@@ -30,7 +29,7 @@ TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
     // the destructor and properly destruct the members.
     this->setAttribute(Qt::WA_DeleteOnClose);
 
-//    if(promptLoadAlgorithm())
+    if(promptLoadAlgorithm())
     {
         // valid_ is used in promptLoadAlgorithm as if it was a local variable. setting here
         // to increase readability
@@ -44,7 +43,6 @@ TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
         client_->isReady() ?
                     ui->actionConnect->setChecked(true) :
                     ui->actionConnect->setEnabled(false);
-                    connect(&clientReadyTimer_, &QTimer::timeout, this, &TheTradingMachineMainWindow::checkInteractiveBrokerConnection);
     }
 }
 
@@ -84,7 +82,7 @@ void TheTradingMachineMainWindow::play()
 {
     auto objects = ui->tabWidget->children();
     TheTradingMachineTab* newTab = new TheTradingMachineTab(api_, client_, nullptr);
-    ui->tabWidget->addTab(newTab, std::string("test").c_str());
+    ui->tabWidget->addTab(newTab, newTab->tabName());
 
 }
 
@@ -153,6 +151,7 @@ void TheTradingMachineMainWindow::connectDefaulSlots()
     connect(ui->actionConnect, &QAction::triggered, this, &TheTradingMachineMainWindow::connectInteractiveBroker);
     connect(ui->actionPlay, &QAction::triggered, this, &TheTradingMachineMainWindow::play);
     connect(ui->tabWidget, &QTabWidget::tabCloseRequested, this, &TheTradingMachineMainWindow::closeTab);
+    connect(&clientReadyTimer_, &QTimer::timeout, this, &TheTradingMachineMainWindow::checkInteractiveBrokerConnection);
 }
 
 bool TheTradingMachineMainWindow::promptLoadAlgorithm()
