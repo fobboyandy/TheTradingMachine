@@ -180,6 +180,7 @@ void SupportBreakShort::shortTrade()
 // algorithm and we only have a single instance of the dll file
 int PlayAlgorithm(std::string dataInput, std::shared_ptr<IBInterfaceClient> ibInst)
 {
+	const int INVALID_HANDLE = -1;
 	// each time we initialize an algorithm, the size increases by 1
 	// the size is returned as a handle to the call for future use
 	SbsInsts.push_back(std::unique_ptr<SupportBreakShort>(new SupportBreakShort(dataInput, ibInst)));
@@ -188,6 +189,7 @@ int PlayAlgorithm(std::string dataInput, std::shared_ptr<IBInterfaceClient> ibIn
 
 bool GetPlotData(int instHandle, std::shared_ptr<PlotData>* dataOut)
 {
+	if(instHandle == )
 	try
 	{
 		*dataOut = SbsInsts.at(static_cast<size_t>(instHandle))->getPlotPlotData();

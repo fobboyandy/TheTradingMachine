@@ -82,8 +82,14 @@ void TheTradingMachineMainWindow::play()
 {
     auto objects = ui->tabWidget->children();
     TheTradingMachineTab* newTab = new TheTradingMachineTab(api_, client_, nullptr);
-    ui->tabWidget->addTab(newTab, newTab->tabName());
-
+    if(newTab->valid())
+    {
+        ui->tabWidget->addTab(newTab, newTab->tabName());
+    }
+    else
+    {
+        delete newTab;
+    }
 }
 
 void TheTradingMachineMainWindow::stopCurrentSession()

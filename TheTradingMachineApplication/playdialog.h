@@ -19,6 +19,7 @@ public:
 private slots:
     void slotFileLoad();
 
+    void confirmInput();
 private:
     Ui::PlayDialog *ui;
     QString userInput;

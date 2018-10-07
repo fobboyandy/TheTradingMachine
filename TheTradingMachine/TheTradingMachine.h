@@ -48,7 +48,6 @@ protected:
 	void stop(void);
 	virtual void tickHandler(const Tick& tick) = 0;
 
-
 	//let the impl class call the pure virtual tickHandler
 	friend TheTradingMachineImpl;
 };

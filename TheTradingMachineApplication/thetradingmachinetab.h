@@ -35,7 +35,8 @@ public:
     TheTradingMachineTab(const TheTradingMachineTab&& other) = delete;
     TheTradingMachineTab& operator=(const TheTradingMachineTab& other) = delete;
 
-    QString tabName();
+    QString tabName() const;
+    bool valid() const;
 
 private:
     QGridLayout *gridLayout_;
@@ -68,6 +69,8 @@ private:
     //plot scale control
     bool autoScale_;
     bool plotActive_;
+
+    bool valid_;
 
 private:
     void candleGraphSetup(void);

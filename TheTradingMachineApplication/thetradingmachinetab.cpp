@@ -16,7 +16,8 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     lastPlotDataIndex_(0),
     volumeAxisRect_(nullptr),
     autoScale_(true),
-    plotActive_(false)
+    plotActive_(false),
+    valid_(false)
 {
     this->setObjectName(QStringLiteral("TheTradingMachineTab"));
     gridLayout_ = new QGridLayout(this);
@@ -38,36 +39,47 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), candleSticksAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
     connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
 
-    //prompt user for the input method. real time or historical ticks
-//    std::wstring fpTest("..\\outputfiles\\Jul 19AMD.tickdat");
+    // prompt user for the input method. real time or historical ticks
+    // std::wstring fpTest("..\\outputfiles\\Jul 19AMD.tickdat");
     PlayDialog loadInput(this);
     loadInput.exec();
     auto input = loadInput.getInput();
     name_ = formatTabName(input);
 
-    //if real time, check for ib connection
-    // instantiate the algorithm for this ticker
-    algorithmHandle_ = api_.playAlgorithm(input.toStdString(), client_);
-
-    if(api_.getPlotData(algorithmHandle_, &plotData_) && plotData_ != nullptr)
+    if(name_.size() > 0)
     {
-        connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
-        replotTimer_->start(0);
-    }
+        valid_ = true;
+        //if real time, check for ib connection
+        // instantiate the algorithm for this ticker
+        algorithmHandle_ = api_.playAlgorithm(input.toStdString(), client_);
 
+        if(api_.getPlotData(algorithmHandle_, &plotData_) && plotData_ != nullptr)
+        {
+            connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
+            replotTimer_->start(0);
+        }
+    }
 }
 
 TheTradingMachineTab::~TheTradingMachineTab()
 {
-    // stop the algorithm dll
-    if(!api_.stopAlgorithm(algorithmHandle_))
+    if(valid_)
     {
-        qDebug("Unable to stop algorithm!!!");
-        assert(false);
+        // stop the algorithm dll
+        if(!api_.stopAlgorithm(algorithmHandle_))
+        {
+            qDebug("Unable to stop algorithm!!!");
+            assert(false);
+        }
     }
 }
 
-QString TheTradingMachineTab::tabName()
+bool TheTradingMachineTab::valid() const
+{
+    return valid_;
+}
+
+QString TheTradingMachineTab::tabName() const
 {
     return name_;
 }
