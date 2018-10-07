@@ -30,7 +30,7 @@ QString PlayDialog::getInput() const
 
 void PlayDialog::slotFileLoad()
 {
-    userInput = QFileDialog::getOpenFileName(this, "Load Tick Data", QString(), "*.tickdat");
+    userInput = QFileDialog::getOpenFileName(this, "Load Tick Data", QString("..\\outputfiles\\"), "*.tickdat");
     if(userInput.size() > 0)
     {
         ui->lineEdit->setText(userInput);

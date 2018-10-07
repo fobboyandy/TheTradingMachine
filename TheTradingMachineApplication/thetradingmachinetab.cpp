@@ -7,13 +7,13 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     gridLayout_(nullptr),
     plot_(nullptr),
     replotTimer_(new QTimer(this)),
-    plotData_(nullptr),
-    candleMaker_(60),
-    lastPlotDataIndex_(0),
     api_(api),
     client_(client),
+    plotData_(nullptr),
     candleSticksAxisRect_(nullptr),
     candleSticksGraph_(nullptr),
+    candleMaker_(60),
+    lastPlotDataIndex_(0),
     volumeAxisRect_(nullptr),
     autoScale_(true),
     plotActive_(false)
@@ -54,6 +54,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
         connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
         replotTimer_->start(0);
     }
+
 }
 
 TheTradingMachineTab::~TheTradingMachineTab()
@@ -156,7 +157,6 @@ QString TheTradingMachineTab::formatTabName(const QString &input)
     {
         inputFormatted = input;
     }
-    qDebug(inputFormatted.toStdString().c_str());
     return inputFormatted;
 }
 
