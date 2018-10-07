@@ -48,29 +48,31 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
 
     if(name_.size() > 0)
     {
-        valid_ = true;
+
         //if real time, check for ib connection
         // instantiate the algorithm for this ticker
         algorithmHandle_ = api_.playAlgorithm(input.toStdString(), client_);
-
-        if(api_.getPlotData(algorithmHandle_, &plotData_) && plotData_ != nullptr)
+        if(algorithmHandle_ != -1)
         {
-            connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
-            replotTimer_->start(0);
+            if(api_.getPlotData(algorithmHandle_, &plotData_) && plotData_ != nullptr)
+            {
+                // tab should only be valid if play algorithm and getplotdata worked
+                valid_ = true;
+                connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
+                replotTimer_->start(0);
+            }
         }
     }
 }
 
 TheTradingMachineTab::~TheTradingMachineTab()
 {
-    if(valid_)
+    // we should call stop algorithm even if
+    // valid_ is false to let dll do any
+    // necessary clean up
+    if(!api_.stopAlgorithm(algorithmHandle_))
     {
-        // stop the algorithm dll
-        if(!api_.stopAlgorithm(algorithmHandle_))
-        {
-            qDebug("Unable to stop algorithm!!!");
-            assert(false);
-        }
+        qDebug("Unable to stop algorithm!!!");
     }
 }
 

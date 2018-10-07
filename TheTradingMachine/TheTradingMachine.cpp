@@ -18,7 +18,7 @@ public:
 
 	void start(void);
 	void stop(void);
-
+	bool valid(void) const;
 private:
 
 	enum class Mode
@@ -35,6 +35,7 @@ private:
 	std::shared_ptr<IBInterfaceClient> ibApi;
 	std::thread readTickDataThread;
 	std::atomic<bool> threadCancellationToken;
+	bool valid_;
 	void readTickFile(void);
 };
 
@@ -42,29 +43,22 @@ TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(TheTradingMachin
 	parent(parentIn),
 	input(in),
 	ibApi(ibApiPtr),
-	plotData(std::shared_ptr<PlotData>(new PlotData())),
-	threadCancellationToken(false)
+	plotData(std::make_shared<PlotData>()),
+	threadCancellationToken(false),
+	valid_(false)
 {
-	// should be impossible if nobody has access to TheTradingMachine's implementation
-	if (parent == nullptr)
-	{
-		throw std::runtime_error("TheTradingMachine Implementation Was Unable to Access Parent.");
-	}
-
 	//
 	// Check if it's a recorded data input for backtesting
 	//
 	if (input.find(".tickdat") != std::string::npos)
 	{
 		operationMode = Mode::PLAYBACK;
+		valid_ = true;
 	}
 	else if (ibApi != nullptr && ibApi->isReady())
 	{
 		operationMode = Mode::REALTIME;
-	}
-	else
-	{
-		throw std::runtime_error("Must provide a valid Interactive Broker Connection or historical data file!");
+		valid_ = true;
 	}
 }
 
@@ -75,6 +69,11 @@ TheTradingMachine::TheTradingMachineImpl::~TheTradingMachineImpl()
 
 void TheTradingMachine::TheTradingMachineImpl::start(void)
 {
+	if (!valid_)
+	{
+		// do nothing if not valid
+		return;
+	}
 	switch (operationMode)
 	{
 		case Mode::REALTIME:
@@ -98,6 +97,10 @@ void TheTradingMachine::TheTradingMachineImpl::start(void)
 
 void TheTradingMachine::TheTradingMachineImpl::stop(void)
 {
+	if (!valid_)
+	{
+		return;
+	}
 	switch (operationMode)
 	{
 		case Mode::REALTIME:			
@@ -119,6 +122,11 @@ void TheTradingMachine::TheTradingMachineImpl::stop(void)
 			break;
 	}
 
+}
+
+bool TheTradingMachine::TheTradingMachineImpl::valid(void) const
+{
+	return valid_;
 }
 
 void TheTradingMachine::TheTradingMachineImpl::preTickHandler(const Tick & tick)
@@ -266,4 +274,11 @@ void TheTradingMachine::stop(void)
 std::shared_ptr<PlotData> TheTradingMachine::getPlotPlotData()
 {
 	return impl_->plotData;
+}
+
+bool TheTradingMachine::valid() const
+{
+	if (impl_ == nullptr)
+		return false;
+	return impl_->valid();
 }
