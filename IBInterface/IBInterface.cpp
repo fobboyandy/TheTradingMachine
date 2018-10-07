@@ -36,32 +36,10 @@
 #include <ctime>
 #include <fstream>
 #include <cstdint>
+#include <future>
 
 const int PING_DEADLINE = 2; // seconds
 const int SLEEP_BETWEEN_PINGS = 30; // seconds
-
-bool IBInterface::Initialize()
-{
-	int attempts = 0;
-	while (!isConnected() && attempts < MAX_ATTEMPTS)
-	{
-		connect("", 7496, 0);
-		attempts++;
-	}
-
-	if (attempts == MAX_ATTEMPTS)
-		return false;
-
-	//wait and process all the initial messages from TWS
-	//TWS will be ready when TWS returns nextValidID
-	while (!ready)
-	{
-		Sleep(500);
-		processMessages();
-	}
-
-	return true;
-}
 
 ///////////////////////////////////////////////////////////
 									// member funcs
@@ -117,6 +95,11 @@ void IBInterface::disconnect() const
 bool IBInterface::isConnected() const
 {
 	return m_pClient->isConnected();
+}
+
+bool IBInterface::isReady() const
+{
+	return ready && isConnected();
 }
 
 void IBInterface::setConnectOptions(const std::string& connectOptions)

@@ -18,7 +18,7 @@ public:
 	IBInterfaceClient();
 	~IBInterfaceClient();
 
-	void requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback);
+	bool requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback);
 	bool isReady(void);
 
 private:

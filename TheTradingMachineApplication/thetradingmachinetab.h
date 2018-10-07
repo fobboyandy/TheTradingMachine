@@ -8,7 +8,6 @@
 #include <memory>
 #include <thread>
 #include "qcustomplot.h"
-#include "../TheTradingMachine/TheTradingMachine.h"
 #include "../IBInterfaceClient/IBInterfaceClient.h"
 #include "CandleMaker.h"
 
@@ -36,10 +35,14 @@ public:
     TheTradingMachineTab(const TheTradingMachineTab&& other) = delete;
     TheTradingMachineTab& operator=(const TheTradingMachineTab& other) = delete;
 
+    QString tabName() const;
+    bool valid() const;
+
 private:
     QGridLayout *gridLayout_;
     QCustomPlot *plot_;
     QTimer* replotTimer_;
+    QString name_;
 
     //algorithm api
     AlgorithmApi api_;
@@ -67,11 +70,15 @@ private:
     bool autoScale_;
     bool plotActive_;
 
+    bool valid_;
+
 private:
     void candleGraphSetup(void);
     void volumeGraphSetup(void);
     void spacingSetup(void);
     void legendSetup(void);
+
+    QString formatTabName(const QString& input);
 
 private slots:
     void updatePlot(void);

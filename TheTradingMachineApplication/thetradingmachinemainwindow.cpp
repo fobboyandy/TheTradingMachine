@@ -4,11 +4,11 @@
 #include <Windows.h>
 #include <QString>
 #include <QInputDialog>
-
 #include <type_traits>
 
 // instantiation of static members
 std::shared_ptr<IBInterfaceClient> TheTradingMachineMainWindow::client_ = nullptr;
+QTimer TheTradingMachineMainWindow::clientReadyTimer_;
 std::unordered_set<std::wstring> TheTradingMachineMainWindow::algorithmInstances_;
 
 TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
@@ -35,6 +35,14 @@ TheTradingMachineMainWindow::TheTradingMachineMainWindow(QWidget *parent) :
         // to increase readability
         valid_ = true;
         connectDefaulSlots();
+    }
+
+    // once connected, all additional sessions will be connected
+    if(client_ != nullptr)
+    {
+        client_->isReady() ?
+                    ui->actionConnect->setChecked(true) :
+                    ui->actionConnect->setEnabled(false);
     }
 }
 
@@ -74,8 +82,14 @@ void TheTradingMachineMainWindow::play()
 {
     auto objects = ui->tabWidget->children();
     TheTradingMachineTab* newTab = new TheTradingMachineTab(api_, client_, nullptr);
-    ui->tabWidget->addTab(newTab, std::string("test").c_str());
-
+    if(newTab->valid())
+    {
+        ui->tabWidget->addTab(newTab, newTab->tabName());
+    }
+    else
+    {
+        delete newTab;
+    }
 }
 
 void TheTradingMachineMainWindow::stopCurrentSession()
@@ -85,7 +99,30 @@ void TheTradingMachineMainWindow::stopCurrentSession()
 
 void TheTradingMachineMainWindow::connectInteractiveBroker()
 {
+    if(client_ == nullptr)
+    {
+        // we don't need to check if client is null because
+        // this action is disabled in the destructor when
+        // client is already connected. so client must
+        // be null if this code is reachable
+        client_ = GetIBInterfaceClient();
+        if(client_ != nullptr)
+        {
+            qDebug("retrieving client connection ");
+            // disable the button. it will be reenabled by checkInteractiveBrokerConnection once
+            // the connection is established
+            connect(&clientReadyTimer_, &QTimer::timeout, this, &TheTradingMachineMainWindow::checkInteractiveBrokerConnection);
+            ui->actionConnect->setEnabled(false);
+            clientReadyTimer_.start(100);
+        }
+    }
 
+    //if it's connected, keep it connected
+    else if(ui->actionConnect->isChecked())
+    {
+        ui->actionConnect->setChecked(true);
+    }
+    qDebug("triggered");
 }
 
 void TheTradingMachineMainWindow::closeAll()
@@ -99,11 +136,28 @@ void TheTradingMachineMainWindow::closeTab(int tabIndex)
     tabPtr->deleteLater();
 }
 
+void TheTradingMachineMainWindow::checkInteractiveBrokerConnection()
+{
+    if(client_->isReady())
+    {
+        if(!ui->actionConnect->isEnabled())
+        {
+            ui->actionConnect->setEnabled(true);
+        }
+        if(!ui->actionConnect->isChecked())
+        {
+            ui->actionConnect->setChecked(true);
+        }
+    }
+}
+
 void TheTradingMachineMainWindow::connectDefaulSlots()
 {
     connect(ui->actionNew_Session, &QAction::triggered, this, &TheTradingMachineMainWindow::newSession);
+    connect(ui->actionConnect, &QAction::triggered, this, &TheTradingMachineMainWindow::connectInteractiveBroker);
     connect(ui->actionPlay, &QAction::triggered, this, &TheTradingMachineMainWindow::play);
     connect(ui->tabWidget, &QTabWidget::tabCloseRequested, this, &TheTradingMachineMainWindow::closeTab);
+    connect(&clientReadyTimer_, &QTimer::timeout, this, &TheTradingMachineMainWindow::checkInteractiveBrokerConnection);
 }
 
 bool TheTradingMachineMainWindow::promptLoadAlgorithm()

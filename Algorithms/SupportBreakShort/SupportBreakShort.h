@@ -15,6 +15,7 @@ class SupportBreakShort : public TheTradingMachine
 {
 public:
 	explicit SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst = std::shared_ptr<IBInterfaceClient>(nullptr));
+	SupportBreakShort(SupportBreakShort&& other) = default;
 	~SupportBreakShort();
 	//
 	// Check the openPositions for the top most position. The positions are 
@@ -56,7 +57,7 @@ private:
 	Bar prevSupportBar;
 	Bar prevResistanceBar;
 
-	std::fstream logFile;
+	//std::fstream logFile;
 
 	struct Position
 	{
@@ -75,10 +76,3 @@ protected:
 	// this pure virtual function to handle new ticks
 	void tickHandler(const Tick& tick) override;
 };
-
-extern "C"
-{
-	__declspec(dllexport) int PlayAlgorithm(std::string dataInput, std::shared_ptr<IBInterfaceClient> ibInst = std::shared_ptr<IBInterfaceClient>(nullptr));
-	__declspec(dllexport) bool GetPlotData(int instHandle, std::shared_ptr<PlotData>* dataOut);
-	__declspec(dllexport) bool StopAlgorithm(size_t instHandle);
-}

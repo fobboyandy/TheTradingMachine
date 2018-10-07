@@ -1,21 +1,23 @@
 #include "thetradingmachinetab.h"
 #include "CandleMaker.h"
+#include "playdialog.h"
 
 TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<IBInterfaceClient> client, QWidget* parent) :
     QWidget(parent),
     gridLayout_(nullptr),
     plot_(nullptr),
     replotTimer_(new QTimer(this)),
-    plotData_(nullptr),
-    candleMaker_(60),
-    lastPlotDataIndex_(0),
     api_(api),
     client_(client),
+    plotData_(nullptr),
     candleSticksAxisRect_(nullptr),
     candleSticksGraph_(nullptr),
+    candleMaker_(60),
+    lastPlotDataIndex_(0),
     volumeAxisRect_(nullptr),
     autoScale_(true),
-    plotActive_(false)
+    plotActive_(false),
+    valid_(false)
 {
     this->setObjectName(QStringLiteral("TheTradingMachineTab"));
     gridLayout_ = new QGridLayout(this);
@@ -37,29 +39,51 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), candleSticksAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
     connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
 
-    //prompt user for the input method. real time or historical ticks
-    std::string fpTest("..\\outputfiles\\Jul 19AMD.tickdat");
+    // prompt user for the input method. real time or historical ticks
+    // std::wstring fpTest("..\\outputfiles\\Jul 19AMD.tickdat");
+    PlayDialog loadInput(this);
+    loadInput.exec();
+    auto input = loadInput.getInput();
+    name_ = formatTabName(input);
 
-    //if real time, check for ib connection
-
-    // instantiate the algorithm for this ticker
-    algorithmHandle_ = api_.playAlgorithm(fpTest, client_);
-
-    if(api_.getPlotData(algorithmHandle_, &plotData_) && plotData_ != nullptr)
+    if(name_.size() > 0)
     {
-        connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
-        replotTimer_->start(0);
+
+        //if real time, check for ib connection
+        // instantiate the algorithm for this ticker
+        algorithmHandle_ = api_.playAlgorithm(input.toStdString(), client_);
+        if(algorithmHandle_ != -1)
+        {
+            if(api_.getPlotData(algorithmHandle_, &plotData_) && plotData_ != nullptr)
+            {
+                // tab should only be valid if play algorithm and getplotdata worked
+                valid_ = true;
+                connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
+                replotTimer_->start(0);
+            }
+        }
     }
 }
 
 TheTradingMachineTab::~TheTradingMachineTab()
 {
-    // stop the algorithm dll
+    // we should call stop algorithm even if
+    // valid_ is false to let dll do any
+    // necessary clean up
     if(!api_.stopAlgorithm(algorithmHandle_))
     {
         qDebug("Unable to stop algorithm!!!");
-        assert(false);
     }
+}
+
+bool TheTradingMachineTab::valid() const
+{
+    return valid_;
+}
+
+QString TheTradingMachineTab::tabName() const
+{
+    return name_;
 }
 
 void TheTradingMachineTab::candleGraphSetup()
@@ -130,6 +154,26 @@ void TheTradingMachineTab::legendSetup()
     candleGraphLegend_->addItem(new QCPPlottableLegendItem(candleGraphLegend_, candleSticksGraph_));
 }
 
+QString TheTradingMachineTab::formatTabName(const QString &input)
+{
+    QString inputFormatted;
+    // for recorded files, strip away the directory names by adding
+    // characters from the back to the front of the buffer
+    auto extensionIndex = input.toStdWString().find(L".tickdat");
+    if(extensionIndex != std::wstring::npos)
+    {
+        for(auto i = static_cast<QString::size_type>(extensionIndex) - 1; i >= 0 && input[i] != '\\' && input[i] != '/'; --i)
+        {
+            inputFormatted.push_front(input[i]);
+        }
+    }
+    else
+    {
+        inputFormatted = input;
+    }
+    return inputFormatted;
+}
+
 void TheTradingMachineTab::updatePlot(void)
 {
     std::unique_lock<std::mutex> lock(plotData_->plotDataMtx, std::defer_lock);
@@ -160,8 +204,7 @@ void TheTradingMachineTab::updatePlot(void)
             }
         }
 
-        //replot should always be happening to update the drawing
-        plot_->replot();
+
         if(autoScale_)
         {
             candleSticksGraph_->rescaleAxes();
@@ -172,6 +215,8 @@ void TheTradingMachineTab::updatePlot(void)
         {
             replotTimer_->stop();
         }
+        //replot should always be happening to update the drawing
+        plot_->replot();
     }
 }
 
@@ -188,5 +233,4 @@ void TheTradingMachineTab::xAxisChanged(QCPRange range)
         volumeBarsGraph_->rescaleValueAxis(false, true);
     }
 }
-
 

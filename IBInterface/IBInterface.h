@@ -16,20 +16,14 @@
 #include <string>
 #include <unordered_map>
 #include <functional>
+#include <future>
 #include <mutex>
-
-const unsigned MAX_ATTEMPTS = 50;
 
 class EClientSocket;
 
 //! [ewrapperimpl]
 class IBInterface : public EWrapper
 {
-	//Initialize functions
-public:
-
-	bool Initialize();
-
 	//! [ewrapperimpl]
 public:
 
@@ -44,6 +38,7 @@ public:
 	bool connect(const char * host, unsigned int port, int clientId = 0);
 	void disconnect() const;
 	bool isConnected() const;
+	bool isReady() const;
 
 public:
 	// events
@@ -162,14 +157,13 @@ private:
 	bool m_extraAuth;
 	std::string m_bboExchange;
 
-	bool ready;
+	std::atomic<bool> ready;
 
 public:
 
 	void requestRealTimeMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback);
 	void requestHistoricalMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback);
 	void requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback);
-
 
 private:
 

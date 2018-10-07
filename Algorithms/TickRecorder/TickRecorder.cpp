@@ -1,4 +1,5 @@
 #include "TickRecorder.h"
+#include <windows.h>
 #include <time.h>
 
 std::string TimeToString(time_t time)
@@ -8,9 +9,11 @@ std::string TimeToString(time_t time)
 	return std::string(timeStr);
 }
 
-TickRecorder::TickRecorder(std::string t, IBInterfaceClient * ibapi) : TheTradingMachine(t, ibapi), ticker(t)
+TickRecorder::TickRecorder(std::string input, std::shared_ptr<IBInterfaceClient> ibapi) : 
+	TheTradingMachine(input, ibapi), 
+	ticker(input)
 {
-	if (t.find(".tickdat") != std::string::npos)
+	if (input.find(".tickdat") != std::string::npos)
 	{
 		throw std::invalid_argument("It is already a file. Aborting...");
 		return;
@@ -46,3 +49,5 @@ void TickRecorder::tickHandler(const Tick & tick)
 
 	std::cout << ticker << "\t" << tick.price << '\t' << tick.size << std::endl;
 }
+
+EXPORT_ALGORITHM(TickRecorder)
