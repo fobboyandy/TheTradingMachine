@@ -59,7 +59,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
                 // tab should only be valid if play algorithm and getplotdata worked
                 valid_ = true;
                 connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
-                replotTimer_->start(0);
+                replotTimer_->start(50);
             }
         }
     }
