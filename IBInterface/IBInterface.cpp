@@ -421,7 +421,7 @@ void IBInterface::requestHistoricalMinuteBars(std::string ticker, int timeFrameM
 
 }
 
-void IBInterface::requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback)
+int IBInterface::requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback)
 {
 	OrderId oid;
 	if (stockTickOrderIds.find(ticker) != stockTickOrderIds.end())
@@ -436,8 +436,8 @@ void IBInterface::requestRealTimeTicks(std::string ticker, std::function<void(co
 
 		//
 		// Submit the request with historical data with the update option 
-		// on
-		//
+		// on. We should find some way of checking whether the request was successful
+		// 
 		m_pClient->reqTickByTickData(
 			oid,
 			createUsStockContract(ticker),
@@ -447,7 +447,49 @@ void IBInterface::requestRealTimeTicks(std::string ticker, std::function<void(co
 			);
 
 	}
-	stockTickCallbacks[oid].push_back(callback);
+
+	std::lock_guard<std::mutex> lock(stockTickCallbacksMtx);
+	// use the current size as the index but return the updated size as the handle. this way, 0 can always be used
+	// to indicate invalid handles
+	stockTickCallbacks[oid].insert(std::pair<int, std::function<void(const Tick&)>>(stockTickCallbacks[oid].size(), callback));
+	
+	// For now, no success checking, simply return the handle. 0 indicates failure
+	// which corresponds to size == 0
+	return static_cast<int>(stockTickCallbacks[oid].size());
+}
+
+bool IBInterface::cancelRealTimeTicks(std::string ticker, int handle)
+{
+	OrderId oid;
+	// check if the provided ticker has an associated order id. can't cancel 
+	// if it doesn't exist
+	if (stockTickOrderIds.find(ticker) != stockTickOrderIds.end())
+	{
+		oid = stockTickOrderIds[ticker];
+		using vector_size_type = std::vector<std::function<void(const Tick&)>>::size_type;
+
+		// check if the handle is valid
+		// handles are created using the UPDATED size of the callback list. we need to -1 
+		// to retrieve the original location before the size increment. 
+		// refer to requestRealTimeTicks to see how handles are created.
+		std::lock_guard<std::mutex> lock(stockTickCallbacksMtx);
+		if (stockTickCallbacks[oid].find(handle - 1) != stockTickCallbacks[oid].end())
+		{
+			stockTickCallbacks[oid].erase(handle - 1);
+
+			//unregister this data stream since no one needs its data
+			if (stockTickCallbacks[oid].size() == 0)
+			{
+				m_pClient->cancelTickByTickData(oid);
+				// For now, no success checking of cancelTickbyTickData before removing
+				stockTickCallbacks.erase(oid);
+				stockTickOrderIds.erase(ticker);
+			}
+			return true;
+		}
+	}
+
+	return false;
 }
 
 Contract IBInterface::createUsStockContract(std::string ticker)
@@ -920,9 +962,11 @@ void IBInterface::tickByTickAllLast(int reqId, int tickType, time_t time, double
 
 	Tick t = {tickType, time, price, size, attribs, exchange};
 
-	for (auto& fn : stockTickCallbacks[reqId])
+	// synchronize against addition / removal of callbacks
+	std::lock_guard<std::mutex> lock(stockTickCallbacksMtx);
+	for (const auto& fn : stockTickCallbacks[reqId])
 	{
-		fn(t);
+		(fn.second)(t);
 	}
 }
 //! [tickbytickalllast]
