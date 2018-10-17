@@ -19,8 +19,8 @@ public:
 	void start(void);
 	void stop(void);
 	bool valid(void) const;
-private:
 
+private:
 	enum class Mode
 	{
 		REALTIME,
@@ -32,9 +32,11 @@ private:
 	void preTickHandler(const Tick& tick);
 	Mode operationMode;
 	std::string input;
+	int dataStreamHandle;
 	std::shared_ptr<IBInterfaceClient> ibApi;
 	std::thread readTickDataThread;
 	std::atomic<bool> threadCancellationToken;
+	int streamingDataHandle; // when we request real time data, we are given a handle so that we can cancel it upon closing
 	bool valid_;
 	void readTickFile(void);
 };
@@ -45,7 +47,8 @@ TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(TheTradingMachin
 	ibApi(ibApiPtr),
 	plotData(std::make_shared<PlotData>()),
 	threadCancellationToken(false),
-	valid_(false)
+	valid_(false),
+	dataStreamHandle(0)
 {
 	//
 	// Check if it's a recorded data input for backtesting
@@ -77,7 +80,7 @@ void TheTradingMachine::TheTradingMachineImpl::start(void)
 	switch (operationMode)
 	{
 		case Mode::REALTIME:
-			ibApi->requestRealTimeTicks(input, [this](const Tick& tick) {preTickHandler(tick); });
+			dataStreamHandle = ibApi->requestRealTimeTicks(input, [this](const Tick& tick) {preTickHandler(tick); });
 			break;
 
 		case Mode::PLAYBACK:
@@ -103,10 +106,8 @@ void TheTradingMachine::TheTradingMachineImpl::stop(void)
 	}
 	switch (operationMode)
 	{
-		case Mode::REALTIME:			
-			// need to unregister the ticker from ibapi. in ibapi, need to keep
-			// count of how many registered the same ticker or else it might unregister
-			// someone else's
+		case Mode::REALTIME:
+			ibApi->cancelRealTimeTicks(input, dataStreamHandle);
 			break;
 
 		case Mode::PLAYBACK:
