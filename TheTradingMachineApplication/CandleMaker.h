@@ -16,10 +16,9 @@ public:
 	~CandleMaker();
 
 	//
-    // Given a new tick, returns true and currCandle is a closed candle. otherwise
-    // currCandle holds the current aggregated candle of the period
-	//
-    bool getClosingCandle(const Tick& newTick, Bar& currCandle);
+    // Given a new tick, updates the candle. returns true for new candles.
+    //
+    bool updateCandle(const Tick& newTick, Bar& currCandle);
 
 private:
 
@@ -57,4 +56,6 @@ private:
 	// Update candle mins and max, open and close, and volume. 
 	//
 	void aggregateCandle(const Tick& newTick);
+
+
 };

@@ -13,7 +13,8 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     plotData_(nullptr),
     candleSticksAxisRect_(nullptr),
     candleSticksGraph_(nullptr),
-    candleMaker_(60),
+    timeFrame_(60),
+    candleMaker_(timeFrame_),
     lastPlotDataIndex_(0),
     volumeAxisRect_(nullptr),
     autoScale_(true),
@@ -198,36 +199,38 @@ void TheTradingMachineTab::updatePlot(void)
 
         for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
         {
-            const auto& currentTime = plotData_->ticks[lastPlotDataIndex_].time;
+//            const auto& currentTime = plotData_->ticks[lastPlotDataIndex_].time;
 
-            auto printTime = [](time_t time){
-                char timeStr[256];
-                ctime_s(timeStr, 256, &time);
-                std::cout << timeStr << std::endl;
-            };
-            bool newCandle = candleMaker_.getClosingCandle(plotData_->ticks[lastPlotDataIndex_], currentCandle_);
+//            auto printTime = [](time_t time){
+//                char timeStr[256];
+//                ctime_s(timeStr, 256, &time);
+//                std::cout << timeStr << std::endl;
+//            };
+            bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], currentCandle_);
 
-            if(newCandle)
+
+			time_t candleTime = plotData_->ticks[lastPlotDataIndex_].time;
+            if(isNewCandle)
             {
-                candleBarsDataContainer_->add(QCPFinancialData(currentTime, currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
-                volumeBarsDataContainer_->add(QCPBarsData(currentTime, currentCandle_.volume));
+                // add a new bar to the back
+                candleBarsDataContainer_->add(QCPFinancialData(candleTime, currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
+                volumeBarsDataContainer_->add(QCPBarsData(candleTime, currentCandle_.volume));
             }
             //keep the most recent added candle up to date
             else if(candleBarsDataContainer_->size() > 0)
             {
-                //the key for the plots are currently the index, but should change to time later
-                candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(currentTime, currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
-                volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(currentTime, currentCandle_.volume));
+				//recalculate the candleTime to the nearest 
+                candleTime -= candleTime % timeFrame_;
+				candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(candleTime , currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
+                volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(candleTime, currentCandle_.volume));
             }
         }
-
 
         if(autoScale_)
         {
             candleSticksGraph_->rescaleAxes();
             volumeBarsGraph_->rescaleAxes();
         }
-
 
         if(!plotActive_)
         {
