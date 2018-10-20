@@ -9,8 +9,8 @@ std::string TimeToString(time_t time)
 	return std::string(timeStr);
 }
 
-TickRecorder::TickRecorder(std::string input, std::shared_ptr<IBInterfaceClient> ibapi) : 
-	TheTradingMachine(input, ibapi), 
+TickRecorder::TickRecorder(std::string input, std::shared_ptr<IBInterfaceClient> ibInst) :
+	engine(input, [this](const Tick& tick) {this->tickHandler(tick); }, ibInst),
 	ticker(input)
 {
 	if (input.find(".tickdat") != std::string::npos)
@@ -22,13 +22,11 @@ TickRecorder::TickRecorder(std::string input, std::shared_ptr<IBInterfaceClient>
 	//remove the newline from TimeToString return value
 	std::string filename = TimeToString(time(nullptr)).substr(4, 6) + ticker + ".tickdat";
 	tickoutput.open(filename, std::ios::trunc | std::ios::out);
-	start();
 	// all tick data is handled in the tickHandler function
 }
 
 TickRecorder::~TickRecorder()
 {
-	stop();
 	tickoutput.close();
 }
 

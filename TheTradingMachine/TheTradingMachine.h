@@ -25,15 +25,23 @@ extern "C" 																											\
 	* specific functions. This is necessary because multiple tickers can be running on the same 					\
 	* algorithm and we only have a single instance of the dll file 													\
 	*/ 																												\
-	__declspec(dllexport) int PlayAlgorithm(std::string dataInput, std::shared_ptr<IBInterfaceClient> ibInst) 		\
+	__declspec(dllexport) int PlayAlgorithm(	                                                                    \
+			std::string dataInput,				                                                                    \
+			std::shared_ptr<PlotData>* dataOut,                                                                     \
+			std::shared_ptr<IBInterfaceClient> ibInst) 																\
 	{ 																												\
 		/* each time we initialize an algorithm, the size increases by 1 											\
 		 * the size is returned as a handle to the call for future use  											\
 		*/ 																							                \
 		auto newInstance = std::make_unique<CLASSNAME>(dataInput, ibInst);										    \
-		if (newInstance->valid())																					\
+		if (newInstance->engine.valid())																			\
 		{																											\
-			AlgorithmInstances.push_back(std::move(newInstance));                                                   \
+			if(dataOut != nullptr)																					\
+			{																										\
+				*dataOut = newInstance->engine.getPlotData();											     		\
+			}																										\
+			AlgorithmInstances.push_back(std::move(newInstance));													\
+																													\
 			return static_cast<int>(AlgorithmInstances.size() - 1);													\
 		}																											\
 		else																										\
@@ -41,25 +49,6 @@ extern "C" 																											\
 			return -1;																								\
 		}																											\
 	} 																												\
-	__declspec(dllexport) bool GetPlotData(int instHandle, std::shared_ptr<PlotData>* dataOut) 						\
-	{																												\
-		if(instHandle == -1)																						\
-		{																											\
-			return false;																							\
-		}																											\
-		try																											\
-		{																											\
-			*dataOut = AlgorithmInstances.at(static_cast<size_t>(instHandle))->getPlotPlotData();					\
-			return (*dataOut != nullptr);																			\
-		}																											\
-		catch (const std::out_of_range& oor)																		\
-		{																											\
-			/* don't need to set dataOut to nullptr. let the caller decide from the return status */			    \
-			UNREFERENCED_PARAMETER(oor);																			\
-		}																											\
-																													\
-		return false;																								\
-	}																												\
 																													\
 	__declspec(dllexport) bool StopAlgorithm(int instHandle)														\
 	{																												\
@@ -83,6 +72,10 @@ extern "C" 																											\
 	}																												\
 }																													\
 
+#define THETRADINGMACHINE_OBJ		\
+	public:							\
+		TheTradingMachine engine;	\
+	private:
 #endif
 
 // plot data structure shared with the gui. plot data is stored in this format.
@@ -100,26 +93,13 @@ struct PlotData
 class THETRADINGMACHINEDLL TheTradingMachine
 {
 public:
-	explicit TheTradingMachine(std::string in, std::shared_ptr<IBInterfaceClient> ibApiPtr = std::shared_ptr<IBInterfaceClient>(nullptr));
+	explicit TheTradingMachine(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr = std::shared_ptr<IBInterfaceClient>(nullptr));
 
 	virtual ~TheTradingMachine();
-	std::shared_ptr<PlotData> getPlotPlotData();
+	std::shared_ptr<PlotData> getPlotData();
 	bool valid() const;
 
 private:
 	class TheTradingMachineImpl;
 	TheTradingMachineImpl* impl_;
-protected:
-	// we need the start and stop functions because tickHandler is pure virtual.
-	// because TheTradingMachine starts a thread that runs on the derived classes'
-	// tickHandler, we need the derived class to be able to stop our thread first
-	// before their tickHandler goes out of scope (derived classes get destructed
-	// before base classes) to prevent the running thread to access the function
-	// of the destructed derived class
-	void start(void);
-	void stop(void);
-	virtual void tickHandler(const Tick& tick) = 0;
-	
-	//let the impl class call the pure virtual tickHandler
-	friend TheTradingMachineImpl;
 };
