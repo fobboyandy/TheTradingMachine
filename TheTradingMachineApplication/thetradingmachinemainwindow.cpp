@@ -182,26 +182,19 @@ bool TheTradingMachineMainWindow::promptLoadAlgorithm()
         if(dllHndl_ != nullptr)
         {
             TheTradingMachineTab::AlgorithmApi::PlayAlgorithmFnPtr playAlgorithmProcAddr = reinterpret_cast<TheTradingMachineTab::AlgorithmApi::PlayAlgorithmFnPtr>(GetProcAddress(dllHndl_, "PlayAlgorithm"));
-            TheTradingMachineTab::AlgorithmApi::GetPlotDataFnPtr getPlotDataProcAddr = reinterpret_cast<TheTradingMachineTab::AlgorithmApi::GetPlotDataFnPtr>(GetProcAddress(dllHndl_, "GetPlotData"));
             TheTradingMachineTab::AlgorithmApi::StopAlgorithmFnPtr stopAlgorithmProcAddr = reinterpret_cast<TheTradingMachineTab::AlgorithmApi::StopAlgorithmFnPtr>(GetProcAddress(dllHndl_, "StopAlgorithm"));
 
             //check if any functions are invalid
             if(playAlgorithmProcAddr == nullptr ||
-               getPlotDataProcAddr == nullptr ||
                stopAlgorithmProcAddr == nullptr)
             {
                 displayMessageBox("Failed to load all the necessary functions from the provided algorithm.");
             }
             else
             {
-                api_.playAlgorithm = [=](std::string ticker, std::shared_ptr<IBInterfaceClient> ibIntf)
+                api_.playAlgorithm = [=](std::string ticker, std::shared_ptr<PlotData>* plotData, std::shared_ptr<IBInterfaceClient> ibIntf)
                 {
-                    return playAlgorithmProcAddr(ticker, ibIntf);
-                };
-
-                api_.getPlotData = [=](int inst, std::shared_ptr<PlotData>* plotDataOut)
-                {
-                    return getPlotDataProcAddr(inst, plotDataOut);
+                    return playAlgorithmProcAddr(ticker, plotData, ibIntf);
                 };
 
                 api_.stopAlgorithm = [=](int inst)
