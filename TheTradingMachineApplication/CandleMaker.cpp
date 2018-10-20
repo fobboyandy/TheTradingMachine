@@ -8,7 +8,7 @@
 inline bool isRTH(time_t tickTime)
 {
 	time_t secondsPassed = tickTime % NUM_SECONDS_DAY;
-	if (secondsPassed >= RTH_START && secondsPassed < RTH_END)
+    if (secondsPassed >= RTH_START && secondsPassed < RTH_END)
 	{
 		return true;
 	}
@@ -28,6 +28,7 @@ CandleMaker::~CandleMaker()
 bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle)
 {
     bool isNewCandle = false;
+
     //
     // check for RTH and also
     if (!isRTH(newTick.time))
@@ -72,6 +73,7 @@ bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle)
         aggregatedCandle.close = newTick.price;
         aggregatedCandle.volume = newTick.size;
         isNewCandle = true;
+		currentCandleTime = newTick.time;
     }
     else
     {
@@ -82,7 +84,11 @@ bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle)
     updatedCandle = aggregatedCandle;
 
     return isNewCandle;
+}
 
+time_t CandleMaker::getUpdatedCandleTime()
+{
+    return currentCandleTime;
 }
 
 void CandleMaker::aggregateCandle(const Tick& newTick)

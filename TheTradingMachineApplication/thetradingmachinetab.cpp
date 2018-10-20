@@ -61,7 +61,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
                 // tab should only be valid if play algorithm and getplotdata worked
                 valid_ = true;
                 connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
-                replotTimer_->start(0);
+                replotTimer_->start(50);
             }
         }
     }
@@ -199,30 +199,23 @@ void TheTradingMachineTab::updatePlot(void)
 
         for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
         {
-//            const auto& currentTime = plotData_->ticks[lastPlotDataIndex_].time;
-
-//            auto printTime = [](time_t time){
-//                char timeStr[256];
-//                ctime_s(timeStr, 256, &time);
-//                std::cout << timeStr << std::endl;
-//            };
+            // candleTime holds the time of the most recent candle
             bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], currentCandle_);
+            // getUpdatedCandleTime will return the updated time to the nearest timeFrame
+            auto currentCandleTime = candleMaker_.getUpdatedCandleTime();
 
-
-			time_t candleTime = plotData_->ticks[lastPlotDataIndex_].time;
             if(isNewCandle)
             {
                 // add a new bar to the back
-                candleBarsDataContainer_->add(QCPFinancialData(candleTime, currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
-                volumeBarsDataContainer_->add(QCPBarsData(candleTime, currentCandle_.volume));
+                candleBarsDataContainer_->add(QCPFinancialData(currentCandleTime, currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
+                volumeBarsDataContainer_->add(QCPBarsData(currentCandleTime, currentCandle_.volume));
             }
             //keep the most recent added candle up to date
             else if(candleBarsDataContainer_->size() > 0)
             {
-				//recalculate the candleTime to the nearest 
-                candleTime -= candleTime % timeFrame_;
-				candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(candleTime , currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
-                volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(candleTime, currentCandle_.volume));
+
+                candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(currentCandleTime , currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
+                volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(currentCandleTime, currentCandle_.volume));
             }
         }
 
@@ -236,6 +229,7 @@ void TheTradingMachineTab::updatePlot(void)
         {
             replotTimer_->stop();
         }
+
         //replot should always be happening to update the drawing
         plot_->replot();
     }
@@ -243,7 +237,8 @@ void TheTradingMachineTab::updatePlot(void)
 
 void TheTradingMachineTab::xAxisChanged(QCPRange range)
 {
-    if((floor(range.lower) <= 0 && ceil(range.upper) >= candleSticksGraph_->data()->size()))
+    if(floor(range.lower) <= candleSticksGraph_->data()->at(0)->mainKey() &&
+        ceil(range.upper) >= candleSticksGraph_->data()->at(candleSticksGraph_->data()->size() - 1)->mainKey())
     {
         autoScale_ = true;
     }
