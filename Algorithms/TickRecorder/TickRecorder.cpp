@@ -22,17 +22,19 @@ TickRecorder::TickRecorder(std::string input, std::shared_ptr<IBInterfaceClient>
 	//remove the newline from TimeToString return value
 	std::string filename = TimeToString(time(nullptr)).substr(4, 6) + ticker + ".tickdat";
 	tickoutput.open(filename, std::ios::trunc | std::ios::out);
-	
+	start();
 	// all tick data is handled in the tickHandler function
 }
 
 TickRecorder::~TickRecorder()
 {
+	stop();
 	tickoutput.close();
 }
 
 void TickRecorder::tickHandler(const Tick & tick)
 {
+	//should store binary data instead of strings
 	std::string s = TimeToString(time(nullptr));
 	tickoutput << tick.tickType << ',';
 	tickoutput << tick.time << ",";
@@ -46,8 +48,6 @@ void TickRecorder::tickHandler(const Tick & tick)
 	tickoutput << (int)tick.attributes.bidPastLow << ',';
 	tickoutput << (int)tick.attributes.askPastHigh << ',';
 	tickoutput << tick.exchange << std::endl;
-
-	std::cout << ticker << "\t" << tick.price << '\t' << tick.size << std::endl;
 }
 
 EXPORT_ALGORITHM(TickRecorder)

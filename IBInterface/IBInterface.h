@@ -163,7 +163,12 @@ public:
 
 	void requestRealTimeMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback);
 	void requestHistoricalMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback);
-	void requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback);
+	
+	// given a ticker, the callback will be called when new tick data comes in. the return value is a handle
+	// to the request. caller should cancel the streaming data for the ticker when it terminates to unregister
+	// the callback as well as not waste streaming data lines. 0 indicates invalid handle
+	int requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback);
+	bool cancelRealTimeTicks(std::string ticker, int handle);
 
 private:
 
@@ -188,8 +193,10 @@ private:
 	std::unordered_map<OrderId, std::function<void(const Bar&)>> historicalBarCallbacks;
 
 	// Tick Data
+	// A call back function can be uniquely identified given a ticker and a handle
 	std::unordered_map<std::string, OrderId> stockTickOrderIds;
-	std::unordered_map<OrderId, std::vector<std::function<void(const Tick&)>>> stockTickCallbacks;
+	std::unordered_map<OrderId, std::unordered_map<int, std::function<void(const Tick&)>>> stockTickCallbacks;
+	std::mutex stockTickCallbacksMtx; //synchronizes message processing thread and request and cancel functions
 
 	Contract createUsStockContract(std::string ticker);
 };

@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <Windows.h>
 #include "thetradingmachinemainwindow.h"
 
 int main(int argc, char *argv[])
@@ -8,8 +9,12 @@ int main(int argc, char *argv[])
 
     // ensure that the first window is good
     if(mainWindow->valid())
-        return a.exec();
-
+    {
+        SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_AWAYMODE_REQUIRED);
+        auto executionComplete = a.exec();
+        SetThreadExecutionState(ES_CONTINUOUS);
+        return executionComplete;
+    }
     // we don't need to worry about freeing the memory because each window self destructs
 
     return -1;
