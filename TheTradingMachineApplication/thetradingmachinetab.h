@@ -57,6 +57,7 @@ private:
     QCPTextElement* candleGraphTitle;
     QSharedPointer<QCPFinancialDataContainer> candleBarsDataContainer_;
     Bar currentCandle_;
+    int timeFrame_;
     CandleMaker candleMaker_;
     std::vector<double>::size_type lastPlotDataIndex_;
     QCPLayoutInset* progressWindow_;
@@ -71,6 +72,7 @@ private:
     bool plotActive_;
 
     bool valid_;
+
 
 private:
     void candleGraphSetup(void);

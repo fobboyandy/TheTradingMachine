@@ -16,10 +16,15 @@ public:
 	~CandleMaker();
 
 	//
-    // Given a new tick, returns true and currCandle is a closed candle. otherwise
-    // currCandle holds the current aggregated candle of the period
-	//
-    bool getClosingCandle(const Tick& newTick, Bar& currCandle);
+    // Given a new tick, updates the candle and the latest candle time. returns true for new candles.
+    //
+    bool updateCandle(const Tick& newTick, Bar& updatedCandle);
+
+    //
+    // getUpdatedCandleTime will return the updated time to the nearest timeFrame relative
+    // to the last time updateCandle was called.
+    //
+    time_t getUpdatedCandleTime();
 
 private:
 
@@ -49,7 +54,12 @@ private:
 	// Used to keep track of periods of elapsed timeframes to prevent
 	// ticks within the same timeframe period to trigger a new candle
 	//
-	time_t candlePeriodCounter;
+    time_t candlePeriodCounter;
+
+    //
+    // Used to keep track of the time that the latest candle belongs to
+    //
+    time_t currentCandleTime;
 
 private:
 	//
@@ -57,4 +67,6 @@ private:
 	// Update candle mins and max, open and close, and volume. 
 	//
 	void aggregateCandle(const Tick& newTick);
+
+
 };

@@ -55,6 +55,11 @@ private:
 	//
 	time_t candlePeriodCounter;
 
+	//
+	// Used to keep track of the time that the latest candle belongs to
+	//
+	time_t currentCandleTime; 
+
 private:
 	//
 	// Aggregates the current candle when a new price tick comes in. 

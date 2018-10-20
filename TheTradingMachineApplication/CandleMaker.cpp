@@ -8,7 +8,7 @@
 inline bool isRTH(time_t tickTime)
 {
 	time_t secondsPassed = tickTime % NUM_SECONDS_DAY;
-	if (secondsPassed >= RTH_START && secondsPassed < RTH_END)
+    if (secondsPassed >= RTH_START && secondsPassed < RTH_END)
 	{
 		return true;
 	}
@@ -25,58 +25,70 @@ CandleMaker::~CandleMaker()
 {
 }
 
-bool CandleMaker::getClosingCandle(const Tick& newTick, Bar& currCandle)
+bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle)
 {
-    bool candleClosed = false;
-	//
-	// check for RTH
-	//
-	if (!isRTH(newTick.time))
-	{
-        return candleClosed;
-	}
-	
-	time_t thisPeriodCounter = newTick.time / timeFrame;
+    bool isNewCandle = false;
 
-	//
-	// if thisPeriod > prevCandlePeriod, then it's a new minute
-	// since it won't increment unless it reaches a new period
-	//
-	if (thisPeriodCounter > candlePeriodCounter)
-	{
-		candlePeriodCounter = thisPeriodCounter;
+    //
+    // check for RTH and also
+    if (!isRTH(newTick.time))
+    {
+        return isNewCandle;
+    }
 
-		//
-		// Check if we are at the start of a new time period. For example,
-		// if we started this price stream with time frame 1 minute at 9:00:30,
-		// half of the first minute has passed. Therefore, we need to wait until 
-		// 9:01:00 to begin since we lost the first 30 second of information.
-		//
-		if (beginAggregation)
-		{
-            currCandle = aggregatedCandle;
-            candleClosed = true;
-		}
-		else
-		{
-			beginAggregation = true;
-		}
-		//
-		//Reset the candlebar after each time increment ends
-		//
-		aggregatedCandle.open = newTick.price;
-		aggregatedCandle.low = newTick.price;
-		aggregatedCandle.high = newTick.price;
-		aggregatedCandle.close = newTick.price;
-		aggregatedCandle.volume = newTick.size;
-	}
-	else
-	{
-		aggregateCandle(newTick);
-        currCandle = aggregatedCandle;
-	}
+    // check if the current time is in the middle of an
+    // on going candle. For example, if we started this candle maker with time
+    // frame 1 minute at 9:00:30, half of the first minute has passed. Therefore,
+    // we need to wait until 9:01:00 to begin since we lost the first 30 second
+    // of information.
 
-    return candleClosed;
+    if(!beginAggregation)
+    {
+        if(newTick.time % timeFrame == 0)
+        {
+            beginAggregation = true;
+        }
+        else
+        {
+            return isNewCandle;
+        }
+    }
+
+    time_t thisPeriodCounter = newTick.time / timeFrame;
+
+    //
+    // if thisPeriod > prevCandlePeriod, then it's a new candle
+    // since thisPeriodCounter roll over after truncated division
+    //
+    if (thisPeriodCounter > candlePeriodCounter)
+    {
+        candlePeriodCounter = thisPeriodCounter;
+
+        //
+        // create a new candle
+        //
+        aggregatedCandle.open = newTick.price;
+        aggregatedCandle.low = newTick.price;
+        aggregatedCandle.high = newTick.price;
+        aggregatedCandle.close = newTick.price;
+        aggregatedCandle.volume = newTick.size;
+        isNewCandle = true;
+		currentCandleTime = newTick.time;
+    }
+    else
+    {
+        aggregateCandle(newTick);
+    }
+
+    // this is the updated candle
+    updatedCandle = aggregatedCandle;
+
+    return isNewCandle;
+}
+
+time_t CandleMaker::getUpdatedCandleTime()
+{
+    return currentCandleTime;
 }
 
 void CandleMaker::aggregateCandle(const Tick& newTick)

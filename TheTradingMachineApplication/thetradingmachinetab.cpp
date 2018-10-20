@@ -1,6 +1,7 @@
 #include "thetradingmachinetab.h"
 #include "CandleMaker.h"
 #include "playdialog.h"
+#include <iostream>
 
 TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<IBInterfaceClient> client, QWidget* parent) :
     QWidget(parent),
@@ -12,7 +13,8 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     plotData_(nullptr),
     candleSticksAxisRect_(nullptr),
     candleSticksGraph_(nullptr),
-    candleMaker_(60),
+    timeFrame_(60),
+    candleMaker_(timeFrame_),
     lastPlotDataIndex_(0),
     volumeAxisRect_(nullptr),
     autoScale_(true),
@@ -94,10 +96,14 @@ void TheTradingMachineTab::candleGraphSetup()
     candleSticksAxisRect_->setRangeZoom(Qt::Horizontal);
     candleSticksGraph_ = new QCPFinancial(candleSticksAxisRect_->axis(QCPAxis::atBottom), candleSticksAxisRect_->axis(QCPAxis::atLeft));
     candleSticksGraph_->setWidthType(QCPFinancial::WidthType::wtPlotCoords);
-    // sentinel element so that we can always replace the previous element instead of adding an if statement
-    // which will be evaluated every time
+    candleSticksGraph_->setWidth(timeFrame_ - 2);
+
+    //create the time axis here since we don't need to use the handle later
+    auto xTimeAxis = QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime);
+    xTimeAxis->setDateTimeFormat("hh:mm:ss");
+    candleSticksAxisRect_->axis(QCPAxis::atBottom)->setTicker(xTimeAxis);
+
     candleBarsDataContainer_ = QSharedPointer<QCPFinancialDataContainer>(new QCPFinancialDataContainer);
-    candleBarsDataContainer_->add(QCPFinancialData(0, 0, 0, 0, 0));
     candleSticksGraph_->setData(candleBarsDataContainer_);
     plot_->plotLayout()->addElement(0, 0, candleSticksAxisRect_);
 
@@ -119,16 +125,21 @@ void TheTradingMachineTab::volumeGraphSetup()
     volumeAxisRect_->axis(QCPAxis::atBottom)->setLayer("axes");
     volumeAxisRect_->axis(QCPAxis::atBottom)->grid()->setLayer("grid");
 
+    //create the time axis here since we don't need to use the handle later
+    auto xTimeAxis = QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime);
+    xTimeAxis->setDateTimeFormat("hh:mm:ss");
+    volumeAxisRect_->axis(QCPAxis::atBottom)->setTicker(xTimeAxis);
+
     // create two bar plottables, for positive (green) and negative (red) volume bars:
     volumeBarsGraph_ = new QCPBars(volumeAxisRect_->axis(QCPAxis::atBottom), volumeAxisRect_->axis(QCPAxis::atLeft));
     // set the width of each bar to match the candle sticks
     volumeBarsGraph_->setWidth(candleSticksGraph_->width());
     volumeBarsGraph_->setWidthType(QCPBars::WidthType::wtPlotCoords);
+    volumeBarsGraph_->setWidth(timeFrame_ - 2);
+
     volumeBarsGraph_->setPen(Qt::NoPen);
     volumeBarsGraph_->setBrush(QColor(30, 144, 255));
     volumeBarsDataContainer_ = QSharedPointer<QCPBarsDataContainer>(new QCPBarsDataContainer);
-    //sentinel used to replace the last item without a non 0 condition
-    volumeBarsDataContainer_->add(QCPBarsData(0, 0));
     volumeBarsGraph_->setData(volumeBarsDataContainer_);
     plot_->plotLayout()->addElement(1, 0, volumeAxisRect_);
 }
@@ -191,19 +202,25 @@ void TheTradingMachineTab::updatePlot(void)
 
         for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
         {
-            bool newCandle = candleMaker_.getClosingCandle(plotData_->ticks[lastPlotDataIndex_], currentCandle_);
+            // candleTime holds the time of the most recent candle
+            bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], currentCandle_);
+            // getUpdatedCandleTime will return the updated time to the nearest timeFrame
+            auto currentCandleTime = candleMaker_.getUpdatedCandleTime();
 
-            //the key for the plots are currently the index, but should change to time later
-            candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(candleBarsDataContainer_->size() - 1, currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
-            volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(volumeBarsDataContainer_->size() - 1, currentCandle_.volume));
-
-            if(newCandle)
+            if(isNewCandle)
             {
-                candleBarsDataContainer_->add(QCPFinancialData(candleBarsDataContainer_->size(), currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
-                volumeBarsDataContainer_->add(QCPBarsData(candleBarsDataContainer_->size(), currentCandle_.volume));
+                // add a new bar to the back
+                candleBarsDataContainer_->add(QCPFinancialData(currentCandleTime, currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
+                volumeBarsDataContainer_->add(QCPBarsData(currentCandleTime, currentCandle_.volume));
+            }
+            //keep the most recent added candle up to date
+            else if(candleBarsDataContainer_->size() > 0)
+            {
+
+                candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(currentCandleTime , currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
+                volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(currentCandleTime, currentCandle_.volume));
             }
         }
-
 
         if(autoScale_)
         {
@@ -215,6 +232,7 @@ void TheTradingMachineTab::updatePlot(void)
         {
             replotTimer_->stop();
         }
+
         //replot should always be happening to update the drawing
         plot_->replot();
     }
@@ -222,7 +240,8 @@ void TheTradingMachineTab::updatePlot(void)
 
 void TheTradingMachineTab::xAxisChanged(QCPRange range)
 {
-    if((floor(range.lower) <= 0 && ceil(range.upper) >= candleSticksGraph_->data()->size()))
+    if(floor(range.lower) <= candleSticksGraph_->data()->at(0)->mainKey() &&
+        ceil(range.upper) >= candleSticksGraph_->data()->at(candleSticksGraph_->data()->size() - 1)->mainKey())
     {
         autoScale_ = true;
     }
