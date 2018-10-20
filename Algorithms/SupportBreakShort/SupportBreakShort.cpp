@@ -4,18 +4,16 @@
 #include "TheTradingMachine.h"
 
 SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst) :
-	TheTradingMachine(input, ibInst),
-	minuteBarMaker(60),
+	engine(input, [this](const Tick& tick) {this->tickHandler(tick); }, ibInst),
+	minuteBarMaker(60), // using minute time frame for this algorithm
 	prevDir(UNDEFINED),
 	previousStrength(NONE),
 	profit(0)
 {
-	start();
 }
 
 SupportBreakShort::~SupportBreakShort()
 {
-	stop();
 }
 
 void SupportBreakShort::tickHandler(const Tick & tick)
