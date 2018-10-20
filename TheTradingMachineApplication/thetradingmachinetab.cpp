@@ -96,6 +96,7 @@ void TheTradingMachineTab::candleGraphSetup()
     candleSticksAxisRect_->setRangeZoom(Qt::Horizontal);
     candleSticksGraph_ = new QCPFinancial(candleSticksAxisRect_->axis(QCPAxis::atBottom), candleSticksAxisRect_->axis(QCPAxis::atLeft));
     candleSticksGraph_->setWidthType(QCPFinancial::WidthType::wtPlotCoords);
+    candleSticksGraph_->setWidth(timeFrame_ - 2);
 
     //create the time axis here since we don't need to use the handle later
     auto xTimeAxis = QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime);
@@ -134,6 +135,8 @@ void TheTradingMachineTab::volumeGraphSetup()
     // set the width of each bar to match the candle sticks
     volumeBarsGraph_->setWidth(candleSticksGraph_->width());
     volumeBarsGraph_->setWidthType(QCPBars::WidthType::wtPlotCoords);
+    volumeBarsGraph_->setWidth(timeFrame_ - 2);
+
     volumeBarsGraph_->setPen(Qt::NoPen);
     volumeBarsGraph_->setBrush(QColor(30, 144, 255));
     volumeBarsDataContainer_ = QSharedPointer<QCPBarsDataContainer>(new QCPBarsDataContainer);
