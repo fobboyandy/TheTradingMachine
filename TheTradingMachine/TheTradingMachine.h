@@ -30,6 +30,8 @@ extern "C" 																											\
 			std::shared_ptr<PlotData>* dataOut,                                                                     \
 			std::shared_ptr<IBInterfaceClient> ibInst) 																\
 	{ 																												\
+		/*always keep using the last element of the vector as the handle to the algorithm*/							\
+		static auto handles = 0;																					\
 		/* each time we initialize an algorithm, the size increases by 1 											\
 		 * the size is returned as a handle to the call for future use  											\
 		*/ 																							                \
@@ -42,7 +44,7 @@ extern "C" 																											\
 			}																										\
 			AlgorithmInstances.push_back(std::move(newInstance));													\
 																													\
-			return static_cast<int>(AlgorithmInstances.size() - 1);													\
+			return static_cast<int>(handles++);																		\
 		}																											\
 		else																										\
 		{																											\
@@ -65,7 +67,7 @@ extern "C" 																											\
 		catch (const std::out_of_range& oor)																		\
 		{																											\
 			UNREFERENCED_PARAMETER(oor);																			\
-			/*nothing*/																								\
+			/*nothing for now*/																						\
 		}																											\
 																													\
 		return false;																								\

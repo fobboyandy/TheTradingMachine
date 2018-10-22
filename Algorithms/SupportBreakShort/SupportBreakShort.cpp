@@ -10,6 +10,7 @@ SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<IBInterf
 	previousStrength(NONE),
 	profit(0)
 {
+
 }
 
 SupportBreakShort::~SupportBreakShort()
