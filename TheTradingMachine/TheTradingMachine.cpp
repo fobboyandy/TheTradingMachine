@@ -43,7 +43,7 @@ TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string in, 
 	plotData(std::make_shared<PlotData>()),
 	threadCancellationToken(false),
 	valid_(false),
-	dataStreamHandle(0)
+	dataStreamHandle(-1)
 {
 	//
 	// Check if it's a recorded data input for backtesting
@@ -64,7 +64,10 @@ TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string in, 
 	{
 		operationMode = Mode::REALTIME;
 		dataStreamHandle = ibApi->requestRealTimeTicks(input, [this](const Tick& tick) {preTickHandler(tick); });
-		valid_ = true;
+		if (dataStreamHandle != -1)
+		{
+			valid_ = true;
+		}
 	}
 }
 

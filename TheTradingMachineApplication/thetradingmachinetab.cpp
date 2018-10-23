@@ -203,7 +203,7 @@ void TheTradingMachineTab::updatePlot(void)
             bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], currentCandle_);
             // getUpdatedCandleTime will return the updated time to the nearest timeFrame
             auto currentCandleTime = candleMaker_.getUpdatedCandleTime();
-
+			
             if(isNewCandle)
             {
                 // add a new bar to the back
@@ -213,7 +213,6 @@ void TheTradingMachineTab::updatePlot(void)
             //keep the most recent added candle up to date
             else if(candleBarsDataContainer_->size() > 0)
             {
-
                 candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(currentCandleTime , currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
                 volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(currentCandleTime, currentCandle_.volume));
             }
