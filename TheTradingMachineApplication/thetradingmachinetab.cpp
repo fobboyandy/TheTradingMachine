@@ -53,16 +53,13 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
 
         //if real time, check for ib connection
         // instantiate the algorithm for this ticker
-        algorithmHandle_ = api_.playAlgorithm(input.toStdString(), client_);
+        algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_);
         if(algorithmHandle_ != -1)
         {
-            if(api_.getPlotData(algorithmHandle_, &plotData_) && plotData_ != nullptr)
-            {
-                // tab should only be valid if play algorithm and getplotdata worked
-                valid_ = true;
-                connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
-                replotTimer_->start(50);
-            }
+            // tab should only be valid if play algorithm and getplotdata worked
+            valid_ = true;
+            connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
+            replotTimer_->start(50);
         }
     }
 }
@@ -206,7 +203,7 @@ void TheTradingMachineTab::updatePlot(void)
             bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], currentCandle_);
             // getUpdatedCandleTime will return the updated time to the nearest timeFrame
             auto currentCandleTime = candleMaker_.getUpdatedCandleTime();
-
+			
             if(isNewCandle)
             {
                 // add a new bar to the back
@@ -216,7 +213,6 @@ void TheTradingMachineTab::updatePlot(void)
             //keep the most recent added candle up to date
             else if(candleBarsDataContainer_->size() > 0)
             {
-
                 candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(currentCandleTime , currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
                 volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(currentCandleTime, currentCandle_.volume));
             }

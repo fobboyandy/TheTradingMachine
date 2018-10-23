@@ -11,11 +11,11 @@
 #define RTH_START 48600
 #define RTH_END 72000
 
-class SupportBreakShort : public TheTradingMachine
+class SupportBreakShort
 {
+	THETRADINGMACHINE_OBJ
 public:
 	explicit SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst = std::shared_ptr<IBInterfaceClient>(nullptr));
-	SupportBreakShort(SupportBreakShort&& other) = default;
 	~SupportBreakShort();
 	//
 	// Check the openPositions for the top most position. The positions are 
@@ -24,7 +24,6 @@ public:
 	//
 	void coverTrade();
 	void shortTrade();
-
 private:
 	enum Dir
 	{
@@ -74,5 +73,5 @@ private:
 protected:
 	// this function must be implemented because the base class automatically calls
 	// this pure virtual function to handle new ticks
-	void tickHandler(const Tick& tick) override;
+	void tickHandler(const Tick& tick);
 };

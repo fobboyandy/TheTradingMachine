@@ -12,12 +12,9 @@
 class TheTradingMachine::TheTradingMachineImpl
 {
 public:
-	explicit TheTradingMachineImpl(TheTradingMachine* parent, std::string in, std::shared_ptr<IBInterfaceClient> ibApiPtr);
+	explicit TheTradingMachineImpl(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr);
 	~TheTradingMachineImpl();
 	std::shared_ptr<PlotData> plotData;
-
-	void start(void);
-	void stop(void);
 	bool valid(void) const;
 
 private:
@@ -26,9 +23,7 @@ private:
 		REALTIME,
 		PLAYBACK
 	};
-
-	TheTradingMachine* parent;
-
+	std::function<void(const Tick&)> tickHandler;
 	void preTickHandler(const Tick& tick);
 	Mode operationMode;
 	std::string input;
@@ -41,14 +36,14 @@ private:
 	void readTickFile(void);
 };
 
-TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(TheTradingMachine* parentIn, std::string in, std::shared_ptr<IBInterfaceClient> ibApiPtr):
-	parent(parentIn),
+TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr):
+	tickHandler(algTickCallback),
 	input(in),
 	ibApi(ibApiPtr),
 	plotData(std::make_shared<PlotData>()),
 	threadCancellationToken(false),
 	valid_(false),
-	dataStreamHandle(0)
+	dataStreamHandle(-1)
 {
 	//
 	// Check if it's a recorded data input for backtesting
@@ -56,73 +51,49 @@ TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(TheTradingMachin
 	if (input.find(".tickdat") != std::string::npos)
 	{
 		operationMode = Mode::PLAYBACK;
+		//start a thread to read file
+		readTickDataThread = std::thread([this]
+		{
+			// new thread that reads tick data from a file and calls derived
+			// classes' tickhandler (calls preTickHandler first)
+			readTickFile();
+		});
 		valid_ = true;
 	}
 	else if (ibApi != nullptr && ibApi->isReady())
 	{
 		operationMode = Mode::REALTIME;
-		valid_ = true;
+		dataStreamHandle = ibApi->requestRealTimeTicks(input, [this](const Tick& tick) {preTickHandler(tick); });
+		if (dataStreamHandle != -1)
+		{
+			valid_ = true;
+		}
 	}
 }
 
 TheTradingMachine::TheTradingMachineImpl::~TheTradingMachineImpl()
 {
-	stop();
-}
-
-void TheTradingMachine::TheTradingMachineImpl::start(void)
-{
-	if (!valid_)
-	{
-		// do nothing if not valid
-		return;
-	}
+	// clean up with respect to which mode it was operating in
+	// there should be a better way to achieve this in a more OOP
+	// way. but for now it is what it is.
 	switch (operationMode)
 	{
-		case Mode::REALTIME:
-			dataStreamHandle = ibApi->requestRealTimeTicks(input, [this](const Tick& tick) {preTickHandler(tick); });
-			break;
+	case Mode::REALTIME:
+		ibApi->cancelRealTimeTicks(input, dataStreamHandle);
+		break;
 
-		case Mode::PLAYBACK:
-			//start a thread to read file
-			readTickDataThread = std::thread([this]
-			{
-				// new thread that reads tick data from a file and calls derived
-				// classes' tickhandler (calls preTickHandler first)
-				readTickFile();
-			});
-			break;
+	case Mode::PLAYBACK:
+		//stop the thread
+		threadCancellationToken = true;
+		if (readTickDataThread.joinable())
+		{
+			readTickDataThread.join();
+		}
+		break;
 
-		default:
-			break;
+	default:
+		break;
 	}
-}
-
-void TheTradingMachine::TheTradingMachineImpl::stop(void)
-{
-	if (!valid_)
-	{
-		return;
-	}
-	switch (operationMode)
-	{
-		case Mode::REALTIME:
-			ibApi->cancelRealTimeTicks(input, dataStreamHandle);
-			break;
-
-		case Mode::PLAYBACK:
-			//stop the thread
-			threadCancellationToken = true;
-			if (readTickDataThread.joinable())
-			{
-				readTickDataThread.join();
-			}
-			break;
-
-		default:
-			break;
-	}
-
 }
 
 bool TheTradingMachine::TheTradingMachineImpl::valid(void) const
@@ -132,8 +103,7 @@ bool TheTradingMachine::TheTradingMachineImpl::valid(void) const
 
 void TheTradingMachine::TheTradingMachineImpl::preTickHandler(const Tick & tick)
 {
-	// first handle the tick algorithm specific callback
-	parent->tickHandler(tick);
+	//do any tick prehandling first
 
 	// in case if gui is sometimes slow and is holding the lock, we don't want to block this thread
 	// therefore, if we fail to retrieve the lock immediately, we push the data into a secondary buffer.
@@ -154,6 +124,8 @@ void TheTradingMachine::TheTradingMachineImpl::preTickHandler(const Tick & tick)
 		}
 		lock.unlock();
 	}
+
+	tickHandler(tick);
 }
 
 void TheTradingMachine::TheTradingMachineImpl::readTickFile(void)
@@ -248,8 +220,8 @@ void TheTradingMachine::TheTradingMachineImpl::readTickFile(void)
 	plotData->finished = true;
 }
 
-TheTradingMachine::TheTradingMachine(std::string in, std::shared_ptr<IBInterfaceClient> ibApiPtr) :
-	impl_(new TheTradingMachineImpl(this, in, ibApiPtr))
+TheTradingMachine::TheTradingMachine(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr) :
+	impl_(new TheTradingMachineImpl(in, algTickCallback, ibApiPtr))
 {
 }
 
@@ -262,17 +234,7 @@ TheTradingMachine::~TheTradingMachine()
 	}
 }
 
-void TheTradingMachine::start(void)
-{
-	impl_->start();
-}
-
-void TheTradingMachine::stop(void)
-{
-	impl_->stop();
-}
-
-std::shared_ptr<PlotData> TheTradingMachine::getPlotPlotData()
+std::shared_ptr<PlotData> TheTradingMachine::getPlotData()
 {
 	return impl_->plotData;
 }
