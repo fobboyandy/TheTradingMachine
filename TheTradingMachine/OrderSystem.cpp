@@ -35,7 +35,7 @@ PositionId OrderSystem::buyMarketNoStop(std::string ticker, int numShares)
 		// skip this part for now. we don't need it until we find a working algo
 
 	}
-	//if not live trading, then all market positions are filled instantly at the last price
+	//if not live trading, then all market positions are filled instantly at the last seen price
 	else
 	{
 		posId = _portfolio.newPosition();
@@ -97,6 +97,10 @@ Position OrderSystem::getPosition(PositionId posId)
 }
 
 void OrderSystem::modifyPosition(PositionId posId, Position newPosition)
+{
+}
+
+void OrderSystem::stopLossHandler(const Tick & tick)
 {
 }
 

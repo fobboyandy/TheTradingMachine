@@ -8,11 +8,11 @@
 #include "../IBInterface/Tick.h"
 #include "../IBInterface/bar.h"
 #include "PlotData.h"
+#include "OrderSystem.h"
 
 #ifdef EXPORTTHETRADINGMACHINEDLL
 #define THETRADINGMACHINEDLL __declspec(dllexport)
 #include "../IBInterfaceClient/IBInterfaceClient.h"
-#include "OrderSystem.h"
 #else
 #define THETRADINGMACHINEDLL __declspec(dllimport)
 
@@ -85,7 +85,7 @@ extern "C" 																											\
 class THETRADINGMACHINEDLL TheTradingMachine
 {
 public:
-	explicit TheTradingMachine(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr = std::shared_ptr<IBInterfaceClient>(nullptr));
+	explicit TheTradingMachine(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr = std::shared_ptr<IBInterfaceClient>(nullptr), bool live = false);
 
 	virtual ~TheTradingMachine();
 	std::shared_ptr<PlotData> getPlotData();

@@ -5,8 +5,7 @@
 #include <iostream>
 #include "TickDataSource.h"
 
-TickDataSource::TickDataSource(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr) :
-	tickDataDispatchCallback(algTickCallback),
+TickDataSource::TickDataSource(std::string in, std::shared_ptr<IBInterfaceClient> ibApiPtr) :
 	input(in),
 	ibApi(ibApiPtr),
 	threadCancellationToken(false),
@@ -68,7 +67,6 @@ double TickDataSource::lastPrice() const
 {
 	return _lastPrice;
 }
-
 
 void TickDataSource::readTickFile(void)
 {
@@ -153,9 +151,28 @@ void TickDataSource::readTickFile(void)
 	_finished = true;
 }
 
+int TickDataSource::registerCallback(std::function<void(const Tick&tick)> callback)
+{
+	std::lock_guard<std::mutex> lock(callbackListMtx);
+	callbackList[uniqueCallbackHandles] = callback;
+	return uniqueCallbackHandles++;
+}
+
+void TickDataSource::unregisterCallback(int handle)
+{
+	std::lock_guard<std::mutex> lock(callbackListMtx);
+	callbackList.erase(handle);
+}
+
 void TickDataSource::preTickDispatch(const Tick & tick)
 {
 	//save the price before dispatching the tick
 	_lastPrice = tick.price;
-	tickDataDispatchCallback(tick);
+
+	//dispatch the tick to the registered callbacks under a lock
+	std::lock_guard<std::mutex> lock(callbackListMtx);
+	for (auto& fn : callbackList)
+	{
+		fn.second(tick);
+	}
 }

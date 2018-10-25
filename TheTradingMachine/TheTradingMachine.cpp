@@ -13,35 +13,12 @@
 class TheTradingMachine::TheTradingMachineImpl
 {
 public:
-	explicit TheTradingMachineImpl(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr);
+	explicit TheTradingMachineImpl(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live);
 	~TheTradingMachineImpl();
 	std::shared_ptr<PlotData> plotData;
 	bool valid(void) const;
 
-private:
-	enum class Mode
-	{
-		REALTIME,
-		PLAYBACK
-	};
-
-	std::shared_ptr<IBInterfaceClient> ibApi;
-
-	std::function<void(const Tick&)> tickHandler;
-	void engineTickHandler(const Tick& tick);
-	// tickDataSource contains a thread which relies engineTickHandler which calls tickHandler.
-	// Because destruction happens in reverse order, we need to make sure the thread is stopped
-	// before tickHandler is destroyed or else tickHandler may be called by tickDataSource's thread
-	// after tickHandler is destroyed
-	TickDataSource tickDataSource;
-
-	Mode operationMode;
-	bool valid_;
-
-//Ordering System 
-private:
-	std::unique_ptr<OrderSystem> orderSystem;
-public: 
+public:
 	PositionId buyMarketNoStop(std::string ticker, int numShares);
 	PositionId buyMarketStopMarket(std::string ticker, int numShares, double stopPrice);
 	PositionId buyMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
@@ -63,27 +40,72 @@ public:
 
 	// closes an existing position. It guarantees that an existing position will not be overbought/sold due to a stoploss attached to an order.
 	void closePosition(PositionId posId);
+
+private:
+	enum class Mode
+	{
+		REALTIME,
+		PLAYBACK
+	};
+
+	std::shared_ptr<IBInterfaceClient> ibApi;
+	std::function<void(const Tick&)> tickHandler;
+	void engineTickHandler(const Tick& tick);
+
+	// tickDataSource contains a thread which relies engineTickHandler which calls tickHandler.
+	// Because destruction happens in reverse order, we need to make sure the thread is stopped
+	// before tickHandler is destroyed or else tickHandler may be called by tickDataSource's thread
+	// after tickHandler is destroyed
+	//tickDataSource is shared with accessee by orderSystem
+	std::shared_ptr<TickDataSource> tickDataSource;
+
+	Mode operationMode;
+	bool valid_;
+
+//Ordering System 
+private:
+	//declare as a pointer for lazy initialization
+	std::unique_ptr<OrderSystem> orderSystem;
 };
 
-TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr):
+TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live) :
 	tickHandler(algTickCallback),
 	ibApi(ibApiPtr),
 	plotData(std::make_shared<PlotData>()), //plot data must be initialized before preTickHandler is called
-	tickDataSource(in, [this](const Tick& tick) { this->engineTickHandler(tick); }, ibApiPtr)
+	tickDataSource(std::make_shared<TickDataSource>(in, ibApiPtr))
 {
-	//
-	// Check if it's a recorded data input for backtesting
-	//
-	if (in.find(".tickdat") != std::string::npos)
-	{
-		operationMode = Mode::PLAYBACK;
-	}
-	else if (ibApi != nullptr && ibApi->isReady())
-	{
-		operationMode = Mode::REALTIME;
-	}
 
-	valid_ = tickDataSource.valid();
+	if (tickDataSource->valid())
+	{
+		valid_ = true;
+		//we don't care about the handle because we won't be unregistering this callback
+		tickDataSource->registerCallback([this](const Tick& tick) 
+		{
+			this->engineTickHandler(tick); 
+		});
+
+		//
+		// Check if it's a recorded data input for backtesting
+		//
+		if (in.find(".tickdat") != std::string::npos)
+		{
+			operationMode = Mode::PLAYBACK;
+		}
+		else if (ibApi != nullptr && ibApi->isReady())
+		{
+			operationMode = Mode::REALTIME;
+		}
+
+		//if live trading is turned on, OrderSystem will offload orders to IB.
+		if(live && operationMode == Mode::REALTIME)
+		{
+			orderSystem = std::make_unique<OrderSystem>(ibApi);
+		}
+		else
+		{
+			orderSystem = std::make_unique<OrderSystem>(tickDataSource);
+		}
+	}
 }
 
 TheTradingMachine::TheTradingMachineImpl::~TheTradingMachineImpl()
@@ -122,7 +144,7 @@ void TheTradingMachine::TheTradingMachineImpl::engineTickHandler(const Tick & ti
 	}
 	// if the stream is finished, we MUST unload the data from the buffer. we have to block here
 	// since this is the last time this function will be called from the dataSource
-	else if (tickDataSource.finished())
+	else if (tickDataSource->finished())
 	{
 		lock.lock();
 		while (!plotData->buffer.empty())
@@ -199,10 +221,17 @@ void TheTradingMachine::TheTradingMachineImpl::modifyPosition(PositionId posId, 
 {
 }
 
-TheTradingMachine::TheTradingMachine(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr) :
-	impl_(new TheTradingMachineImpl(in, algTickCallback, ibApiPtr))
+TheTradingMachine::TheTradingMachine
+(
+	std::string in, 
+	std::function<void(const Tick&)> algTickCallback, 
+	std::shared_ptr<IBInterfaceClient> ibApiPtr, 
+	bool live
+) :
+	impl_(new TheTradingMachineImpl(in, algTickCallback, ibApiPtr, live))
 {
 }
+
 
 TheTradingMachine::~TheTradingMachine()
 {

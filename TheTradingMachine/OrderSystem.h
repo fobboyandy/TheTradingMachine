@@ -33,6 +33,12 @@ public:
 	void modifyPosition(PositionId posId, Position newPosition);
 
 private:
+	// handles stoplosses locally without sending a stoploss order to ib. also used
+	// for fileplayback stoploss emulation
+	void stopLossHandler(const Tick& tick);
+	void ibOrderUpdate(OrderId oid, Position p);
+
+private:
 	Portfolio _portfolio;
 
 	// used to create a mapping from OrderId to PositionId in order to
@@ -42,6 +48,4 @@ private:
 	std::shared_ptr<IBInterfaceClient> _ibApi;
 	std::shared_ptr<TickDataSource> _dataSource;
 	bool _liveTrade; 
-
-	void ibOrderUpdate(OrderId oid, Position p);
 };
