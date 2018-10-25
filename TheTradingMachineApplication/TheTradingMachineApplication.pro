@@ -41,9 +41,8 @@ HEADERS += \
     thetradingmachinemainwindow.h \
     playdialog.h \
     thetradingmachinetab.h \
-    ../IBInterfaceClient/IBInterfaceClient.h \
     CandleMaker.h \
-    ../TheTradingMachine/TheTradingMachine.h
+    ../TheTradingMachine/PlotData.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \

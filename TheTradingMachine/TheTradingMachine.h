@@ -7,11 +7,12 @@
 #include <vector>
 #include "../IBInterface/Tick.h"
 #include "../IBInterface/bar.h"
-#include "../IBInterfaceClient/IBInterfaceClient.h"
-#include "Portfolio.h"
+#include "PlotData.h"
 
 #ifdef EXPORTTHETRADINGMACHINEDLL
 #define THETRADINGMACHINEDLL __declspec(dllexport)
+#include "../IBInterfaceClient/IBInterfaceClient.h"
+#include "OrderSystem.h"
 #else
 #define THETRADINGMACHINEDLL __declspec(dllimport)
 
@@ -80,18 +81,6 @@ extern "C" 																											\
 		TheTradingMachine engine;	\
 	private:
 #endif
-
-// plot data structure shared with the gui. plot data is stored in this format.
-// the gui is provided an address to the plot data struct and notified upon 
-// new data
-struct PlotData
-{
-	std::mutex plotDataMtx;
-	bool finished;
-	std::queue<Tick> buffer;
-	std::vector<Tick> ticks;
-	std::vector<std::string> action;
-};
 
 class THETRADINGMACHINEDLL TheTradingMachine
 {

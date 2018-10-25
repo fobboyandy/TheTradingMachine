@@ -14,6 +14,7 @@ using PositionId = int;
 class Position
 {
 public:
+	Position();
 	Position(std::string ticker, int size);
 	~Position();
 

@@ -14,6 +14,10 @@ PositionId Portfolio::newPosition(Position pos)
 }
 
 
+Position::Position()
+{
+}
+
 Position::Position(std::string ticker, int size)
 {
 }
