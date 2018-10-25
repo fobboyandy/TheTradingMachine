@@ -4,6 +4,7 @@
 #include <string>
 #include "../IBInterfaceClient/IBInterfaceClient.h"
 
+using PositionId = int;
 
 //
 // Structure for holding information about a position. This is created initially as an empty
@@ -28,7 +29,6 @@ private:
 class Portfolio
 {
 public:
-	using PositionId = int;
 	Portfolio();
 	~Portfolio();
 

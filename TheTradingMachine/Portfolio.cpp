@@ -8,7 +8,7 @@ Portfolio::~Portfolio()
 {
 }
 
-Portfolio::PositionId Portfolio::newPosition(Position pos)
+PositionId Portfolio::newPosition(Position pos)
 {
 	return PositionId();
 }

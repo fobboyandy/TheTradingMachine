@@ -108,7 +108,6 @@ private:
 
 // Order api
 public:
-	using PositionId = Portfolio::PositionId;
 	// When these order functions are called, a PositionId is returned immediately. The functions
 	// do not block until the positions are filled. Since it's non blocking, the position is not guaranteed
 	// to be filled when the function returns. With the positionId however, the caller can query the status of the position
@@ -124,7 +123,6 @@ public:
 	PositionId sellMarketStopLimit(std::string ticker, double activationPrice, double limitPrice);
 	PositionId sellLimitStopMarket(std::string ticker, double buyLimit, double activationPrice);
 	PositionId sellLimitStopLimit(std::string ticker, double buyLimit, double activationPrice, double limitPrice);
-
 
 	// getPosition gets the current state of a position. It returns a copy to the caller.
 	Position getPosition(PositionId posId);
