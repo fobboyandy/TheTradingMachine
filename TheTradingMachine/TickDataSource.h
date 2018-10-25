@@ -13,20 +13,21 @@ public:
 	bool valid() const;
 	bool finished() const;
 	double lastPrice() const;
+
 private:
+	void preTickDispatch(const Tick& tick);
+	void readTickFile(void);
+
+private:
+	std::function<void(const Tick& tick)> tickDataDispatchCallback;
 	std::string input;
 	std::shared_ptr<IBInterfaceClient> ibApi;
-	std::thread readTickDataThread;
 	int dataStreamHandle;
 	std::atomic<bool> threadCancellationToken;
+	std::thread readTickDataThread;
 	int streamingDataHandle; // when we request real time data, we are given a handle so that we can cancel it upon closing
-	void readTickFile(void);
 	bool _valid;
 	bool _finished; //finished doesn't need to be atomic since the tickHandler thread runs on the same thread as readTickFile thread
-
-	void preTickDispatch(const Tick& tick);
-
 	// price is updated from another thread. make atomic
 	std::atomic<double> _lastPrice;
-	std::function<void(const Tick& tick)> tickDataDispatchCallback;
 };

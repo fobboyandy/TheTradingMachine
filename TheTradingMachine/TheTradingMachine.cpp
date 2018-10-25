@@ -26,10 +26,15 @@ private:
 	};
 
 	std::shared_ptr<IBInterfaceClient> ibApi;
-	TickDataSource tickDataSource;
 
 	std::function<void(const Tick&)> tickHandler;
 	void engineTickHandler(const Tick& tick);
+	// tickDataSource contains a thread which relies engineTickHandler which calls tickHandler.
+	// Because destruction happens in reverse order, we need to make sure the thread is stopped
+	// before tickHandler is destroyed or else tickHandler may be called by tickDataSource's thread
+	// after tickHandler is destroyed
+	TickDataSource tickDataSource;
+
 	Mode operationMode;
 	bool valid_;
 
@@ -133,11 +138,7 @@ void TheTradingMachine::TheTradingMachineImpl::engineTickHandler(const Tick & ti
 PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketNoStop(std::string ticker, int numShares)
 {
 	auto posId = orderSystem->buyMarketNoStop(ticker, numShares);
-	switch (operationMode)
-	{
-
-	}
-	return PositionId();
+	return posId;
 }
 
 PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketStopMarket(std::string ticker, int numShares, double stopPrice)
