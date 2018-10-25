@@ -150,9 +150,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Portfolio.h" />
     <ClInclude Include="TheTradingMachine.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Portfolio.cpp" />
     <ClCompile Include="TheTradingMachine.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

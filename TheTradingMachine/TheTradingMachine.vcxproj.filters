@@ -18,9 +18,15 @@
     <ClInclude Include="TheTradingMachine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Portfolio.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="TheTradingMachine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Portfolio.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

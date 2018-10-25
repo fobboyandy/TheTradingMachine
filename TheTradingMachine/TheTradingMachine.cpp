@@ -34,7 +34,9 @@ private:
 	int streamingDataHandle; // when we request real time data, we are given a handle so that we can cancel it upon closing
 	bool valid_;
 	void readTickFile(void);
+
 };
+
 
 TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr):
 	tickHandler(algTickCallback),

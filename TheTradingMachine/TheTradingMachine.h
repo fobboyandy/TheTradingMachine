@@ -8,6 +8,7 @@
 #include "../IBInterface/Tick.h"
 #include "../IBInterface/bar.h"
 #include "../IBInterfaceClient/IBInterfaceClient.h"
+#include "Portfolio.h"
 
 #ifdef EXPORTTHETRADINGMACHINEDLL
 #define THETRADINGMACHINEDLL __declspec(dllexport)
@@ -104,4 +105,34 @@ public:
 private:
 	class TheTradingMachineImpl;
 	TheTradingMachineImpl* impl_;
+
+// Order api
+public:
+	using PositionId = Portfolio::PositionId;
+	// When these order functions are called, a PositionId is returned immediately. The functions
+	// do not block until the positions are filled. Since it's non blocking, the position is not guaranteed
+	// to be filled when the function returns. With the positionId however, the caller can query the status of the position
+	// using getPosition(PositionId).
+	PositionId buyMarketNoStop(std::string ticker);
+	PositionId buyMarketStopMarket(std::string ticker, double stopPrice);
+	PositionId buyMarketStopLimit(std::string ticker, double activationPrice, double limitPrice);
+	PositionId buyLimitStopMarket(std::string ticker, double buyLimit, double activationPrice);
+	PositionId buyLimitStopLimit(std::string ticker, double buyLimit, double activationPrice, double limitPrice);
+
+	PositionId sellMarketNoStop(std::string ticker);
+	PositionId sellMarketStopMarket(std::string ticker, double activationPrice);
+	PositionId sellMarketStopLimit(std::string ticker, double activationPrice, double limitPrice);
+	PositionId sellLimitStopMarket(std::string ticker, double buyLimit, double activationPrice);
+	PositionId sellLimitStopLimit(std::string ticker, double buyLimit, double activationPrice, double limitPrice);
+
+
+	// getPosition gets the current state of a position. It returns a copy to the caller.
+	Position getPosition(PositionId posId);
+
+	// modifyPosition allows a user to update an existing position if the update is on the same side.
+	// for example. a short can only increase or decrease but cannot be turned into a long
+	void modifyPosition(PositionId posId, Position newPosition);
+
+	// closes an existing position. It guarantees that an existing position will not be overbought/sold due to a stoploss attached to an order.
+	void closePosition(PositionId posId);
 };
