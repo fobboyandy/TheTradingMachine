@@ -37,17 +37,17 @@ private:
 private:
 	std::unique_ptr<OrderSystem> orderSystem;
 public: 
-	PositionId buyMarketNoStop(std::string ticker);
-	PositionId buyMarketStopMarket(std::string ticker, double stopPrice);
-	PositionId buyMarketStopLimit(std::string ticker, double activationPrice, double limitPrice);
-	PositionId buyLimitStopMarket(std::string ticker, double buyLimit, double activationPrice);
-	PositionId buyLimitStopLimit(std::string ticker, double buyLimit, double activationPrice, double limitPrice);
+	PositionId buyMarketNoStop(std::string ticker, int numShares);
+	PositionId buyMarketStopMarket(std::string ticker, int numShares, double stopPrice);
+	PositionId buyMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
+	PositionId buyLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
+	PositionId buyLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
-	PositionId sellMarketNoStop(std::string ticker);
-	PositionId sellMarketStopMarket(std::string ticker, double activationPrice);
-	PositionId sellMarketStopLimit(std::string ticker, double activationPrice, double limitPrice);
-	PositionId sellLimitStopMarket(std::string ticker, double buyLimit, double activationPrice);
-	PositionId sellLimitStopLimit(std::string ticker, double buyLimit, double activationPrice, double limitPrice);
+	PositionId sellMarketNoStop(std::string ticker, int numShares);
+	PositionId sellMarketStopMarket(std::string ticker, int numShares, double activationPrice);
+	PositionId sellMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
+	PositionId sellLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
+	PositionId sellLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
 	// getPosition gets the current state of a position. It returns a copy to the caller.
 	Position getPosition(PositionId posId);
@@ -59,7 +59,6 @@ public:
 	// closes an existing position. It guarantees that an existing position will not be overbought/sold due to a stoploss attached to an order.
 	void closePosition(PositionId posId);
 };
-
 
 TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr):
 	tickHandler(algTickCallback),
@@ -131,52 +130,57 @@ void TheTradingMachine::TheTradingMachineImpl::engineTickHandler(const Tick & ti
 
 }
 
-PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketNoStop(std::string ticker)
+PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketNoStop(std::string ticker, int numShares)
+{
+	auto posId = orderSystem->buyMarketNoStop(ticker, numShares);
+	switch (operationMode)
+	{
+
+	}
+	return PositionId();
+}
+
+PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketStopMarket(std::string ticker, int numShares, double stopPrice)
 {
 	return PositionId();
 }
 
-PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketStopMarket(std::string ticker, double stopPrice)
+PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
 {
 	return PositionId();
 }
 
-PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketStopLimit(std::string ticker, double activationPrice, double limitPrice)
+PositionId TheTradingMachine::TheTradingMachineImpl::buyLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
 {
 	return PositionId();
 }
 
-PositionId TheTradingMachine::TheTradingMachineImpl::buyLimitStopMarket(std::string ticker, double buyLimit, double activationPrice)
+PositionId TheTradingMachine::TheTradingMachineImpl::buyLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
 {
 	return PositionId();
 }
 
-PositionId TheTradingMachine::TheTradingMachineImpl::buyLimitStopLimit(std::string ticker, double buyLimit, double activationPrice, double limitPrice)
+PositionId TheTradingMachine::TheTradingMachineImpl::sellMarketNoStop(std::string ticker, int numShares)
 {
 	return PositionId();
 }
 
-PositionId TheTradingMachine::TheTradingMachineImpl::sellMarketNoStop(std::string ticker)
+PositionId TheTradingMachine::TheTradingMachineImpl::sellMarketStopMarket(std::string ticker, int numShares, double activationPrice)
 {
 	return PositionId();
 }
 
-PositionId TheTradingMachine::TheTradingMachineImpl::sellMarketStopMarket(std::string ticker, double activationPrice)
+PositionId TheTradingMachine::TheTradingMachineImpl::sellMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
 {
 	return PositionId();
 }
 
-PositionId TheTradingMachine::TheTradingMachineImpl::sellMarketStopLimit(std::string ticker, double activationPrice, double limitPrice)
+PositionId TheTradingMachine::TheTradingMachineImpl::sellLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
 {
 	return PositionId();
 }
 
-PositionId TheTradingMachine::TheTradingMachineImpl::sellLimitStopMarket(std::string ticker, double buyLimit, double activationPrice)
-{
-	return PositionId();
-}
-
-PositionId TheTradingMachine::TheTradingMachineImpl::sellLimitStopLimit(std::string ticker, double buyLimit, double activationPrice, double limitPrice)
+PositionId TheTradingMachine::TheTradingMachineImpl::sellLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
 {
 	return PositionId();
 }
@@ -220,6 +224,65 @@ bool TheTradingMachine::valid() const
 	return impl_->valid();
 }
 
+void TheTradingMachine::modifyPosition(PositionId posId, Position newPosition)
+{
+}
+
 void TheTradingMachine::closePosition(PositionId posId)
 {
+}
+
+PositionId TheTradingMachine::buyMarketNoStop(std::string ticker, int numShares)
+{
+	return PositionId();
+}
+
+PositionId TheTradingMachine::buyMarketStopMarket(std::string ticker, int numShares, double stopPrice)
+{
+	return PositionId();
+}
+
+PositionId TheTradingMachine::buyMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
+{
+	return PositionId();
+}
+
+PositionId TheTradingMachine::buyLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
+{
+	return PositionId();
+}
+
+PositionId TheTradingMachine::buyLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
+{
+	return PositionId();
+}
+
+PositionId TheTradingMachine::sellMarketNoStop(std::string ticker, int numShares)
+{
+	return PositionId();
+}
+
+PositionId TheTradingMachine::sellMarketStopMarket(std::string ticker, int numShares, double activationPrice)
+{
+	return PositionId();
+}
+
+PositionId TheTradingMachine::sellMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
+{
+	return PositionId();
+}
+
+PositionId TheTradingMachine::sellLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
+{
+	return PositionId();
+}
+
+PositionId TheTradingMachine::sellLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
+{
+	return PositionId();
+}
+
+Position TheTradingMachine::getPosition(PositionId posId)
+{
+	return Position();
 }

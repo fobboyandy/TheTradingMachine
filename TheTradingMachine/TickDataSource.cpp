@@ -30,7 +30,7 @@ TickDataSource::TickDataSource(std::string in, std::function<void(const Tick&)> 
 	}
 	else if (ibApi != nullptr && ibApi->isReady())
 	{
-		dataStreamHandle = ibApi->requestRealTimeTicks(input, tickDataDispatchCallback);
+		dataStreamHandle = ibApi->requestRealTimeTicks(input, [this](const Tick& tick) {this->preTickDispatch(tick); });
 		if (dataStreamHandle != -1)
 		{
 			_valid = true;
@@ -62,6 +62,11 @@ bool TickDataSource::valid() const
 bool TickDataSource::finished() const
 {
 	return _finished;
+}
+
+double TickDataSource::lastPrice() const
+{
+	return _lastPrice;
 }
 
 
@@ -136,7 +141,7 @@ void TickDataSource::readTickFile(void)
 				break;
 			}
 		}
-		tickDataDispatchCallback(callbackTick);
+		preTickDispatch(callbackTick);
 	}
 
 	//if threadcancellation was toggled, then it was forcefully terminated
@@ -146,4 +151,11 @@ void TickDataSource::readTickFile(void)
 		std::cout << "terminated" << std::endl;
 
 	_finished = true;
+}
+
+void TickDataSource::preTickDispatch(const Tick & tick)
+{
+	//save the price before dispatching the tick
+	_lastPrice = tick.price;
+	tickDataDispatchCallback(tick);
 }

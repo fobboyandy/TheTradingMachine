@@ -12,6 +12,7 @@ public:
 	~TickDataSource();
 	bool valid() const;
 	bool finished() const;
+	double lastPrice() const;
 private:
 	std::string input;
 	std::shared_ptr<IBInterfaceClient> ibApi;
@@ -23,5 +24,9 @@ private:
 	bool _valid;
 	bool _finished; //finished doesn't need to be atomic since the tickHandler thread runs on the same thread as readTickFile thread
 
+	void preTickDispatch(const Tick& tick);
+
+	// price is updated from another thread. make atomic
+	std::atomic<double> _lastPrice;
 	std::function<void(const Tick& tick)> tickDataDispatchCallback;
 };

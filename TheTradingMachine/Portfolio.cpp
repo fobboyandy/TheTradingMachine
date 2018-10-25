@@ -1,6 +1,7 @@
 #include "Portfolio.h"
 
-Portfolio::Portfolio()
+Portfolio::Portfolio():
+	_uniquePositionId(0)
 {
 }
 
@@ -8,28 +9,17 @@ Portfolio::~Portfolio()
 {
 }
 
-PositionId Portfolio::newPosition(Position pos)
+PositionId Portfolio::newPosition()
 {
-	return PositionId();
+	// use postIncrement to keep consistent with m_orderId in ibApi
+	auto currentPositionId = _uniquePositionId++;
+	_positions[currentPositionId] = Position{0, 0};
+	return currentPositionId;
 }
 
-
-Position::Position()
+// caller handles errorchecking
+void Portfolio::fillPosition(PositionId posId, double avgPrice, int numShares)
 {
-}
-
-Position::Position(std::string ticker, int size)
-{
-}
-
-Position::~Position()
-{
-}
-
-void Position::fillPosition()
-{
-}
-
-void Position::fillPosition(int numShares)
-{
+	_positions[posId].shares = numShares;
+	_positions[posId].averagePrice = avgPrice;
 }

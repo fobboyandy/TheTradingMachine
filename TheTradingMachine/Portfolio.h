@@ -8,25 +8,17 @@ using PositionId = int;
 
 //
 // Structure for holding information about a position. This is created initially as an empty
-// position. It must be filled before it becomes valid either through the constructor or 
-// using fillPosition
+// position. It is initialized with no shares. Because we only do all or none orders, when an order
+// is filled, shares will hold the number of shares that we hold. if shares == 0, then we have no shares
 //
-class Position
+struct Position
 {
-public:
-	Position();
-	Position(std::string ticker, int size);
-	~Position();
-
-	void fillPosition();
-	void fillPosition(int numShares);
-private:
-	std::string ticker;
-	double averageFillPrice;
-	int filled;
-	int remaining;
+	double averagePrice;
+	int shares;
 };
 
+// Portfolio contains many different trade positions of a SINGLE stock
+// Each position is identified by the position id. 
 class Portfolio
 {
 public:
@@ -36,9 +28,13 @@ public:
 	// calling this returns a unique position id which identifies the position to be
 	// added to the portfolio. This function only allocates an empty position to the 
 	// portfolio. It should be filled with the number of shares by calling Position::fillPosition(int)
-	PositionId newPosition(Position pos);
+	PositionId newPosition();
+
+	// all orders are submitted as all or none so we either fill the entire position or none
+	// therefore, this should only be called once for any order
+	void fillPosition(PositionId posId, double avgPrice, int numShares);
 
 private:
 	PositionId _uniquePositionId;
-	std::unordered_map<int, Position> _positions;
+	std::unordered_map<PositionId, Position> _positions;
 };

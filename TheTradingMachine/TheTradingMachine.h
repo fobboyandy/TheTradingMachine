@@ -101,17 +101,19 @@ public:
 	// do not block until the positions are filled. Since it's non blocking, the position is not guaranteed
 	// to be filled when the function returns. With the positionId however, the caller can query the status of the position
 	// using getPosition(PositionId).
-	PositionId buyMarketNoStop(std::string ticker);
-	PositionId buyMarketStopMarket(std::string ticker, double stopPrice);
-	PositionId buyMarketStopLimit(std::string ticker, double activationPrice, double limitPrice);
-	PositionId buyLimitStopMarket(std::string ticker, double buyLimit, double activationPrice);
-	PositionId buyLimitStopLimit(std::string ticker, double buyLimit, double activationPrice, double limitPrice);
+		
+	// all orders are submitted as all or none
+	PositionId buyMarketNoStop(std::string ticker, int numShares);
+	PositionId buyMarketStopMarket(std::string ticker, int numShares, double stopPrice);
+	PositionId buyMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
+	PositionId buyLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
+	PositionId buyLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
-	PositionId sellMarketNoStop(std::string ticker);
-	PositionId sellMarketStopMarket(std::string ticker, double activationPrice);
-	PositionId sellMarketStopLimit(std::string ticker, double activationPrice, double limitPrice);
-	PositionId sellLimitStopMarket(std::string ticker, double buyLimit, double activationPrice);
-	PositionId sellLimitStopLimit(std::string ticker, double buyLimit, double activationPrice, double limitPrice);
+	PositionId sellMarketNoStop(std::string ticker, int numShares);
+	PositionId sellMarketStopMarket(std::string ticker, int numShares, double activationPrice);
+	PositionId sellMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
+	PositionId sellLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
+	PositionId sellLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
 	// getPosition gets the current state of a position. It returns a copy to the caller.
 	Position getPosition(PositionId posId);
