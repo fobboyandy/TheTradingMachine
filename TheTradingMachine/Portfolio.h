@@ -15,6 +15,7 @@ struct Position
 {
 	double averagePrice;
 	int shares;
+	double profit;
 };
 
 // Portfolio contains many different trade positions of a SINGLE stock

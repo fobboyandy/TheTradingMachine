@@ -13,28 +13,7 @@ TickDataSource::TickDataSource(std::string in, std::shared_ptr<IBInterfaceClient
 	_valid(false),
 	_finished(false)
 {
-	//
-	// Check if it's a recorded data input for backtesting
-	//
-	if (input.find(".tickdat") != std::string::npos)
-	{
-		//start a thread to read file
-		readTickDataThread = std::thread([this]
-		{
-			// new thread that reads tick data from a file and calls derived
-			// classes' tickhandler (calls preTickHandler first)
-			readTickFile();
-		});
-		_valid = true;
-	}
-	else if (ibApi != nullptr && ibApi->isReady())
-	{
-		dataStreamHandle = ibApi->requestRealTimeTicks(input, [this](const Tick& tick) {this->preTickDispatch(tick); });
-		if (dataStreamHandle != -1)
-		{
-			_valid = true;
-		}
-	}
+
 }
 
 TickDataSource::~TickDataSource()
@@ -66,6 +45,36 @@ bool TickDataSource::finished() const
 double TickDataSource::lastPrice() const
 {
 	return _lastPrice;
+}
+
+void TickDataSource::start() 
+{	
+	//
+	// Check if it's a recorded data input for backtesting
+	//
+	if (input.find(".tickdat") != std::string::npos)
+	{
+		//start a thread to read file
+		readTickDataThread = std::thread([this]
+		{
+			// new thread that reads tick data from a file and calls derived
+			// classes' tickhandler (calls preTickHandler first)
+			readTickFile();
+		});
+		_valid = true;
+	}
+	else if (ibApi != nullptr && ibApi->isReady())
+	{
+		dataStreamHandle = ibApi->requestRealTimeTicks(input, [this](const Tick& tick) {this->preTickDispatch(tick); });
+		if (dataStreamHandle != -1)
+		{
+			_valid = true;
+		}
+	}
+}
+
+void TickDataSource::stop()
+{
 }
 
 void TickDataSource::readTickFile(void)

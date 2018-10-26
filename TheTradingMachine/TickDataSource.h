@@ -19,6 +19,11 @@ public:
 	bool finished() const;
 	double lastPrice() const;
 
+	// since callbacks are not registered at constructor, we need to start the file reading
+	// thread after the caller has properly registered for their callbacks before starting
+	void start();
+	void stop();
+
 private:
 	void preTickDispatch(const Tick& tick);
 	void readTickFile(void);

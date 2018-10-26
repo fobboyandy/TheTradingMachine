@@ -1,20 +1,38 @@
 #include "OrderSystem.h"
 
 
-OrderSystem::OrderSystem(std::shared_ptr<IBInterfaceClient> ibApi):
+OrderSystem::OrderSystem(std::shared_ptr<TickDataSource> dataSource, std::shared_ptr<IBInterfaceClient> ibApi, bool live) :
 	_OrderPosition(std::make_unique<std::unordered_map<OrderId, PositionId>>()),
 	_ibApi(ibApi),
-	_liveTrade(true)
-{
-
-}
-
-OrderSystem::OrderSystem(std::shared_ptr<TickDataSource> dataSource) :
 	_dataSource(dataSource),
-	_liveTrade(false)
+	_liveTrade(live)
 {
-
+	// if live trading, we send all stoploss orders to interactive broker
+	// if non live trading, we register stoplossHandler as a callback
+	// to locally monitor stoplosses
+	if (dataSource != nullptr)
+	{
+		if (_liveTrade)
+		{
+			if (ibApi == nullptr || !ibApi->isReady())
+			{
+				throw "A valid Interactive Broker connection must be provided to do live trading.";
+			}
+		}
+		else
+		{
+			dataSource->registerCallback([this](const Tick& tick)
+			{
+				this->stoplossHandler(tick);
+			});
+		}
+	}
+	else
+	{
+		throw "Invalid data source.";
+	}
 }
+
 
 OrderSystem::~OrderSystem()
 {
@@ -100,7 +118,7 @@ void OrderSystem::modifyPosition(PositionId posId, Position newPosition)
 {
 }
 
-void OrderSystem::stopLossHandler(const Tick & tick)
+void OrderSystem::stoplossHandler(const Tick & tick)
 {
 }
 

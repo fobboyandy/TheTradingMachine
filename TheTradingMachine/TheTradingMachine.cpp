@@ -74,38 +74,42 @@ TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string in, 
 	plotData(std::make_shared<PlotData>()), //plot data must be initialized before preTickHandler is called
 	tickDataSource(std::make_shared<TickDataSource>(in, ibApiPtr))
 {
-
-	if (tickDataSource->valid())
+	//we don't care about the handle because we won't be unregistering this callback
+	tickDataSource->registerCallback([this](const Tick& tick) 
 	{
-		valid_ = true;
-		//we don't care about the handle because we won't be unregistering this callback
-		tickDataSource->registerCallback([this](const Tick& tick) 
-		{
-			this->engineTickHandler(tick); 
-		});
+		this->engineTickHandler(tick); 
+	});
 
-		//
-		// Check if it's a recorded data input for backtesting
-		//
-		if (in.find(".tickdat") != std::string::npos)
-		{
-			operationMode = Mode::PLAYBACK;
-		}
-		else if (ibApi != nullptr && ibApi->isReady())
-		{
-			operationMode = Mode::REALTIME;
-		}
-
-		//if live trading is turned on, OrderSystem will offload orders to IB.
-		if(live && operationMode == Mode::REALTIME)
-		{
-			orderSystem = std::make_unique<OrderSystem>(ibApi);
-		}
-		else
-		{
-			orderSystem = std::make_unique<OrderSystem>(tickDataSource);
-		}
+	//
+	// Check if it's a recorded data input for backtesting
+	//
+	if (in.find(".tickdat") != std::string::npos)
+	{
+		operationMode = Mode::PLAYBACK;
 	}
+	else if (ibApi != nullptr && ibApi->isReady())
+	{
+		operationMode = Mode::REALTIME;
+	}
+
+	//if live trading is turned on, OrderSystem will offload orders to IB.
+	if(live && operationMode == Mode::REALTIME)
+	{
+		orderSystem = std::make_unique<OrderSystem>(tickDataSource, ibApi, true);
+	}
+	else
+	{
+		orderSystem = std::make_unique<OrderSystem>(tickDataSource);
+	}
+
+	// all the necessary callbacks have been registered at this point. 
+	// start the data source.
+	tickDataSource->start();
+	if (!tickDataSource->valid())
+	{
+		throw "Invalid data source!";
+	}
+	valid_ = true;
 }
 
 TheTradingMachine::TheTradingMachineImpl::~TheTradingMachineImpl()

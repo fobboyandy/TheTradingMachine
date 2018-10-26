@@ -10,11 +10,11 @@
 class OrderSystem
 {
 public:
-	// two options. construction providing ibApi means placing live orders. otherwise, 
-	// providing dataSource means prices are simulated and orders are filled without placing
-	// actual orders
-	OrderSystem(std::shared_ptr<IBInterfaceClient> ibApi);
-	OrderSystem(std::shared_ptr<TickDataSource> dataSource);
+	// providing only the datasource implies simulated trading. all orders will be filled immediately. stoplosses will be
+	// simulated and monitored by registering stopLossHandler as a callback to dataSource. Otherwise if ibApi is provided and
+	// the redundant (redundant because providing ibApi already implies live trading since it isn't used for paper trading) live 
+	// trading flag is true, then all orders and stoplosses will be created and sent to IB as live orders.
+	OrderSystem(std::shared_ptr<TickDataSource> dataSource, std::shared_ptr<IBInterfaceClient> ibApi = nullptr, bool live = false);
 	~OrderSystem();
 	
 	PositionId buyMarketNoStop(std::string ticker, int numShares);
@@ -35,7 +35,7 @@ public:
 private:
 	// handles stoplosses locally without sending a stoploss order to ib. also used
 	// for fileplayback stoploss emulation
-	void stopLossHandler(const Tick& tick);
+	void stoplossHandler(const Tick& tick);
 	void ibOrderUpdate(OrderId oid, Position p);
 
 private:
@@ -47,5 +47,7 @@ private:
 	std::unique_ptr<std::unordered_map<OrderId, PositionId>> _OrderPosition;
 	std::shared_ptr<IBInterfaceClient> _ibApi;
 	std::shared_ptr<TickDataSource> _dataSource;
-	bool _liveTrade; 
+	const bool _liveTrade; 
+
+
 };
