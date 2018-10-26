@@ -3,8 +3,9 @@
 #include "SupportBreakShort.h"
 #include "TheTradingMachine.h"
 
-SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst) :
-	engine(input, [this](const Tick& tick) {this->tickHandler(tick); }, ibInst),
+SupportBreakShort::SupportBreakShort(std::string in, std::shared_ptr<IBInterfaceClient> ibInst) :
+	engine(in, [this](const Tick& tick) {this->tickHandler(tick); }, ibInst),
+	input(in),
 	minuteBarMaker(60), // using minute time frame for this algorithm
 	prevDir(UNDEFINED),
 	previousStrength(NONE),
@@ -19,6 +20,8 @@ SupportBreakShort::~SupportBreakShort()
 
 void SupportBreakShort::tickHandler(const Tick & tick)
 {
+	engine.buyMarketNoStop(input, 100);
+
 	// does nothing for now. all plot data is handled in base class
 
 	//Bar minuteBar;

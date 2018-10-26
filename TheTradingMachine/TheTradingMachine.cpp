@@ -48,9 +48,21 @@ private:
 		PLAYBACK
 	};
 
+	const std::string input;
 	std::shared_ptr<IBInterfaceClient> ibApi;
 	std::function<void(const Tick&)> tickHandler;
 	void engineTickHandler(const Tick& tick);
+
+	//Ordering System 
+private:
+	// declare as a pointer for lazy initialization. During initialization
+	// orderSystem is created AFTER tickDataSource because orderSystem relies on 
+	// tickDataSource to function. However, we want tickDataSource to be destructed 
+	// before orderSystem because tickDataSource contains a thread which
+	// calls orderSystem's member function. This would lead to calling an already
+	// destroyed function if orderSystem was destructed first
+	// orderSystem also contains an instance of TickDataSource shared_ptr!! need to refactor this
+	std::unique_ptr<OrderSystem> orderSystem;
 
 	// tickDataSource contains a thread which relies engineTickHandler which calls tickHandler.
 	// Because destruction happens in reverse order, we need to make sure the thread is stopped
@@ -62,13 +74,10 @@ private:
 	Mode operationMode;
 	bool valid_;
 
-//Ordering System 
-private:
-	//declare as a pointer for lazy initialization
-	std::unique_ptr<OrderSystem> orderSystem;
 };
 
 TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live) :
+	input(in),
 	tickHandler(algTickCallback),
 	ibApi(ibApiPtr),
 	plotData(std::make_shared<PlotData>()), //plot data must be initialized before preTickHandler is called
@@ -163,8 +172,7 @@ void TheTradingMachine::TheTradingMachineImpl::engineTickHandler(const Tick & ti
 
 PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketNoStop(std::string ticker, int numShares)
 {
-	auto posId = orderSystem->buyMarketNoStop(ticker, numShares);
-	return posId;
+	return orderSystem->buyMarketNoStop(ticker, numShares);
 }
 
 PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketStopMarket(std::string ticker, int numShares, double stopPrice)
@@ -268,7 +276,7 @@ void TheTradingMachine::closePosition(PositionId posId)
 
 PositionId TheTradingMachine::buyMarketNoStop(std::string ticker, int numShares)
 {
-	return PositionId();
+	return impl_->buyMarketNoStop(ticker, numShares);
 }
 
 PositionId TheTradingMachine::buyMarketStopMarket(std::string ticker, int numShares, double stopPrice)

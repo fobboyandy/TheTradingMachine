@@ -35,6 +35,7 @@ public:
 private:
 	// handles stoplosses locally without sending a stoploss order to ib. also used
 	// for fileplayback stoploss emulation
+	int stoplossHandlerHandle;
 	void stoplossHandler(const Tick& tick);
 	void ibOrderUpdate(OrderId oid, Position p);
 

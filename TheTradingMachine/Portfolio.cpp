@@ -20,7 +20,7 @@ PositionId Portfolio::newPosition()
 // caller handles errorchecking
 void Portfolio::fillPosition(PositionId posId, double avgPrice, int numShares)
 {
-	const auto position = _positions[posId];
+	auto& position = _positions[posId];
 	
 	// if it's an existing position
 	if (position.shares != 0)
@@ -28,7 +28,6 @@ void Portfolio::fillPosition(PositionId posId, double avgPrice, int numShares)
 
 	}
 
-
-	_positions[posId].shares = numShares;
-	_positions[posId].averagePrice = avgPrice;
+	position.shares = numShares;
+	position.averagePrice = avgPrice;
 }

@@ -21,7 +21,7 @@ OrderSystem::OrderSystem(std::shared_ptr<TickDataSource> dataSource, std::shared
 		}
 		else
 		{
-			dataSource->registerCallback([this](const Tick& tick)
+			stoplossHandlerHandle = dataSource->registerCallback([this](const Tick& tick)
 			{
 				this->stoplossHandler(tick);
 			});
@@ -36,6 +36,7 @@ OrderSystem::OrderSystem(std::shared_ptr<TickDataSource> dataSource, std::shared
 
 OrderSystem::~OrderSystem()
 {
+	_dataSource->unregisterCallback(stoplossHandlerHandle);
 }
 
 PositionId OrderSystem::buyMarketNoStop(std::string ticker, int numShares)
