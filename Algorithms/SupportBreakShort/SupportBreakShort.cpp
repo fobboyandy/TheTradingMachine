@@ -3,13 +3,21 @@
 #include "SupportBreakShort.h"
 #include "TheTradingMachine.h"
 
-SupportBreakShort::SupportBreakShort(std::string in, std::shared_ptr<IBInterfaceClient> ibInst) :
-	engine(in, [this](const Tick& tick) {this->tickHandler(tick); }, ibInst),
-	input(in),
+SupportBreakShort::SupportBreakShort(std::string tickDataFile):
+	engine(tickDataFile),
+	input(tickDataFile), 
 	minuteBarMaker(60), // using minute time frame for this algorithm
 	prevDir(UNDEFINED),
-	previousStrength(NONE),
-	profit(0)
+	previousStrength(NONE)
+{
+}
+
+SupportBreakShort::SupportBreakShort(std::string ticker, std::shared_ptr<IBInterfaceClient> ibInst, bool live) :
+	engine(ticker, ibInst, live),
+	input(ticker),
+	minuteBarMaker(60), // using minute time frame for this algorithm
+	prevDir(UNDEFINED),
+	previousStrength(NONE)
 {
 
 }
@@ -174,4 +182,58 @@ void SupportBreakShort::shortTrade()
 	}
 }
 
-EXPORT_ALGORITHM(SupportBreakShort)
+#include <stdexcept>
+#include <unordered_map>
+#include <memory>
+
+static std::unordered_map<int, std::unique_ptr<SupportBreakShort>> AlgorithmInstances;
+extern "C"
+{
+	/*
+	* int represents a handle to the instantiation of the algorithm corresponding to the input ticker
+	* this handle needs to be stored by the caller for destruction and calling algorithm
+	* specific functions. This is necessary because multiple tickers can be running on the same
+	* algorithm and we only have a single instance of the dll file
+	*/
+	__declspec(dllexport) int PlayAlgorithm(
+		std::string dataInput,
+		std::shared_ptr<PlotData>* dataOut,
+		std::shared_ptr<IBInterfaceClient> ibInst,
+		bool live)
+	{
+		static auto uniqueHandles = 0;
+
+		std::unique_ptr<SupportBreakShort> newInstance;
+		
+		/* Engine throws exception for failed constructions*/
+		try
+		{
+			if (ibInst == nullptr)
+			{
+				newInstance = std::make_unique<SupportBreakShort>(dataInput);
+			}
+			else
+			{
+				newInstance = std::make_unique<SupportBreakShort>(dataInput, ibInst, live);
+			}
+
+			if (dataOut != nullptr)
+			{
+				*dataOut = newInstance->engine.getPlotData();
+			}
+			AlgorithmInstances[uniqueHandles] = std::move(newInstance);
+			return static_cast<int>(uniqueHandles++);
+			
+		}
+		catch(const std::runtime_error&)
+		{
+			return -1;
+		}
+	}
+
+	__declspec(dllexport) bool StopAlgorithm(int instHandle)
+	{
+		AlgorithmInstances.erase(instHandle);
+		return true;
+	}
+}

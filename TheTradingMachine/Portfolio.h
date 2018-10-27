@@ -3,8 +3,7 @@
 #include <unordered_map>
 #include <string>
 #include "../IBInterfaceClient/IBInterfaceClient.h"
-
-using PositionId = int;
+#include "Common.h"
 
 //
 // Structure for holding information about a position. This is created initially as an empty

@@ -4,20 +4,28 @@
 #include <sstream>
 #include <fstream>
 #include <thread>
-#include <assert.h>
+#include <stdexcept>
 #include "TheTradingMachine.h"
-#include "OrderSystem.h"
-#include "TickDataSource.h"
-
+#include "LocalBroker.h"
+#include "Common.h"
 
 class TheTradingMachine::TheTradingMachineImpl
 {
 public:
-	explicit TheTradingMachineImpl(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live);
-	~TheTradingMachineImpl();
-	std::shared_ptr<PlotData> plotData;
-	bool valid(void) const;
+	//paper trading using tickdata
+	TheTradingMachineImpl(std::string tickDataFile);
 
+	//live trading or paper trade using real time ticks.
+	TheTradingMachineImpl(std::string ticker, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live = false);
+	~TheTradingMachineImpl();
+	bool valid(void) const;
+	void run();
+	void setCallback(TickCallbackFunction callback);
+
+	// public plotData so that algorithm can post algorithm specific plot data
+	std::shared_ptr<PlotData> plotData;
+
+//ordering api
 public:
 	PositionId buyMarketNoStop(std::string ticker, int numShares);
 	PositionId buyMarketStopMarket(std::string ticker, int numShares, double stopPrice);
@@ -31,94 +39,54 @@ public:
 	PositionId sellLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
 	PositionId sellLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
-	// getPosition gets the current state of a position. It returns a copy to the caller.
-	Position getPosition(PositionId posId);
-
-	// modifyPosition allows a user to update an existing position if the update is on the same side.
-	// for example. a short can only increase or decrease but cannot be turned into a long
-	void modifyPosition(PositionId posId, Position newPosition);
-
 	// closes an existing position. It guarantees that an existing position will not be overbought/sold due to a stoploss attached to an order.
 	void closePosition(PositionId posId);
 
 private:
-	enum class Mode
-	{
-		REALTIME,
-		PLAYBACK
-	};
-
-	const std::string input;
+	TickCallbackFunction algorithmTickCallback;
 	std::shared_ptr<IBInterfaceClient> ibApi;
-	std::function<void(const Tick&)> tickHandler;
 	void engineTickHandler(const Tick& tick);
-
-	//Ordering System 
-private:
-	// declare as a pointer for lazy initialization. During initialization
-	// orderSystem is created AFTER tickDataSource because orderSystem relies on 
-	// tickDataSource to function. However, we want tickDataSource to be destructed 
-	// before orderSystem because tickDataSource contains a thread which
-	// calls orderSystem's member function. This would lead to calling an already
-	// destroyed function if orderSystem was destructed first
-	// orderSystem also contains an instance of TickDataSource shared_ptr!! need to refactor this
-	std::unique_ptr<OrderSystem> orderSystem;
-
-	// tickDataSource contains a thread which relies engineTickHandler which calls tickHandler.
-	// Because destruction happens in reverse order, we need to make sure the thread is stopped
-	// before tickHandler is destroyed or else tickHandler may be called by tickDataSource's thread
-	// after tickHandler is destroyed
-	//tickDataSource is shared with accessee by orderSystem
-	std::shared_ptr<TickDataSource> tickDataSource;
-
-	Mode operationMode;
-	bool valid_;
-
+	LocalBroker localBroker;
+	bool _valid;
 };
 
-TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live) :
-	input(in),
-	tickHandler(algTickCallback),
-	ibApi(ibApiPtr),
-	plotData(std::make_shared<PlotData>()), //plot data must be initialized before preTickHandler is called
-	tickDataSource(std::make_shared<TickDataSource>(in, ibApiPtr))
+TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string tickDataFile):
+	plotData(std::make_shared<PlotData>()),
+	localBroker(tickDataFile)
 {
-	//we don't care about the handle because we won't be unregistering this callback
-	tickDataSource->registerCallback([this](const Tick& tick) 
+	if (localBroker.valid())
 	{
-		this->engineTickHandler(tick); 
-	});
-
-	//
-	// Check if it's a recorded data input for backtesting
-	//
-	if (in.find(".tickdat") != std::string::npos)
-	{
-		operationMode = Mode::PLAYBACK;
-	}
-	else if (ibApi != nullptr && ibApi->isReady())
-	{
-		operationMode = Mode::REALTIME;
-	}
-
-	//if live trading is turned on, OrderSystem will offload orders to IB.
-	if(live && operationMode == Mode::REALTIME)
-	{
-		orderSystem = std::make_unique<OrderSystem>(tickDataSource, ibApi, true);
+		auto callback = [this](const Tick& tick)
+		{
+			this->engineTickHandler(tick);
+		};
+		//we don't care about the returned handle because we won't be unregistering this callback
+		localBroker.registerCallback(callback) == INVALID_CALLBACK_HANDLE)
 	}
 	else
 	{
-		orderSystem = std::make_unique<OrderSystem>(tickDataSource);
+		throw std::runtime_error("Failed to initialize broker.");
 	}
+}
 
-	// all the necessary callbacks have been registered at this point. 
-	// start the data source.
-	tickDataSource->start();
-	if (!tickDataSource->valid())
+TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string ticker, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live) :
+	ibApi(ibApiPtr),
+	plotData(std::make_shared<PlotData>()), //plot data must be initialized before preTickHandler is called
+	localBroker(ticker, ibApiPtr, live),
+	_valid(false)
+{
+	if(localBroker.valid())
 	{
-		throw "Invalid data source!";
+		auto callback = [this](const Tick& tick)
+		{
+			this->engineTickHandler(tick);
+		};
+		//we don't care about the returned handle because we won't be unregistering this callback
+		if (localBroker.registerCallback(callback) != INVALID_CALLBACK_HANDLE)
+		{
+			_valid = true;
+		}
 	}
-	valid_ = true;
 }
 
 TheTradingMachine::TheTradingMachineImpl::~TheTradingMachineImpl()
@@ -127,52 +95,39 @@ TheTradingMachine::TheTradingMachineImpl::~TheTradingMachineImpl()
 
 bool TheTradingMachine::TheTradingMachineImpl::valid(void) const
 {
-	return valid_;
+	return _valid;
+}
+
+void TheTradingMachine::TheTradingMachineImpl::run()
+{
+	if (_valid)
+	{
+		localBroker.run();
+	}
+}
+
+void TheTradingMachine::TheTradingMachineImpl::setCallback(TickCallbackFunction callback)
+{
+	algorithmTickCallback = callback;
 }
 
 void TheTradingMachine::TheTradingMachineImpl::engineTickHandler(const Tick & tick)
 {
 	//let algorithm act on the data first
-	tickHandler(tick);
+	algorithmTickCallback(tick);
 
 	// in case if gui is sometimes slow and is holding the lock, we don't want to block this thread
 	// therefore, if we fail to retrieve the lock immediately, we push the data into a secondary buffer.
 	// when we successfully get the lock, we simply have to move the data into plotData. this will allow
 	// the algorithm to be more overall responsive .
-	std::unique_lock<std::mutex> lock(plotData->plotDataMtx, std::defer_lock);
+	std::unique_lock<std::mutex> lock(plotData->plotDataMtx);
 	PlotData& plotDataRef = *plotData;
-	//this is the only thread that accesses buffer no synchronization needed
-	plotDataRef.buffer.push(tick);
-	// if it was able to lock the lock, then unload everything from the buffer into the plotData
-	// the buffer should usually. we use trylock in order to prevent GUI operations from blocking 
-	// the actual algorithm
-	if (lock.try_lock())
-	{
-		while (!plotDataRef.buffer.empty())
-		{
-			plotDataRef.ticks.push_back(plotDataRef.buffer.front());
-			plotDataRef.buffer.pop();
-		}
-		lock.unlock();
-	}
-	// if the stream is finished, we MUST unload the data from the buffer. we have to block here
-	// since this is the last time this function will be called from the dataSource
-	else if (tickDataSource->finished())
-	{
-		lock.lock();
-		while (!plotData->buffer.empty())
-		{
-			plotData->ticks.push_back(plotData->buffer.front());
-			plotData->buffer.pop();
-		}
-		plotData->finished = true;
-	}
-
+	plotDataRef.ticks.push_back(tick);
 }
 
 PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketNoStop(std::string ticker, int numShares)
 {
-	return orderSystem->buyMarketNoStop(ticker, numShares);
+	return localBroker.buyMarketNoStop(ticker, numShares);
 }
 
 PositionId TheTradingMachine::TheTradingMachineImpl::buyMarketStopMarket(std::string ticker, int numShares, double stopPrice)
@@ -220,63 +175,43 @@ PositionId TheTradingMachine::TheTradingMachineImpl::sellLimitStopLimit(std::str
 	return PositionId();
 }
 
-void TheTradingMachine::TheTradingMachineImpl::closePosition(PositionId posId)
+TheTradingMachine::TheTradingMachine(std::string tickDataFile):
+	_impl(new TheTradingMachineImpl(tickDataFile))
 {
 }
 
-Position TheTradingMachine::TheTradingMachineImpl::getPosition(PositionId posId)
-{
-	return Position();
-}
-
-void TheTradingMachine::TheTradingMachineImpl::modifyPosition(PositionId posId, Position newPosition)
+TheTradingMachine::TheTradingMachine(std::string ticker, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live):
+	_impl(new TheTradingMachineImpl(ticker, ibApiPtr, live))
 {
 }
-
-TheTradingMachine::TheTradingMachine
-(
-	std::string in, 
-	std::function<void(const Tick&)> algTickCallback, 
-	std::shared_ptr<IBInterfaceClient> ibApiPtr, 
-	bool live
-) :
-	impl_(new TheTradingMachineImpl(in, algTickCallback, ibApiPtr, live))
-{
-}
-
 
 TheTradingMachine::~TheTradingMachine()
 {
-	if (impl_ != nullptr)
+	if (_impl != nullptr)
 	{
-		delete impl_;
-		impl_ = nullptr;
+		delete _impl;
+		_impl = nullptr;
 	}
 }
 
 std::shared_ptr<PlotData> TheTradingMachine::getPlotData()
 {
-	return impl_->plotData;
+	return _impl->plotData;
 }
 
 bool TheTradingMachine::valid() const
 {
-	if (impl_ == nullptr)
-		return false;
-	return impl_->valid();
-}
-
-void TheTradingMachine::modifyPosition(PositionId posId, Position newPosition)
-{
-}
-
-void TheTradingMachine::closePosition(PositionId posId)
-{
+	if (_impl != nullptr)
+	{
+		return _impl->valid();
+	}
+	
+	return false;
 }
 
 PositionId TheTradingMachine::buyMarketNoStop(std::string ticker, int numShares)
 {
-	return impl_->buyMarketNoStop(ticker, numShares);
+	return _impl->buyMarketNoStop(ticker, numShares);
 }
 
 PositionId TheTradingMachine::buyMarketStopMarket(std::string ticker, int numShares, double stopPrice)
@@ -322,9 +257,4 @@ PositionId TheTradingMachine::sellLimitStopMarket(std::string ticker, int numSha
 PositionId TheTradingMachine::sellLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
 {
 	return PositionId();
-}
-
-Position TheTradingMachine::getPosition(PositionId posId)
-{
-	return Position();
 }

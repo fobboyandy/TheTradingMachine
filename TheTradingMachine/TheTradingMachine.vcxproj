@@ -150,14 +150,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Common.h" />
     <ClInclude Include="PlotData.h" />
     <ClInclude Include="TickDataSource.h" />
-    <ClInclude Include="OrderSystem.h" />
+    <ClInclude Include="LocalBroker.h" />
     <ClInclude Include="Portfolio.h" />
     <ClInclude Include="TheTradingMachine.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="OrderSystem.cpp" />
+    <ClCompile Include="LocalBroker.cpp" />
     <ClCompile Include="Portfolio.cpp" />
     <ClCompile Include="TheTradingMachine.cpp" />
     <ClCompile Include="TickDataSource.cpp" />

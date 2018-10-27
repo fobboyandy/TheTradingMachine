@@ -13,9 +13,9 @@
 
 class SupportBreakShort
 {
-	THETRADINGMACHINE_OBJ
 public:
-	explicit SupportBreakShort(std::string in, std::shared_ptr<IBInterfaceClient> ibInst = std::shared_ptr<IBInterfaceClient>(nullptr));
+	SupportBreakShort(std::string tickDataFile);
+	SupportBreakShort(std::string ticker, std::shared_ptr<IBInterfaceClient> ibInst, bool live = false);
 	~SupportBreakShort();
 	//
 	// Check the openPositions for the top most position. The positions are 
@@ -24,6 +24,8 @@ public:
 	//
 	void coverTrade();
 	void shortTrade();
+	TheTradingMachine engine;
+
 private:
 
 	std::string input;
