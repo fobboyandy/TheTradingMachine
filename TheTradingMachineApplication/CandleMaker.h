@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <functional>
-#include "TheTradingMachine.h"
+#include "PlotData.h"
 
 class CandleMaker
 {
@@ -11,7 +11,7 @@ public:
 	// Given the streaming real time price snapshots and CandleMaker will 
 	// aggregate the snapshots into candles of the desired time frame
 	//
-	CandleMaker(int timeFrameSeconds);
+    CandleMaker(int timeFrameSeconds, bool rth = true);
 
 	~CandleMaker();
 
@@ -25,6 +25,8 @@ public:
     // to the last time updateCandle was called.
     //
     time_t getUpdatedCandleTime();
+
+    void setRthOnly(bool rth);
 
 private:
 
@@ -60,6 +62,8 @@ private:
     // Used to keep track of the time that the latest candle belongs to
     //
     time_t currentCandleTime;
+
+    bool rthOnly;
 
 private:
 	//

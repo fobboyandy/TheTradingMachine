@@ -7,10 +7,12 @@
 #include <vector>
 #include "../IBInterface/Tick.h"
 #include "../IBInterface/bar.h"
-#include "../IBInterfaceClient/IBInterfaceClient.h"
+#include "PlotData.h"
+#include "OrderSystem.h"
 
 #ifdef EXPORTTHETRADINGMACHINEDLL
 #define THETRADINGMACHINEDLL __declspec(dllexport)
+#include "../IBInterfaceClient/IBInterfaceClient.h"
 #else
 #define THETRADINGMACHINEDLL __declspec(dllimport)
 
@@ -30,6 +32,8 @@ extern "C" 																											\
 			std::shared_ptr<PlotData>* dataOut,                                                                     \
 			std::shared_ptr<IBInterfaceClient> ibInst) 																\
 	{ 																												\
+		/*always keep using the last element of the vector as the handle to the algorithm*/							\
+		static auto handles = 0;																					\
 		/* each time we initialize an algorithm, the size increases by 1 											\
 		 * the size is returned as a handle to the call for future use  											\
 		*/ 																							                \
@@ -42,7 +46,7 @@ extern "C" 																											\
 			}																										\
 			AlgorithmInstances.push_back(std::move(newInstance));													\
 																													\
-			return static_cast<int>(AlgorithmInstances.size() - 1);													\
+			return static_cast<int>(handles++);																		\
 		}																											\
 		else																										\
 		{																											\
@@ -65,7 +69,7 @@ extern "C" 																											\
 		catch (const std::out_of_range& oor)																		\
 		{																											\
 			UNREFERENCED_PARAMETER(oor);																			\
-			/*nothing*/																								\
+			/*nothing for now*/																						\
 		}																											\
 																													\
 		return false;																								\
@@ -78,22 +82,10 @@ extern "C" 																											\
 	private:
 #endif
 
-// plot data structure shared with the gui. plot data is stored in this format.
-// the gui is provided an address to the plot data struct and notified upon 
-// new data
-struct PlotData
-{
-	std::mutex plotDataMtx;
-	bool finished;
-	std::queue<Tick> buffer;
-	std::vector<Tick> ticks;
-	std::vector<std::string> action;
-};
-
 class THETRADINGMACHINEDLL TheTradingMachine
 {
 public:
-	explicit TheTradingMachine(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr = std::shared_ptr<IBInterfaceClient>(nullptr));
+	explicit TheTradingMachine(std::string in, std::function<void(const Tick&)> algTickCallback, std::shared_ptr<IBInterfaceClient> ibApiPtr = std::shared_ptr<IBInterfaceClient>(nullptr), bool live = false);
 
 	virtual ~TheTradingMachine();
 	std::shared_ptr<PlotData> getPlotData();
@@ -102,4 +94,34 @@ public:
 private:
 	class TheTradingMachineImpl;
 	TheTradingMachineImpl* impl_;
+
+// Order api
+public:
+	// When these order functions are called, a PositionId is returned immediately. The functions
+	// do not block until the positions are filled. Since it's non blocking, the position is not guaranteed
+	// to be filled when the function returns. With the positionId however, the caller can query the status of the position
+	// using getPosition(PositionId).
+		
+	// all orders are submitted as all or none
+	PositionId buyMarketNoStop(std::string ticker, int numShares);
+	PositionId buyMarketStopMarket(std::string ticker, int numShares, double stopPrice);
+	PositionId buyMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
+	PositionId buyLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
+	PositionId buyLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
+
+	PositionId sellMarketNoStop(std::string ticker, int numShares);
+	PositionId sellMarketStopMarket(std::string ticker, int numShares, double activationPrice);
+	PositionId sellMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
+	PositionId sellLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
+	PositionId sellLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
+
+	// getPosition gets the current state of a position. It returns a copy to the caller.
+	Position getPosition(PositionId posId);
+
+	// modifyPosition allows a user to update an existing position if the update is on the same side.
+	// for example. a short can only increase or decrease but cannot be turned into a long
+	void modifyPosition(PositionId posId, Position newPosition);
+
+	// closes an existing position. It guarantees that an existing position will not be overbought/sold due to a stoploss attached to an order.
+	void closePosition(PositionId posId);
 };

@@ -15,7 +15,7 @@ class SupportBreakShort
 {
 	THETRADINGMACHINE_OBJ
 public:
-	explicit SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst = std::shared_ptr<IBInterfaceClient>(nullptr));
+	explicit SupportBreakShort(std::string in, std::shared_ptr<IBInterfaceClient> ibInst = std::shared_ptr<IBInterfaceClient>(nullptr));
 	~SupportBreakShort();
 	//
 	// Check the openPositions for the top most position. The positions are 
@@ -25,6 +25,8 @@ public:
 	void coverTrade();
 	void shortTrade();
 private:
+
+	std::string input;
 	enum Dir
 	{
 		UP,

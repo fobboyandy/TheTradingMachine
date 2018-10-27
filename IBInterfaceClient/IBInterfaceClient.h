@@ -23,6 +23,7 @@ public:
 	bool isReady(void);
 
 private:
+
 	class IBInterfaceClientImpl;
 	IBInterfaceClientImpl* impl_;
 };

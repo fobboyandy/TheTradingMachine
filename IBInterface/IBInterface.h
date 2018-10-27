@@ -163,12 +163,19 @@ public:
 
 	void requestRealTimeMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback);
 	void requestHistoricalMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback);
-	
-	// given a ticker, the callback will be called when new tick data comes in. the return value is a handle
-	// to the request. caller should cancel the streaming data for the ticker when it terminates to unregister
-	// the callback as well as not waste streaming data lines. 0 indicates invalid handle
-	int requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback);
-	bool cancelRealTimeTicks(std::string ticker, int handle);
+
+	//
+	// This function is used to register the function which assigns realTimeTickCallback. 
+	// When a new tick arrives, callback will be called with the corresponding OrderId along
+	// with the new tick data. This function MUST be called before using requestRealTimeTicks.
+	//
+	void registerRealTimeTickCallback(std::function<void(OrderId, const Tick&)> callback);
+	//
+	// given a ticker, this function simply requests for a real time tick data stream from the IB server.
+	// It does ont perform error checks. It simply sends a request to interactive broker
+	//
+	OrderId requestRealTimeTicks(std::string ticker);
+	void cancelRealTimeTicks(OrderId oid);
 
 private:
 
@@ -192,12 +199,9 @@ private:
 	// Historical Data
 	std::unordered_map<OrderId, std::function<void(const Bar&)>> historicalBarCallbacks;
 
-	// Tick Data
-	// A call back function can be uniquely identified given a ticker and a handle
-	std::unordered_map<std::string, OrderId> stockTickOrderIds;
-	std::unordered_map<OrderId, std::unordered_map<int, std::function<void(const Tick&)>>> stockTickCallbacks;
-	std::mutex stockTickCallbacksMtx; //synchronizes message processing thread and request and cancel functions
-
+	// this function is registered to be called when new ticks arrive. we provide them with the orderId
+	// of the associated arriving ticks.
+	std::function<void(OrderId, const Tick&)> tickCallback;
 	Contract createUsStockContract(std::string ticker);
 };
 

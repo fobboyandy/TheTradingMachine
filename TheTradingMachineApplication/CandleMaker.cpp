@@ -15,9 +15,10 @@ inline bool isRTH(time_t tickTime)
 	return false;
 }
 
-CandleMaker::CandleMaker(int timeFrameSeconds) :
+CandleMaker::CandleMaker(int timeFrameSeconds, bool rth) :
 	timeFrame(timeFrameSeconds),
-	beginAggregation(false)
+    beginAggregation(false),
+    rthOnly(rth)
 {
 }
 
@@ -30,8 +31,8 @@ bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle)
     bool isNewCandle = false;
 
     //
-    // check for RTH and also
-    if (!isRTH(newTick.time))
+    // check for RTH and also don't act on unreported ticks
+    if ((rthOnly && !isRTH(newTick.time)) || newTick.attributes.unreported)
     {
         return isNewCandle;
     }
@@ -73,7 +74,7 @@ bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle)
         aggregatedCandle.close = newTick.price;
         aggregatedCandle.volume = newTick.size;
         isNewCandle = true;
-		currentCandleTime = newTick.time;
+        currentCandleTime = newTick.time - (newTick.time % timeFrame); // candle time should align with the nearest timeframe
     }
     else
     {
@@ -89,6 +90,13 @@ bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle)
 time_t CandleMaker::getUpdatedCandleTime()
 {
     return currentCandleTime;
+}
+
+void CandleMaker::setRthOnly(bool rth)
+{
+    // we don't need to synchronize this because this is read/write only in the
+    // gui thread
+    rthOnly = rth;
 }
 
 void CandleMaker::aggregateCandle(const Tick& newTick)
