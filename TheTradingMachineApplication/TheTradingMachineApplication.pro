@@ -25,8 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 INCLUDEPATH += \
-        ./../TheTradingMachine/ \
-        ./../Algorithms/
+        ./../TheTradingMachine/
 
 SOURCES += \
         main.cpp \

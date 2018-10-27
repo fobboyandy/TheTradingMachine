@@ -33,10 +33,6 @@ LocalBroker::LocalBroker(std::string ticker, std::shared_ptr<IBInterfaceClient> 
 		}
 		_valid = true;
 	}
-	else
-	{
-		throw "Invalid data source.";
-	}
 }
 
 LocalBroker::~LocalBroker()

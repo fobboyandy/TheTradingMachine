@@ -3,13 +3,15 @@
 #include "SupportBreakShort.h"
 #include "TheTradingMachine.h"
 
-SupportBreakShort::SupportBreakShort(std::string tickDataFile):
+SupportBreakShort::SupportBreakShort(std::string tickDataFile) :
 	engine(tickDataFile),
-	input(tickDataFile), 
+	input(tickDataFile),
 	minuteBarMaker(60), // using minute time frame for this algorithm
 	prevDir(UNDEFINED),
 	previousStrength(NONE)
 {
+	engine.setCallback([this](const Tick& tick) {this->tickHandler(tick); });
+	engine.run(); 
 }
 
 SupportBreakShort::SupportBreakShort(std::string ticker, std::shared_ptr<IBInterfaceClient> ibInst, bool live) :
@@ -19,7 +21,8 @@ SupportBreakShort::SupportBreakShort(std::string ticker, std::shared_ptr<IBInter
 	prevDir(UNDEFINED),
 	previousStrength(NONE)
 {
-
+	engine.setCallback([this](const Tick& tick) {this->tickHandler(tick); });
+	engine.run();
 }
 
 SupportBreakShort::~SupportBreakShort()

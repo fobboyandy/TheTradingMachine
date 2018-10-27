@@ -21,8 +21,10 @@ public:
 	~TheTradingMachine();
 	std::shared_ptr<PlotData> getPlotData();
 
+	void setCallback(TickCallbackFunction callback);
+	void run();
 private:
-	class TheTradingMachineImpl;
+	class TheTradingMachineImpl; 
 	TheTradingMachineImpl* _impl;
 
 // Order api

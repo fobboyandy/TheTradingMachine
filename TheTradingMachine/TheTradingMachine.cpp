@@ -18,7 +18,6 @@ public:
 	//live trading or paper trade using real time ticks.
 	TheTradingMachineImpl(std::string ticker, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live = false);
 	~TheTradingMachineImpl();
-	bool valid(void) const;
 	void run();
 	void setCallback(TickCallbackFunction callback);
 
@@ -39,15 +38,11 @@ public:
 	PositionId sellLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
 	PositionId sellLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
-	// closes an existing position. It guarantees that an existing position will not be overbought/sold due to a stoploss attached to an order.
-	void closePosition(PositionId posId);
-
 private:
 	TickCallbackFunction algorithmTickCallback;
 	std::shared_ptr<IBInterfaceClient> ibApi;
 	void engineTickHandler(const Tick& tick);
 	LocalBroker localBroker;
-	bool _valid;
 };
 
 TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string tickDataFile):
@@ -61,7 +56,7 @@ TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string tick
 			this->engineTickHandler(tick);
 		};
 		//we don't care about the returned handle because we won't be unregistering this callback
-		localBroker.registerCallback(callback) == INVALID_CALLBACK_HANDLE)
+		localBroker.registerCallback(callback);
 	}
 	else
 	{
@@ -72,8 +67,7 @@ TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string tick
 TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string ticker, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live) :
 	ibApi(ibApiPtr),
 	plotData(std::make_shared<PlotData>()), //plot data must be initialized before preTickHandler is called
-	localBroker(ticker, ibApiPtr, live),
-	_valid(false)
+	localBroker(ticker, ibApiPtr, live)
 {
 	if(localBroker.valid())
 	{
@@ -82,10 +76,11 @@ TheTradingMachine::TheTradingMachineImpl::TheTradingMachineImpl(std::string tick
 			this->engineTickHandler(tick);
 		};
 		//we don't care about the returned handle because we won't be unregistering this callback
-		if (localBroker.registerCallback(callback) != INVALID_CALLBACK_HANDLE)
-		{
-			_valid = true;
-		}
+		localBroker.registerCallback(callback);
+	}
+	else
+	{
+		throw std::runtime_error("Failed to initialize broker.");
 	}
 }
 
@@ -93,17 +88,9 @@ TheTradingMachine::TheTradingMachineImpl::~TheTradingMachineImpl()
 {
 }
 
-bool TheTradingMachine::TheTradingMachineImpl::valid(void) const
-{
-	return _valid;
-}
-
 void TheTradingMachine::TheTradingMachineImpl::run()
 {
-	if (_valid)
-	{
-		localBroker.run();
-	}
+	localBroker.run();
 }
 
 void TheTradingMachine::TheTradingMachineImpl::setCallback(TickCallbackFunction callback)
@@ -199,14 +186,14 @@ std::shared_ptr<PlotData> TheTradingMachine::getPlotData()
 	return _impl->plotData;
 }
 
-bool TheTradingMachine::valid() const
+void TheTradingMachine::setCallback(TickCallbackFunction callback)
 {
-	if (_impl != nullptr)
-	{
-		return _impl->valid();
-	}
-	
-	return false;
+	_impl->setCallback(callback);
+}
+
+void TheTradingMachine::run()
+{
+	_impl->run();
 }
 
 PositionId TheTradingMachine::buyMarketNoStop(std::string ticker, int numShares)

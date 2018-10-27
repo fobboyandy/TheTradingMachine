@@ -36,22 +36,20 @@ TickDataSource::TickDataSource(std::string in, std::weak_ptr<IBInterfaceClient> 
 
 TickDataSource::~TickDataSource()
 {
-	if (_realTimeStream)
+	// stop the thread if thread is joinable
+	if (readTickDataThread.joinable())
 	{
 		//stop the thread
 		threadCancellationToken = true;
-		if (readTickDataThread.joinable())
-		{
-			readTickDataThread.join();
-		}
+		readTickDataThread.join();
 	}
-	else
+	
+	//unregister the callback registered to this data source
+	if (!ibApi.expired())
 	{
-		if (!ibApi.expired())
-		{
-			ibApi.lock()->cancelRealTimeTicks(input, dataStreamHandle);
-		}
+		ibApi.lock()->cancelRealTimeTicks(input, dataStreamHandle);
 	}
+	
 }
 
 bool TickDataSource::valid() const
