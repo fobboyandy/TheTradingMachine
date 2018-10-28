@@ -15,6 +15,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IBInterfaceClient", "IBInte
 		{35F11259-7161-4001-8905-9A8CA2337215} = {35F11259-7161-4001-8905-9A8CA2337215}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseAlgorithm", "BaseAlgorithm\BaseAlgorithm.vcxproj", "{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -47,6 +49,14 @@ Global
 		{EC374C0B-59B0-424D-9CC5-CBD66D692CCA}.Release|x64.Build.0 = Release|x64
 		{EC374C0B-59B0-424D-9CC5-CBD66D692CCA}.Release|x86.ActiveCfg = Release|Win32
 		{EC374C0B-59B0-424D-9CC5-CBD66D692CCA}.Release|x86.Build.0 = Release|Win32
+		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Debug|x64.ActiveCfg = Debug|x64
+		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Debug|x64.Build.0 = Debug|x64
+		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Debug|x86.ActiveCfg = Debug|Win32
+		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Debug|x86.Build.0 = Debug|Win32
+		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Release|x64.ActiveCfg = Release|x64
+		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Release|x64.Build.0 = Release|x64
+		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Release|x86.ActiveCfg = Release|Win32
+		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

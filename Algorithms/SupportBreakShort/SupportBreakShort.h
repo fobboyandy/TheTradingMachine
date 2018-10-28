@@ -17,6 +17,8 @@ public:
 	SupportBreakShort(std::string tickDataFile);
 	SupportBreakShort(std::string ticker, std::shared_ptr<IBInterfaceClient> ibInst, bool live = false);
 	~SupportBreakShort();
+	TheTradingMachine engine;
+
 	//
 	// Check the openPositions for the top most position. The positions are 
 	// sorted by target prices since the highest target price are the positions
@@ -24,8 +26,6 @@ public:
 	//
 	void coverTrade();
 	void shortTrade();
-	TheTradingMachine engine;
-
 private:
 
 	std::string input;

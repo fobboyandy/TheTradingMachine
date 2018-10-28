@@ -11,7 +11,6 @@
 
 class TickRecorder
 {
-	THETRADINGMACHINE_OBJ
 public:
 	explicit TickRecorder(std::string input, std::shared_ptr<IBInterfaceClient> ibInst = std::shared_ptr<IBInterfaceClient>(nullptr));
 	~TickRecorder();
