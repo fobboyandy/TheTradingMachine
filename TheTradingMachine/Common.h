@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <vector>
+#include "Position.h"
 #include "../IBInterface/Tick.h"
 #include "../IBInterface/bar.h"
 

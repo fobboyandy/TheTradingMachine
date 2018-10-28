@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClInclude Include="Common.h" />
     <ClInclude Include="PlotData.h" />
+    <ClInclude Include="Position.h" />
     <ClInclude Include="TickDataSource.h" />
     <ClInclude Include="LocalBroker.h" />
     <ClInclude Include="Portfolio.h" />

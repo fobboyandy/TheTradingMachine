@@ -50,8 +50,11 @@ bool LocalBroker::valid()
 	return _valid;
 }
 
-PositionId LocalBroker::buyMarketNoStop(std::string ticker, int numShares)
+PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares)
 {
+	//validate number of shares
+	numShares = abs(numShares);
+
 	PositionId posId;
 	if (_liveTrade)
 	{
@@ -69,65 +72,110 @@ PositionId LocalBroker::buyMarketNoStop(std::string ticker, int numShares)
 	else
 	{
 		posId = _portfolio.newPosition();
-		// autofill 
+		
+		// data source's tick dispatch runs on the same thread as this function
+		// so _dataSource's lastPrice is always within sync
 		_portfolio.fillPosition(posId, _dataSource.lastPrice(), numShares);
 	}
 
 	return posId;
 }
 
-PositionId LocalBroker::buyMarketStopMarket(std::string ticker, int numShares, double stopPrice)
+PositionId LocalBroker::longMarketStopMarket(std::string ticker, int numShares, double stopPrice)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::buyMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
+PositionId LocalBroker::longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::buyLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
+PositionId LocalBroker::longLimitStopMarket(std::string ticker, int numShares, double longLimit, double activationPrice)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::buyLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
+PositionId LocalBroker::longLimitStopLimit(std::string ticker, int numShares, double longLimit, double activationPrice, double limitPrice)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::sellMarketNoStop(std::string ticker, int numShares)
+PositionId LocalBroker::shortMarketNoStop(std::string ticker, int numShares)
+{
+	//validate number of shares 
+	numShares = abs(numShares);
+
+	PositionId posId;
+	if (_liveTrade)
+	{
+		// we are supposed to create an order and submit it to ibapi. ib api
+		// returns an orderId to us. We need to map this OrderId to to a position 
+		// that the orderUpdate callback from ibapi will be able to update the appropriate
+		// position
+
+		// all orders are submitted as all or none
+
+		// skip this part for now. we don't need it until we find a working algo
+
+	}
+	//if not live trading, then all market positions are filled instantly at the last seen price
+	else
+	{
+		posId = _portfolio.newPosition();
+		// autofill
+		// short positions are negative
+		_portfolio.fillPosition(posId, _dataSource.lastPrice(), -numShares);
+	}
+
+	return posId;
+}
+
+PositionId LocalBroker::shortMarketStopMarket(std::string ticker, int numShares, double activationPrice)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::sellMarketStopMarket(std::string ticker, int numShares, double activationPrice)
+PositionId LocalBroker::shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::sellMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
+PositionId LocalBroker::shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::sellLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
+PositionId LocalBroker::shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::sellLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
+void LocalBroker::reducePosition(PositionId posId, int numShares)
 {
-	return PositionId();
+	if (_liveTrade)
+	{
+		// we are supposed to create an order and submit it to ibapi. ib api
+		// returns an orderId to us. We need to map this OrderId to to a position 
+		// that the orderUpdate callback from ibapi will be able to update the appropriate
+		// position
+
+		// all orders are submitted as all or none
+
+		// skip this part for now. we don't need it until we find a working algo
+
+	}
+	//if not live trading, then all market positions are filled instantly at the last seen price
+	else
+	{
+		// autofill
+		_portfolio.reducePosition(posId, _dataSource.lastPrice(), numShares);
+	}
 }
 
 Position LocalBroker::getPosition(PositionId posId)
 {
 	return Position();
-}
-
-void LocalBroker::modifyPosition(PositionId posId, Position newPosition)
-{
 }
 
 CallbackHandle LocalBroker::registerCallback(TickCallbackFunction callback)
@@ -150,4 +198,22 @@ void LocalBroker::ibOrderUpdate(OrderId oid, Position p)
 
 void LocalBroker::closePosition(PositionId posId)
 {
+	if (_liveTrade)
+	{
+		// we are supposed to create an order and submit it to ibapi. ib api
+		// returns an orderId to us. We need to map this OrderId to to a position 
+		// that the orderUpdate callback from ibapi will be able to update the appropriate
+		// position
+
+		// all orders are submitted as all or none
+
+		// skip this part for now. we don't need it until we find a working algo
+
+	}
+	//if not live trading, then all market positions are filled instantly at the last seen price
+	else
+	{
+		// autofill
+		_portfolio.closePosition(posId, _dataSource.lastPrice());
+	}
 }

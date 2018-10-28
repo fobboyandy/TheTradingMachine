@@ -32,27 +32,35 @@ public:
 
 	void run();
 	bool valid();
+	CallbackHandle registerCallback(TickCallbackFunction callback);
+	void unregisterCallback(CallbackHandle handle);
 
 // order api
 public:
-	PositionId buyMarketNoStop(std::string ticker, int numShares);
-	PositionId buyMarketStopMarket(std::string ticker, int numShares, double stopPrice);
-	PositionId buyMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
-	PositionId buyLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
-	PositionId buyLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
-	PositionId sellMarketNoStop(std::string ticker, int numShares);
-	PositionId sellMarketStopMarket(std::string ticker, int numShares, double activationPrice);
-	PositionId sellMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
-	PositionId sellLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
-	PositionId sellLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
+	//long orders
+	PositionId longMarketNoStop(std::string ticker, int numShares);
+	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice);
+	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
+	PositionId longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
+	PositionId longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
+	//short orders
+	PositionId shortMarketNoStop(std::string ticker, int numShares);
+	PositionId shortMarketStopMarket(std::string ticker, int numShares, double activationPrice);
+	PositionId shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
+	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
+	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
+
+	//Profit taking functions
+	//close position reduces all the shares to 0. If it was a long, it sells. If it was a short, it covers.
 	void closePosition(PositionId posId);
-	Position getPosition(PositionId posId);
-	void modifyPosition(PositionId posId, Position newPosition);
 
-	CallbackHandle registerCallback(TickCallbackFunction callback);
-	void unregisterCallback(CallbackHandle handle);
+	// reducePosition reduces the position in the opposite direction. If it was a long, it sells. If it's a short, it covers. 
+	// It will never over reduce an existing position. ie. it will never oversell a long position or overcover a short position.
+	void reducePosition(PositionId posId, int numShares);
+
+	Position getPosition(PositionId posId);
 
 private:
 	// handles stoplosses locally without sending a stoploss order to ib. also used

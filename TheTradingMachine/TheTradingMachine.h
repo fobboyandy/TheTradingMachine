@@ -35,15 +35,19 @@ public:
 	// using getPosition(PositionId).
 		
 	// all orders are submitted as all or none
-	PositionId buyMarketNoStop(std::string ticker, int numShares);
-	PositionId buyMarketStopMarket(std::string ticker, int numShares, double stopPrice);
-	PositionId buyMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
-	PositionId buyLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
-	PositionId buyLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
+	PositionId longMarketNoStop(std::string ticker, int numShares);
+	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice);
+	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
+	PositionId longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
+	PositionId longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
-	PositionId sellMarketNoStop(std::string ticker, int numShares);
-	PositionId sellMarketStopMarket(std::string ticker, int numShares, double activationPrice);
-	PositionId sellMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
-	PositionId sellLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
-	PositionId sellLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
+	PositionId shortMarketNoStop(std::string ticker, int numShares);
+	PositionId shortMarketStopMarket(std::string ticker, int numShares, double activationPrice);
+	PositionId shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
+	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
+	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
+
+	void closePosition(PositionId posId);
+	void reducePosition(PositionId posId, int numShares);
+	Position getPosition(PositionId posId);
 };
