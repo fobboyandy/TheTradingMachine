@@ -11,13 +11,11 @@
 #define RTH_START 48600
 #define RTH_END 72000
 
-class SupportBreakShort
+class SupportBreakShort : public TheTradingMachine
 {
 public:
-	SupportBreakShort(std::string tickDataFile);
-	SupportBreakShort(std::string ticker, std::shared_ptr<IBInterfaceClient> ibInst, bool live = false);
+	SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst, bool live);
 	~SupportBreakShort();
-	TheTradingMachine engine;
 
 	//
 	// Check the openPositions for the top most position. The positions are 
@@ -77,5 +75,5 @@ private:
 protected:
 	// this function must be implemented because the base class automatically calls
 	// this pure virtual function to handle new ticks
-	void tickHandler(const Tick& tick);
+	void tickHandler(const Tick& tick) override;
 };

@@ -5,56 +5,44 @@
 #include <iostream>
 #include "TickDataSource.h"
 
-TickDataSource::TickDataSource(std::string in) :
-	input(in),
+TickDataSource::TickDataSource(std::string input, std::shared_ptr<IBInterfaceClient> ibApiPtr) :
+	input(input),
+	ibApi(ibApiPtr),
 	threadCancellationToken(false),
 	dataStreamHandle(-1),
-	_valid(false),
 	_finished(false),
 	_realTimeStream(false)
 {
 	if (input.find(".tickdat") != std::string::npos)
 	{
-		_valid = true;
+		_realTimeStream = false;
 	}
-}
-
-TickDataSource::TickDataSource(std::string in, std::weak_ptr<IBInterfaceClient> ibApiPtr) :
-	input(in),
-	ibApi(ibApiPtr),
-	threadCancellationToken(false),
-	dataStreamHandle(-1),
-	_valid(false),
-	_finished(false),
-	_realTimeStream(true)
-{
-	if (!ibApiPtr.expired() && ibApiPtr.lock()->isReady())
+	else if (ibApiPtr != nullptr && ibApiPtr->isReady())
 	{
-		_valid = true;
+		_realTimeStream = true;
+	}
+	else
+	{
+		throw std::runtime_error("Unable to initialize tick data source");
 	}
 }
 
 TickDataSource::~TickDataSource()
 {
-	// stop the thread if thread is joinable
-	if (readTickDataThread.joinable())
+	if (_realTimeStream && ibApi != nullptr)
 	{
-		//stop the thread
-		threadCancellationToken = true;
-		readTickDataThread.join();
+		ibApi->cancelRealTimeTicks(input, dataStreamHandle);	
 	}
-	
-	//unregister the callback registered to this data source
-	if (!ibApi.expired())
+	else
 	{
-		ibApi.lock()->cancelRealTimeTicks(input, dataStreamHandle);
+		// stop the thread if thread is joinable
+		if (readTickDataThread.joinable())
+		{
+			//stop the thread
+			threadCancellationToken = true;
+			readTickDataThread.join();
+		}
 	}
-	
-}
-
-bool TickDataSource::valid() const
-{
-	return _valid;
 }
 
 bool TickDataSource::finished() const
@@ -84,17 +72,15 @@ void TickDataSource::run()
 	}
 	else 
 	{
-		if (!ibApi.expired())
-		{		
-			// register for a live data stream from ib and have ticks sent to 
-			// preTickDispatch handler function. preTickDispatch will validate
-			// callback function's existence before calling to prevent calling
-			// invalidated lambda functions.
-			dataStreamHandle = ibApi.lock()->requestRealTimeTicks(input, [this](const Tick& tick)
-			{
-				this->preTickDispatch(tick); 
-			});
-		}
+		// register for a live data stream from ib and have ticks sent to 
+		// preTickDispatch handler function. preTickDispatch will validate
+		// callback function's existence before calling to prevent calling
+		// invalidated lambda functions.
+		dataStreamHandle = ibApi->requestRealTimeTicks(input, [this](const Tick& tick)
+		{
+			this->preTickDispatch(tick); 
+		});
+		
 	}
 }
 

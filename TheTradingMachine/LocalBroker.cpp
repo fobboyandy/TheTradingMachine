@@ -1,37 +1,30 @@
 #include "LocalBroker.h"
 
-
-
-LocalBroker::LocalBroker(std::string input) :
-	_dataSource(input),
-	_liveTrade(false),
-	_valid(false)
-{
-	_valid = _dataSource.valid();
-}
-
-LocalBroker::LocalBroker(std::string ticker, std::shared_ptr<IBInterfaceClient> ibApi, bool live) :
+LocalBroker::LocalBroker(std::string input, std::shared_ptr<IBInterfaceClient> ibApi, bool live) :
 	_ibApi(ibApi),
-	_dataSource(ticker, ibApi),
-	_liveTrade(live),
-	_valid(false)
+	_dataSource(input, ibApi),
+	_liveTrade(live)
 {
-	// if live trading, we send all stoploss orders to interactive broker
-	// if non live trading, we register stoplossHandler as a callback
-	// to locally monitor stoplosses
-	if (_dataSource.valid() && ibApi->isReady())
+	// if live option is turned on but invalid conection is provided
+	// then we can't trade live.
+	// when trading live, all orders are sent to ib and all positions are
+	// maintained by IB. 
+	if (live)
 	{
-		// for non live trades, we manage stoplosses locally using
-		// stoplossHandler
-		if (!_liveTrade)
+		if (ibApi == nullptr || !ibApi->isReady())
 		{
-			//register stophandler for tick callback from data source.
-			stoplossHandlerHandle = _dataSource.registerCallback([this](const Tick& tick)
-			{
-				this->stoplossHandler(tick);
-			});
+			throw std::runtime_error("A valid IB connection is needed for live trading.");
 		}
-		_valid = true;
+	}
+	// for non live orders, we maintain all positions and orders locally.
+	// stoplosses are handled by stoplossHandler
+	else
+	{
+		//register stophandler for tick callback from data source.
+		stoplossHandlerHandle = _dataSource.registerCallback([this](const Tick& tick)
+		{
+			this->stoplossHandler(tick);
+		});
 	}
 }
 
@@ -43,11 +36,6 @@ LocalBroker::~LocalBroker()
 void LocalBroker::run()
 {
 	_dataSource.run();
-}
-
-bool LocalBroker::valid()
-{
-	return _valid;
 }
 
 PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares)

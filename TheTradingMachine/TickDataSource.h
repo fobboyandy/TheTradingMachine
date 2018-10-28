@@ -11,12 +11,11 @@
 class TickDataSource
 {
 public:
-	TickDataSource(std::string in);
-	TickDataSource(std::string in, std::weak_ptr<IBInterfaceClient> ibApiPtr);
+	TickDataSource(std::string input, std::shared_ptr<IBInterfaceClient> ibApiPtr);
 	~TickDataSource();
+
 	CallbackHandle registerCallback(TickCallbackFunction callback);
 	void unregisterCallback(CallbackHandle handle);
-	bool valid() const;
 	bool finished() const;
 	double lastPrice() const;
 
@@ -39,10 +38,10 @@ private:
 	std::unordered_map<CallbackHandle, TickCallbackFunction> callbackList;
 
 	std::string input;
-	const bool _realTimeStream;
+	bool _realTimeStream;
 
 	// api data
-	std::weak_ptr<IBInterfaceClient> ibApi; 
+	std::shared_ptr<IBInterfaceClient> ibApi; 
 	// when we request real time data, we are given a handle so that we can cancel it upon closing
 	CallbackHandle dataStreamHandle;
 

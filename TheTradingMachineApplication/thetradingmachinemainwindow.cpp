@@ -192,9 +192,9 @@ bool TheTradingMachineMainWindow::promptLoadAlgorithm()
             }
             else
             {
-                api_.playAlgorithm = [=](std::string ticker, std::shared_ptr<PlotData>* plotData, std::shared_ptr<IBInterfaceClient> ibIntf)
+                api_.playAlgorithm = [=](std::string ticker, std::shared_ptr<PlotData>* plotData, std::shared_ptr<IBInterfaceClient> ibIntf, bool live)
                 {
-                    return playAlgorithmProcAddr(ticker, plotData, ibIntf);
+                    return playAlgorithmProcAddr(ticker, plotData, ibIntf, live);
                 };
 
                 api_.stopAlgorithm = [=](int inst)

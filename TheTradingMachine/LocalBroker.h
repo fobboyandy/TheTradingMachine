@@ -16,18 +16,8 @@
 // it relies on the tick data from TickDataSource to emulate trading positions and stoplosses locally (paper trading).
 class LocalBroker
 {
-public:
-	// if only an input is given, then local broker simulates a broker by loading data stored in the file 
-	// given in the input string. In this mode, LocalBroker will also fill all orders as paper trades. All
-	// orders will be guaranteed to fill instantly. All stoplosses are also maintained locally.
-	LocalBroker(std::string input);
-
-	// If a ticker and an active api connection is given, then tick data will come from the broker.
-	// By default, live trading will be off and all orders will be maintained locally as paper trades. 
-	// If live is turned on, all orders are sent to interactive broker as live orders. all stoplosses
-	// are submitted as orders and maintained by interactive broker. orders are not guaranteed to fill
-	// in live orders. 
-	LocalBroker(std::string ticker, std::shared_ptr<IBInterfaceClient> ibApi, bool live = false);
+public: 
+	LocalBroker(std::string input, std::shared_ptr<IBInterfaceClient> ibApi, bool live);
 	~LocalBroker();
 
 	void run();
@@ -52,16 +42,10 @@ public:
 	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
 	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
-	//Profit taking functions
-	//close position reduces all the shares to 0. If it was a long, it sells. If it was a short, it covers.
+	void reducePosition(PositionId posId, int numShares);
 	void closePosition(PositionId posId);
 
-	// reducePosition reduces the position in the opposite direction. If it was a long, it sells. If it's a short, it covers. 
-	// It will never over reduce an existing position. ie. it will never oversell a long position or overcover a short position.
-	void reducePosition(PositionId posId, int numShares);
-
 	Position getPosition(PositionId posId);
-
 private:
 	// handles stoplosses locally without sending a stoploss order to ib. also used
 	// for fileplayback stoploss emulation

@@ -53,13 +53,13 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
 
         //if real time, check for ib connection
         // instantiate the algorithm for this ticker
-        algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_);
+        algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_, false);
         if(algorithmHandle_ != -1)
         {
             // tab should only be valid if play algorithm and getplotdata worked
             valid_ = true;
             connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
-            replotTimer_->start(50);
+            replotTimer_->start(100);
         }
     }
 }

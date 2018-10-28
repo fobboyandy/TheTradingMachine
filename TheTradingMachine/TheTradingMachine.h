@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string>
-#include <stdexcept>
 #include "Common.h"
 #include "PlotData.h"
 #include "../IBInterfaceClient/IBInterfaceClient.h"
@@ -10,44 +9,66 @@
 #define THETRADINGMACHINEDLL __declspec(dllexport)
 #else
 #define THETRADINGMACHINEDLL __declspec(dllimport)
+#include <unordered_map>
+#include <memory>
+#include <stdexcept>
+
+#define EXPORT_ALGORITHM(CLASSNAME) 																				\
+/*boilerplate code for runtime dll linking*/																		\
+static int uniqueInstanceHandles = 0;																				\
+static std::unordered_map<int, std::unique_ptr<CLASSNAME>> AlgorithmInstances; 										\
+extern "C" 																											\
+{ 																													\
+	/* 																												\
+	* int represents a handle to the instantiation of the algorithm corresponding to the input ticker  				\
+	* this handle needs to be stored by the caller for destruction and calling algorithm 							\
+	* specific functions. This is necessary because multiple tickers can be running on the same 					\
+	* algorithm and we only have a single instance of the dll file 													\
+	*/ 																												\
+	__declspec(dllexport) int PlayAlgorithm(																		\
+		std::string dataInput,																						\
+		std::shared_ptr<PlotData>* dataOut,																			\
+		std::shared_ptr<IBInterfaceClient> ibInst,																	\
+		bool live) 																									\
+	{ 																												\
+		try																											\
+		{																											\
+			auto newInstance = std::make_unique<CLASSNAME>(dataInput, ibInst, live);								\
+			*dataOut = newInstance->getPlotData();																	\
+			AlgorithmInstances[uniqueInstanceHandles] = std::move(newInstance);										\
+			return static_cast<int>(uniqueInstanceHandles++);														\
+		}																											\
+		catch (const std::runtime_error&)																			\
+		{																											\
+			return -1;																								\
+		}																											\
+	} 																												\
+																													\
+	__declspec(dllexport) bool StopAlgorithm(int instHandle)														\
+	{																												\
+																													\
+		AlgorithmInstances.erase(instHandle);																		\
+		return true;																								\
+	}																												\
+}
 #endif
 
 class THETRADINGMACHINEDLL TheTradingMachine
 {
 public:
-	TheTradingMachine(std::string tickDataFile);
-	TheTradingMachine(std::string ticker, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live = false);
+	TheTradingMachine(std::string input, std::shared_ptr<IBInterfaceClient> ibApiPtr = std::shared_ptr<IBInterfaceClient>(nullptr), bool live = false);
 
-	~TheTradingMachine();
+	virtual ~TheTradingMachine();
 	std::shared_ptr<PlotData> getPlotData();
-
-	void setCallback(TickCallbackFunction callback);
 	void run();
+	void stop();
+
 private:
-	class TheTradingMachineImpl; 
+	class TheTradingMachineImpl;
 	TheTradingMachineImpl* _impl;
-
-// Order api
-public:
-	// When these order functions are called, a PositionId is returned immediately. The functions
-	// do not block until the positions are filled. Since it's non blocking, the position is not guaranteed
-	// to be filled when the function returns. With the positionId however, the caller can query the status of the position
-	// using getPosition(PositionId).
-		
-	// all orders are submitted as all or none
-	PositionId longMarketNoStop(std::string ticker, int numShares);
-	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice);
-	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
-	PositionId longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
-	PositionId longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
-
-	PositionId shortMarketNoStop(std::string ticker, int numShares);
-	PositionId shortMarketStopMarket(std::string ticker, int numShares, double activationPrice);
-	PositionId shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
-	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
-	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
-
-	void closePosition(PositionId posId);
-	void reducePosition(PositionId posId, int numShares);
-	Position getPosition(PositionId posId);
+protected:
+	virtual void tickHandler(const Tick& tick) = 0;
+	
+	//let the impl class call the pure virtual tickHandler
+	friend TheTradingMachineImpl;
 };

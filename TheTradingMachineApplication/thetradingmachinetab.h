@@ -18,10 +18,10 @@ class TheTradingMachineTab : public QWidget
 public:
     struct AlgorithmApi
     {
-        using PlayAlgorithmFnPtr = int (*)(std::string, std::shared_ptr<PlotData>*, std::shared_ptr<IBInterfaceClient>);
+        using PlayAlgorithmFnPtr = int (*)(std::string, std::shared_ptr<PlotData>*, std::shared_ptr<IBInterfaceClient>, bool);
         using StopAlgorithmFnPtr = bool (*)(int);
 
-        std::function<int(std::string, std::shared_ptr<PlotData>*, std::shared_ptr<IBInterfaceClient>)> playAlgorithm;
+        std::function<int(std::string, std::shared_ptr<PlotData>*, std::shared_ptr<IBInterfaceClient>, bool)> playAlgorithm;
         std::function<bool(int)> stopAlgorithm;
     };
 
