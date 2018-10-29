@@ -26,7 +26,7 @@ public:
 	void run();
 
 private:
-	void preTickDispatch(const Tick& tick);
+	void broadcastTick(const Tick& tick);
 	void readTickFile(void);
 	
 private:	

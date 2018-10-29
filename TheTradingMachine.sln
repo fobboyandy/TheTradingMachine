@@ -3,11 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TheTradingMachine", "TheTradingMachine\TheTradingMachine.vcxproj", "{31B10F56-20CC-41F8-9A19-CE39244A7230}"
-	ProjectSection(ProjectDependencies) = postProject
-		{EC374C0B-59B0-424D-9CC5-CBD66D692CCA} = {EC374C0B-59B0-424D-9CC5-CBD66D692CCA}
-	EndProjectSection
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IBInterface", "IBInterface\IBInterface.vcxproj", "{35F11259-7161-4001-8905-9A8CA2337215}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IBInterfaceClient", "IBInterfaceClient\IBInterfaceClient.vcxproj", "{EC374C0B-59B0-424D-9CC5-CBD66D692CCA}"
@@ -15,7 +10,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "IBInterfaceClient", "IBInte
 		{35F11259-7161-4001-8905-9A8CA2337215} = {35F11259-7161-4001-8905-9A8CA2337215}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseAlgorithm", "BaseAlgorithm\BaseAlgorithm.vcxproj", "{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BaseAlgorithm", "BaseAlgorithm\BaseAlgorithm.vcxproj", "{AFC4D4DB-47D4-4448-9B03-BB5E8A53A52F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,14 +20,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{31B10F56-20CC-41F8-9A19-CE39244A7230}.Debug|x64.ActiveCfg = Debug|x64
-		{31B10F56-20CC-41F8-9A19-CE39244A7230}.Debug|x64.Build.0 = Debug|x64
-		{31B10F56-20CC-41F8-9A19-CE39244A7230}.Debug|x86.ActiveCfg = Debug|Win32
-		{31B10F56-20CC-41F8-9A19-CE39244A7230}.Debug|x86.Build.0 = Debug|Win32
-		{31B10F56-20CC-41F8-9A19-CE39244A7230}.Release|x64.ActiveCfg = Release|x64
-		{31B10F56-20CC-41F8-9A19-CE39244A7230}.Release|x64.Build.0 = Release|x64
-		{31B10F56-20CC-41F8-9A19-CE39244A7230}.Release|x86.ActiveCfg = Release|Win32
-		{31B10F56-20CC-41F8-9A19-CE39244A7230}.Release|x86.Build.0 = Release|Win32
 		{35F11259-7161-4001-8905-9A8CA2337215}.Debug|x64.ActiveCfg = Debug|x64
 		{35F11259-7161-4001-8905-9A8CA2337215}.Debug|x64.Build.0 = Debug|x64
 		{35F11259-7161-4001-8905-9A8CA2337215}.Debug|x86.ActiveCfg = Debug|Win32
@@ -49,14 +36,14 @@ Global
 		{EC374C0B-59B0-424D-9CC5-CBD66D692CCA}.Release|x64.Build.0 = Release|x64
 		{EC374C0B-59B0-424D-9CC5-CBD66D692CCA}.Release|x86.ActiveCfg = Release|Win32
 		{EC374C0B-59B0-424D-9CC5-CBD66D692CCA}.Release|x86.Build.0 = Release|Win32
-		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Debug|x64.ActiveCfg = Debug|x64
-		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Debug|x64.Build.0 = Debug|x64
-		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Debug|x86.ActiveCfg = Debug|Win32
-		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Debug|x86.Build.0 = Debug|Win32
-		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Release|x64.ActiveCfg = Release|x64
-		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Release|x64.Build.0 = Release|x64
-		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Release|x86.ActiveCfg = Release|Win32
-		{7FB0EB9C-1831-4306-B47B-06D5A0ADE9E1}.Release|x86.Build.0 = Release|Win32
+		{AFC4D4DB-47D4-4448-9B03-BB5E8A53A52F}.Debug|x64.ActiveCfg = Debug|x64
+		{AFC4D4DB-47D4-4448-9B03-BB5E8A53A52F}.Debug|x64.Build.0 = Debug|x64
+		{AFC4D4DB-47D4-4448-9B03-BB5E8A53A52F}.Debug|x86.ActiveCfg = Debug|Win32
+		{AFC4D4DB-47D4-4448-9B03-BB5E8A53A52F}.Debug|x86.Build.0 = Debug|Win32
+		{AFC4D4DB-47D4-4448-9B03-BB5E8A53A52F}.Release|x64.ActiveCfg = Release|x64
+		{AFC4D4DB-47D4-4448-9B03-BB5E8A53A52F}.Release|x64.Build.0 = Release|x64
+		{AFC4D4DB-47D4-4448-9B03-BB5E8A53A52F}.Release|x86.ActiveCfg = Release|Win32
+		{AFC4D4DB-47D4-4448-9B03-BB5E8A53A52F}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

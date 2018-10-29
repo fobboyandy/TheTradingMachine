@@ -3,15 +3,14 @@
 #include <iostream>
 #include <functional>
 #include <list>
-#include "CandleMaker.h"
-#include "TheTradingMachine.h"
+#include "BaseAlgorithm.h"
 
 #define NUM_SECONDS_DAY 86400
 #define RTH_SECONDS 48600
 #define RTH_START 48600
 #define RTH_END 72000
 
-class SupportBreakShort : public TheTradingMachine
+class SupportBreakShort : public BaseAlgorithm
 {
 public:
 	SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst, bool live);
@@ -40,10 +39,10 @@ private:
 		NONE,
 	};
 
-	//
-	// Minute candles
-	//
-	CandleMaker minuteBarMaker;
+	////
+	//// Minute candles
+	////
+	//CandleMaker minuteBarMaker;
 
 	//
 	// Trading data

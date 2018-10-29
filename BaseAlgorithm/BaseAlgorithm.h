@@ -1,25 +1,70 @@
 #pragma once
 
 #include <string>
-#include "../TheTradingMachine/TheTradingMachine.h"
-#include "../TheTradingMachine/Common.h"
-#include "../TheTradingMachine/Position.h"
+#include "Common.h"
+#include "PlotData.h"
+#include "../IBInterfaceClient/IBInterfaceClient.h"
 
-#ifdef BASEALGORITHM_EXPORTS
-#define BASEALGORITHM_DLL __declspec(dllexport)
+#ifdef EXPORTBASEALGORITHMDLL
+#define BASEALGORITHMDLL __declspec(dllexport)
 #else
-#define BASEALGORITHM_DLL  __declspec(dllimport)
+#define BASEALGORITHMDLL __declspec(dllimport)
+#include <unordered_map>
+#include <memory>
+#include <stdexcept>
+
+#define EXPORT_ALGORITHM(CLASSNAME) 																				\
+/*boilerplate code for runtime dll linking*/																		\
+static int uniqueInstanceHandles = 0;																				\
+static std::unordered_map<int, std::unique_ptr<CLASSNAME>> AlgorithmInstances; 										\
+extern "C" 																											\
+{ 																													\
+	/* 																												\
+	* int represents a handle to the instantiation of the algorithm corresponding to the input ticker  				\
+	* this handle needs to be stored by the caller for destruction and calling algorithm 							\
+	* specific functions. This is necessary because multiple tickers can be running on the same 					\
+	* algorithm and we only have a single instance of the dll file 													\
+	*/ 																												\
+	__declspec(dllexport) int PlayAlgorithm(																		\
+		std::string dataInput,																						\
+		std::shared_ptr<PlotData>* dataOut,																			\
+		std::shared_ptr<IBInterfaceClient> ibInst,																	\
+		bool live) 																									\
+	{ 																												\
+		try																											\
+		{																											\
+			auto newInstance = std::make_unique<CLASSNAME>(dataInput, ibInst, live);								\
+			*dataOut = newInstance->getPlotData();																	\
+			AlgorithmInstances[uniqueInstanceHandles] = std::move(newInstance);										\
+			return static_cast<int>(uniqueInstanceHandles++);														\
+		}																											\
+		catch (const std::runtime_error&)																			\
+		{																											\
+			return -1;																								\
+		}																											\
+	} 																												\
+																													\
+	__declspec(dllexport) bool StopAlgorithm(int instHandle)														\
+	{																												\
+																													\
+		AlgorithmInstances.erase(instHandle);																		\
+		return true;																								\
+	}																												\
+}
 #endif
 
-class BASEALGORITHM_DLL BaseAlgorithm
+class BASEALGORITHMDLL BaseAlgorithm
 {
 public:
-	BaseAlgorithm(std::string ticker, std::shared_ptr<IBInterfaceClient> ibApiPtr, bool live = false);
+	BaseAlgorithm(std::string input, std::shared_ptr<IBInterfaceClient> ibApiPtr = std::shared_ptr<IBInterfaceClient>(nullptr), bool live = false);
+
 	virtual ~BaseAlgorithm();
+	std::shared_ptr<PlotData> getPlotData();
+	void run();
+	void stop();
 
-	virtual void tickHandler(const Tick& tick) = 0;
-
-	// all orders are submitted as all or none
+//ordering api
+public:
 	PositionId longMarketNoStop(std::string ticker, int numShares);
 	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice);
 	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
@@ -36,10 +81,12 @@ public:
 	void reducePosition(PositionId posId, int numShares);
 	Position getPosition(PositionId posId);
 
+	virtual void tickHandler(const Tick& tick) = 0;
 private:
 	class BaseAlgorithmImpl;
 	BaseAlgorithmImpl* _impl;
-
-	// allow impl to access tickHandler
+protected:
+	
+	//let the impl class call the pure virtual tickHandler
 	friend BaseAlgorithmImpl;
 };

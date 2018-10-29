@@ -2,9 +2,8 @@
 #include "SupportBreakShort.h"
 
 SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst, bool live) :
-	TheTradingMachine(input, ibInst, live),
+	BaseAlgorithm(input, ibInst, live),
 	input(input),
-	minuteBarMaker(60), // using minute time frame for this algorithm
 	prevDir(UNDEFINED),
 	previousStrength(NONE)
 {
@@ -13,7 +12,7 @@ SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<IBInterf
 
 SupportBreakShort::~SupportBreakShort()
 {
-	stop();
+	//stop();
 }
 
 void SupportBreakShort::tickHandler(const Tick & tick)

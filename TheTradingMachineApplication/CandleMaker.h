@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <functional>
-#include "PlotData.h"
+#include "../BaseAlgorithm/PlotData.h"
 
 class CandleMaker
 {

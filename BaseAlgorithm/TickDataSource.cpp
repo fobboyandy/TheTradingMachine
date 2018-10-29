@@ -78,7 +78,7 @@ void TickDataSource::run()
 		// invalidated lambda functions.
 		dataStreamHandle = ibApi->requestRealTimeTicks(input, [this](const Tick& tick)
 		{
-			this->preTickDispatch(tick); 
+			this->broadcastTick(tick);
 		});
 		
 	}
@@ -155,7 +155,7 @@ void TickDataSource::readTickFile(void)
 				break;
 			}
 		}
-		preTickDispatch(callbackTick);
+		broadcastTick(callbackTick);
 	}
 
 	//if threadcancellation was toggled, then it was forcefully terminated
@@ -180,15 +180,20 @@ void TickDataSource::unregisterCallback(CallbackHandle handle)
 	callbackList.erase(handle);
 }
 
-void TickDataSource::preTickDispatch(const Tick & tick)
+void TickDataSource::broadcastTick(const Tick & tick)
 {
-	//save the price before dispatching the tick
+	//save the price before broadcasting the tick
 	_lastPrice = tick.price;
 
 	//dispatch the tick to the registered callbacks under a lock
 	std::lock_guard<std::mutex> lock(callbackListMtx);
 	for (auto& fn : callbackList)
 	{
+		// wrap the broadcast in a try catch in case
+		// user didn't call stop and their
+		// tickHandler goes out of scope before
+		// BaseAlgorithm was able to unregister it.
+
 		fn.second(tick);
 	}
 }

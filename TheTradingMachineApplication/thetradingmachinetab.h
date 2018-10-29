@@ -8,8 +8,9 @@
 #include <memory>
 #include <thread>
 #include "qcustomplot.h"
-#include "../IBInterfaceClient/IBInterfaceClient.h"
 #include "CandleMaker.h"
+#include "../IBInterfaceClient/IBInterfaceClient.h"
+#include "../BaseAlgorithm/PlotData.h"
 
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTab : public QWidget
