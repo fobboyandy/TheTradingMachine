@@ -15,8 +15,6 @@ SupportBreakShort::~SupportBreakShort()
 
 void SupportBreakShort::tickHandler(const Tick & tick)
 {
-	//engine.buyMarketNoStop(input, 100);
-
 	// does nothing for now. all plot data is handled in base class
 
 	//Bar minuteBar;

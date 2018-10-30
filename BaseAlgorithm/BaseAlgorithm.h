@@ -39,6 +39,7 @@ extern "C" 																											\
 	} 																												\
 }
 
+// not really sure how to define these template functions outside of a macro
 template<class Algorithm>
 __declspec(dllexport) int PlayAlgorithmT(
 	std::string dataInput,
