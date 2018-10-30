@@ -80,8 +80,10 @@ public:
 
 	virtual ~BaseAlgorithm();
 	std::shared_ptr<PlotData> getPlotData();
-	void run();
-	void stop();
+
+	// not meant to be overridden
+	virtual void run() final;
+	virtual void stop() final;
 
 //ordering api
 public:
