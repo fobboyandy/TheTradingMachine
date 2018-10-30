@@ -3,20 +3,19 @@
 #include <iostream>
 #include <functional>
 #include <list>
-#include "CandleMaker.h"
-#include "TheTradingMachine.h"
+#include "BaseAlgorithm.h"
 
 #define NUM_SECONDS_DAY 86400
 #define RTH_SECONDS 48600
 #define RTH_START 48600
 #define RTH_END 72000
 
-class SupportBreakShort
+class SupportBreakShort : public BaseAlgorithm
 {
-	THETRADINGMACHINE_OBJ
 public:
-	explicit SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst = std::shared_ptr<IBInterfaceClient>(nullptr));
+	SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst, bool live);
 	~SupportBreakShort();
+
 	//
 	// Check the openPositions for the top most position. The positions are 
 	// sorted by target prices since the highest target price are the positions
@@ -25,6 +24,8 @@ public:
 	void coverTrade();
 	void shortTrade();
 private:
+
+	std::string input;
 	enum Dir
 	{
 		UP,
@@ -38,10 +39,10 @@ private:
 		NONE,
 	};
 
-	//
-	// Minute candles
-	//
-	CandleMaker minuteBarMaker;
+	////
+	//// Minute candles
+	////
+	//CandleMaker minuteBarMaker;
 
 	//
 	// Trading data
@@ -73,5 +74,5 @@ private:
 protected:
 	// this function must be implemented because the base class automatically calls
 	// this pure virtual function to handle new ticks
-	void tickHandler(const Tick& tick);
+	void tickHandler(const Tick& tick) override;
 };

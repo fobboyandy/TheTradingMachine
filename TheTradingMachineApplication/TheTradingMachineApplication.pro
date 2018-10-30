@@ -25,8 +25,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 INCLUDEPATH += \
-        ./../TheTradingMachine/ \
-        ./../Algorithms/
+        ./../BaseAlgorithm/
 
 SOURCES += \
         main.cpp \
@@ -42,7 +41,7 @@ HEADERS += \
     playdialog.h \
     thetradingmachinetab.h \
     CandleMaker.h \
-    ../TheTradingMachine/TheTradingMachine.h
+    ../TheTradingMachine/PlotData.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \

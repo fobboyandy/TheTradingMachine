@@ -20,10 +20,11 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{31B10F56-20CC-41F8-9A19-CE39244A7230}</ProjectGuid>
+    <ProjectGuid>{AFC4D4DB-47D4-4448-9B03-BB5E8A53A52F}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>TheTradingMachine</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <ProjectName>BaseAlgorithm</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -104,7 +105,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>EXPORTTHETRADINGMACHINEDLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>EXPORTBASEALGORITHMDLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -150,10 +151,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="TheTradingMachine.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="PlotData.h" />
+    <ClInclude Include="Position.h" />
+    <ClInclude Include="TickDataSource.h" />
+    <ClInclude Include="LocalBroker.h" />
+    <ClInclude Include="Portfolio.h" />
+    <ClInclude Include="BaseAlgorithm.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="TheTradingMachine.cpp" />
+    <ClCompile Include="LocalBroker.cpp" />
+    <ClCompile Include="Portfolio.cpp" />
+    <ClCompile Include="BaseAlgorithm.cpp" />
+    <ClCompile Include="TickDataSource.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

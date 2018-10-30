@@ -1,16 +1,12 @@
 #include <memory>
-#include <windows.h>
 #include "SupportBreakShort.h"
-#include "TheTradingMachine.h"
 
-SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst) :
-	engine(input, [this](const Tick& tick) {this->tickHandler(tick); }, ibInst),
-	minuteBarMaker(60), // using minute time frame for this algorithm
+SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst, bool live) :
+	BaseAlgorithm(input, ibInst, live),
+	input(input),
 	prevDir(UNDEFINED),
-	previousStrength(NONE),
-	profit(0)
+	previousStrength(NONE)
 {
-
 }
 
 SupportBreakShort::~SupportBreakShort()
