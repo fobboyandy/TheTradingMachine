@@ -7,12 +7,10 @@ SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<IBInterf
 	prevDir(UNDEFINED),
 	previousStrength(NONE)
 {
-	run();
 }
 
 SupportBreakShort::~SupportBreakShort()
 {
-	//stop();
 }
 
 void SupportBreakShort::tickHandler(const Tick & tick)

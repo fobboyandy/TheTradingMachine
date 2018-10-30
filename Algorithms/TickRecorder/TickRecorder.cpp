@@ -24,7 +24,8 @@ TickRecorder::~TickRecorder()
 void TickRecorder::tickHandler(const Tick & tick)
 {
 	//should store binary data instead of strings
-	std::string s = TimeToString(time(nullptr));
+	auto tickTime = tick.time;
+	std::string s = TimeToString(time(&tickTime));
 	tickoutput << tick.tickType << ',';
 	tickoutput << tick.time << ",";
 	tickoutput << s.substr(0, s.length() - 1) << ",";

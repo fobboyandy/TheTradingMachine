@@ -15,7 +15,6 @@
 
 #define EXPORT_ALGORITHM(CLASSNAME) 																				\
 /*boilerplate code for runtime dll linking*/																		\
-static int uniqueInstanceHandles = 0;																				\
 static std::unordered_map<int, std::unique_ptr<CLASSNAME>> AlgorithmInstances; 										\
 extern "C" 																											\
 { 																													\
@@ -31,25 +30,46 @@ extern "C" 																											\
 		std::shared_ptr<IBInterfaceClient> ibInst,																	\
 		bool live) 																									\
 	{ 																												\
-		try																											\
-		{																											\
-			auto newInstance = std::make_unique<CLASSNAME>(dataInput, ibInst, live);								\
-			*dataOut = newInstance->getPlotData();																	\
-			AlgorithmInstances[uniqueInstanceHandles] = std::move(newInstance);										\
-			return static_cast<int>(uniqueInstanceHandles++);														\
-		}																											\
-		catch (const std::runtime_error&)																			\
-		{																											\
-			return -1;																								\
-		}																											\
+		return PlayAlgorithmT<CLASSNAME>(dataInput, dataOut, ibInst, live);											\
 	} 																												\
 																													\
-	__declspec(dllexport) bool StopAlgorithm(int instHandle)														\
-	{																												\
-																													\
-		AlgorithmInstances.erase(instHandle);																		\
-		return true;																								\
-	}																												\
+	__declspec(dllexport) bool StopAlgorithm(int instHandle) 														\
+	{ 																												\
+		return StopAlgorithmT<CLASSNAME>(instHandle);																\
+	} 																												\
+}
+
+template<class Algorithm>
+__declspec(dllexport) int PlayAlgorithmT(
+	std::string dataInput,
+	std::shared_ptr<PlotData>* dataOut,
+	std::shared_ptr<IBInterfaceClient> ibInst,
+	bool live)
+{
+	static int uniqueInstanceHandles = 0;
+	try
+	{
+		auto newInstance = std::make_unique<Algorithm>(dataInput, ibInst, live);
+		*dataOut = newInstance->getPlotData();
+		newInstance->run();
+		AlgorithmInstances[uniqueInstanceHandles] = std::move(newInstance);
+		return static_cast<int>(uniqueInstanceHandles++);
+	}
+	catch (const std::runtime_error&)
+	{
+		return -1;
+	}
+}
+
+template<class Algorithm>
+__declspec(dllexport) bool StopAlgorithmT(int instHandle)
+{
+	if (AlgorithmInstances.find(instHandle) != AlgorithmInstances.end())
+	{
+		AlgorithmInstances[instHandle]->stop();
+		AlgorithmInstances.erase(instHandle);
+	}
+	return true;
 }
 #endif
 
