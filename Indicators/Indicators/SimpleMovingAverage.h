@@ -1,24 +1,31 @@
 #pragma once
-#include "Indicator.h"
 
-class SimpleMovingAverage : public Indicator<SimpleMovingAverage>
+#include "Common.h"
+#include "Indicator.h"
+#include <ctime>
+
+class INDICATORDLL SimpleMovingAverage : Indicator<SimpleMovingAverage>
 {
 public:
-	SimpleMovingAverage(int period);
-	~SimpleMovingAverage();
+	IndicatorPoint<SimpleMovingAverage> computeIndicatorPoint(const SamplePoint<SimpleMovingAverage>& sample) override;
+	IndicatorPoint<SimpleMovingAverage> recomputeIndicatorPoint(const SamplePoint<SimpleMovingAverage>& sample) override;
+
+private:
+	class SimpleMovingAverageImpl;
+	SimpleMovingAverageImpl* impl_;
 };
 
-// specialization for IP and SP for SMA
-template <>
+// template specialization
+template<>
 struct IndicatorPoint<SimpleMovingAverage>
 {
-	double key;
+	time_t time;
 	double value;
 };
 
-template <>
+template<>
 struct SamplePoint<SimpleMovingAverage>
 {
-	double key;
+	time_t time;
 	double value;
 };

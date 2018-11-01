@@ -41,7 +41,10 @@ HEADERS += \
     playdialog.h \
     thetradingmachinetab.h \
     CandleMaker.h \
-    ../BaseAlgorithm/BaseAlgorithm/PlotData.h
+    ../BaseAlgorithm/BaseAlgorithm/PlotData.h \
+    ../Indicators/Indicators/Common.h \
+    ../Indicators/Indicators/Indicator.h \
+    ../Indicators/Indicators/SimpleMovingAverage.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \
@@ -59,3 +62,8 @@ win32: LIBS += -L$$PWD/../InteractiveBrokersClient/x64/Debug/ -lInteractiveBroke
 
 INCLUDEPATH += $$PWD/../InteractiveBrokersClient/x64/Debug
 DEPENDPATH += $$PWD/../InteractiveBrokersClient/x64/Debug
+
+win32: LIBS += -L$$PWD/../Indicators/x64/Debug/ -lIndicators
+
+INCLUDEPATH += $$PWD/../Indicators/x64/Debug
+DEPENDPATH += $$PWD/../Indicators/x64/Debug

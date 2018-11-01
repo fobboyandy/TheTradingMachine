@@ -1,6 +1,7 @@
 #include "thetradingmachinetab.h"
 #include "CandleMaker.h"
 #include "playdialog.h"
+#include "../Indicators/Indicators/SimpleMovingAverage.h"
 #include <iostream>
 
 TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<InteractiveBrokersClient> client, QWidget* parent) :
@@ -204,6 +205,13 @@ void TheTradingMachineTab::updatePlot(void)
             // getUpdatedCandleTime will return the updated time to the nearest timeFrame
             auto currentCandleTime = candleMaker_.getUpdatedCandleTime();
 			
+            SimpleMovingAverage sma;
+            SamplePoint<SimpleMovingAverage> sp;
+            sp.time = 0;
+            sp.value = 0;
+
+            auto throwAway = sma.recomputeIndicatorPoint(sp);
+
             if(isNewCandle)
             {
                 // add a new bar to the back
