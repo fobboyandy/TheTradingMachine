@@ -3,7 +3,7 @@
 #include <iostream>
 #include <functional>
 #include <list>
-#include "BaseAlgorithm.h"
+#include "../../BaseAlgorithm/BaseAlgorithm/BaseAlgorithm.h"
 
 #define NUM_SECONDS_DAY 86400
 #define RTH_SECONDS 48600
@@ -13,7 +13,7 @@
 class SupportBreakShort : public BaseAlgorithm
 {
 public:
-	SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst, bool live);
+	SupportBreakShort(std::string input, std::shared_ptr<InteractiveBrokersClient> ibInst, bool live);
 	~SupportBreakShort();
 
 	//

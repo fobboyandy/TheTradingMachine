@@ -9,7 +9,7 @@ std::string TimeToString(time_t time)
 	return std::string(timeStr);
 }
 
-TickRecorder::TickRecorder(std::string input, std::shared_ptr<IBInterfaceClient> ibInst, bool live):
+TickRecorder::TickRecorder(std::string input, std::shared_ptr<InteractiveBrokersClient> ibInst, bool live):
 	BaseAlgorithm(input, ibInst, live)
 {
 	run();

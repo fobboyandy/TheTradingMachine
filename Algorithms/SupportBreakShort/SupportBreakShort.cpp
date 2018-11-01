@@ -1,7 +1,7 @@
 #include <memory>
 #include "SupportBreakShort.h"
 
-SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<IBInterfaceClient> ibInst, bool live) :
+SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<InteractiveBrokersClient> ibInst, bool live) :
 	BaseAlgorithm(input, ibInst, live),
 	input(input),
 	prevDir(UNDEFINED),
@@ -165,6 +165,7 @@ void SupportBreakShort::shortTrade()
 
 		}
 	}
+
 }
 
 EXPORT_ALGORITHM(SupportBreakShort)

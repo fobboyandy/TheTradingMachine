@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "BaseAlgorithm.h"
+#include "../../BaseAlgorithm/BaseAlgorithm/BaseAlgorithm.h"
 
 #define NUM_SECONDS_DAY 86400
 #define RTH_SECONDS 48600
@@ -12,7 +12,7 @@
 class TickRecorder : public BaseAlgorithm
 {
 public:
-	TickRecorder(std::string input, std::shared_ptr<IBInterfaceClient> ibInst, bool live);
+	TickRecorder(std::string input, std::shared_ptr<InteractiveBrokersClient> ibInst, bool live);
 	~TickRecorder();
 	void tickHandler(const Tick& tick) override;
 private:
