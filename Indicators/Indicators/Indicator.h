@@ -23,4 +23,7 @@ public:
 	// buffer which keeps a minimum number of previous sample points to recompute the next 
 	// indicator point instead of recalculating from the beginning.
 	virtual IndicatorPoint<T> recomputeIndicatorPoint(const SamplePoint<T>& sample) = 0;
+
+	void foo();
+
 };

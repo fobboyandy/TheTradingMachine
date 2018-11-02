@@ -127,8 +127,14 @@
    </property>
   </action>
   <action name="actionSMA">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
-    <string>SMA</string>
+    <string>Simple Moving Average</string>
+   </property>
+   <property name="toolTip">
+    <string>Simple Moving Average</string>
    </property>
   </action>
   <action name="actionVolume">

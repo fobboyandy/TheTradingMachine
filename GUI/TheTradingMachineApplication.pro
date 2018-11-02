@@ -44,7 +44,8 @@ HEADERS += \
     ../BaseAlgorithm/BaseAlgorithm/PlotData.h \
     ../Indicators/Indicators/Common.h \
     ../Indicators/Indicators/Indicator.h \
-    ../Indicators/Indicators/SimpleMovingAverage.h
+    ../Indicators/Indicators/SimpleMovingAverage.h \
+    indicatorgraph.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \

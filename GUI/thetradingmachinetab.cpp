@@ -1,8 +1,8 @@
 #include "thetradingmachinetab.h"
 #include "CandleMaker.h"
 #include "playdialog.h"
-#include "../Indicators/Indicators/SimpleMovingAverage.h"
 #include <iostream>
+#include "../Indicators/Indicators/SimpleMovingAverage.h"
 
 TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<InteractiveBrokersClient> client, QWidget* parent) :
     QWidget(parent),
@@ -43,7 +43,6 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
 
     // prompt user for the input method. real time or historical ticks
-    // std::wstring fpTest("..\\outputfiles\\Jul 19AMD.tickdat");
     PlayDialog loadInput(this);
     loadInput.exec();
     auto input = loadInput.getInput();
@@ -51,7 +50,6 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
 
     if(name_.size() > 0)
     {
-
         //if real time, check for ib connection
         // instantiate the algorithm for this ticker
         algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_, false);
@@ -104,13 +102,6 @@ void TheTradingMachineTab::candleGraphSetup()
     candleBarsDataContainer_ = QSharedPointer<QCPFinancialDataContainer>(new QCPFinancialDataContainer);
     candleSticksGraph_->setData(candleBarsDataContainer_);
     plot_->plotLayout()->addElement(0, 0, candleSticksAxisRect_);
-
-    progressWindow_ = new QCPLayoutInset();
-    auto title = new QCPTextElement(plot_);
-    title->setText("Title");
-    progressWindow_->addElement(title, Qt::AlignTop | Qt::AlignHCenter);
-    candleSticksAxisRect_->insetLayout()->addElement(progressWindow_, Qt::AlignTop | Qt::AlignHCenter);
-
 }
 
 void TheTradingMachineTab::volumeGraphSetup()
@@ -157,10 +148,10 @@ void TheTradingMachineTab::spacingSetup()
 
 void TheTradingMachineTab::legendSetup()
 {
-    candleGraphLegend_ = new QCPLegend();
-    candleSticksAxisRect_->insetLayout()->addElement(candleGraphLegend_, Qt::AlignTop | Qt::AlignRight);
-    plot_->setAutoAddPlottableToLegend(false);
-    candleGraphLegend_->addItem(new QCPPlottableLegendItem(candleGraphLegend_, candleSticksGraph_));
+//    candleGraphLegend_ = new QCPLegend();
+//    candleSticksAxisRect_->insetLayout()->addElement(candleGraphLegend_, Qt::AlignTop | Qt::AlignRight);
+//    plot_->setAutoAddPlottableToLegend(false);
+//    candleGraphLegend_->addItem(new QCPPlottableLegendItem(candleGraphLegend_, candleSticksGraph_));
 }
 
 QString TheTradingMachineTab::formatTabName(const QString &input)
@@ -181,6 +172,23 @@ QString TheTradingMachineTab::formatTabName(const QString &input)
         inputFormatted = input;
     }
     return inputFormatted;
+}
+
+void TheTradingMachineTab::updatePlotNewCandle(const time_t candleTime, const Bar &candle)
+{
+    // add a new bar volume and candlesticks
+    candleBarsDataContainer_->add(QCPFinancialData(candleTime, candle.open, candle.high, candle.low, candle.close));
+    volumeBarsDataContainer_->add(QCPBarsData(candleTime, candle.volume));
+
+    // update active indicators' plots
+}
+
+void TheTradingMachineTab::updatePlotReplaceCandle(const time_t candleTime, const Bar &candle)
+{
+    candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(candleTime , candle.open, candle.high, candle.low, candle.close));
+    volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(candleTime, candle.volume));
+
+    //update active indicators' plots
 }
 
 void TheTradingMachineTab::updatePlot(void)
@@ -204,25 +212,16 @@ void TheTradingMachineTab::updatePlot(void)
             bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], currentCandle_);
             // getUpdatedCandleTime will return the updated time to the nearest timeFrame
             auto currentCandleTime = candleMaker_.getUpdatedCandleTime();
-			
-            SimpleMovingAverage sma;
-            SamplePoint<SimpleMovingAverage> sp;
-            sp.time = 0;
-            sp.value = 0;
 
-            auto throwAway = sma.recomputeIndicatorPoint(sp);
-
+            //update the plot with a new candle.
             if(isNewCandle)
             {
-                // add a new bar to the back
-                candleBarsDataContainer_->add(QCPFinancialData(currentCandleTime, currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
-                volumeBarsDataContainer_->add(QCPBarsData(currentCandleTime, currentCandle_.volume));
+                updatePlotNewCandle(currentCandleTime, currentCandle_);
             }
-            //keep the most recent added candle up to date
+            //keep the plot up to date with an updated candle
             else if(candleBarsDataContainer_->size() > 0)
             {
-                candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(currentCandleTime , currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
-                volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(currentCandleTime, currentCandle_.volume));
+                updatePlotReplaceCandle(currentCandleTime, currentCandle_);
             }
         }
 

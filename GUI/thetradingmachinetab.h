@@ -52,14 +52,11 @@ private:
     //inside candle graph rect
     QCPAxisRect* candleSticksAxisRect_;
     QCPFinancial* candleSticksGraph_;
-    QCPLegend* candleGraphLegend_;
-    QCPTextElement* candleGraphTitle;
     QSharedPointer<QCPFinancialDataContainer> candleBarsDataContainer_;
     Bar currentCandle_;
     int timeFrame_;
     CandleMaker candleMaker_;
     std::vector<double>::size_type lastPlotDataIndex_;
-    QCPLayoutInset* progressWindow_;
 
     //inside volume graph rect
     QCPAxisRect* volumeAxisRect_;
@@ -69,9 +66,7 @@ private:
     //plot scale control
     bool autoScale_;
     bool plotActive_;
-
     bool valid_;
-
 
 private:
     void candleGraphSetup(void);
@@ -80,6 +75,10 @@ private:
     void legendSetup(void);
 
     QString formatTabName(const QString& input);
+
+private:
+    void updatePlotNewCandle(const time_t candleTime, const Bar &candle);
+    void updatePlotReplaceCandle(const time_t candleTime, const Bar &candle);
 
 private slots:
     void updatePlot(void);

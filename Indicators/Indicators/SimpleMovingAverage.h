@@ -4,9 +4,12 @@
 #include "Indicator.h"
 #include <ctime>
 
-class INDICATORDLL SimpleMovingAverage : Indicator<SimpleMovingAverage>
+class INDICATORSDLL SimpleMovingAverage : Indicator<SimpleMovingAverage>
 {
 public:
+	SimpleMovingAverage(int period);
+	~SimpleMovingAverage();
+
 	IndicatorPoint<SimpleMovingAverage> computeIndicatorPoint(const SamplePoint<SimpleMovingAverage>& sample) override;
 	IndicatorPoint<SimpleMovingAverage> recomputeIndicatorPoint(const SamplePoint<SimpleMovingAverage>& sample) override;
 
