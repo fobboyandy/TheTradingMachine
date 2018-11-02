@@ -14,6 +14,7 @@
 #include "../InteractiveBrokersClient/InteractiveBrokersClient/InteractiveBrokersClient.h"
 #include "../BaseAlgorithm/BaseAlgorithm/PlotData.h"
 #include "iplot.h"
+#include "candlevolumeplot.h"
 
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTab : public QWidget
@@ -52,25 +53,23 @@ private:
     std::shared_ptr<InteractiveBrokersClient> client_;
     std::shared_ptr<PlotData> plotData_;
 
-    //inside candle graph rect
-    QCPAxisRect* candleSticksAxisRect_;
-    QCPFinancial* candleSticksGraph_;
-    QSharedPointer<QCPFinancialDataContainer> candleBarsDataContainer_;
+    // axisRects for candle and volume
+    QCPAxisRect* candleAxisRect_;
+    QCPAxisRect* volumeAxisRect_;
+
+    // candle data
     Bar currentCandle_;
     int timeFrame_;
     CandleMaker candleMaker_;
     std::vector<double>::size_type lastPlotDataIndex_;
 
-    //inside volume graph rect
-    QCPAxisRect* volumeAxisRect_;
-    QCPBars* volumeBarsGraph_;
-    QSharedPointer<QCPBarsDataContainer> volumeBarsDataContainer_;
-
     // enumeration for predefined mapping for various indicators
     enum class IPlotIndex;
 
     // all activated plots
-    std::unordered_map<IPlotIndex, std::list<IPlot*>> activePlots_;
+    std::unordered_map<IPlotIndex, std::list<std::unique_ptr<IPlot>>> activePlots_;
+
+    std::unique_ptr<CandleVolumePlot> candleVolume_;
 
     //plot scale control
     bool autoScale_;

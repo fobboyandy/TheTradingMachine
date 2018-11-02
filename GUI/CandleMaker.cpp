@@ -26,7 +26,7 @@ CandleMaker::~CandleMaker()
 {
 }
 
-bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle)
+bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle, time_t& currentCandleTime)
 {
     bool isNewCandle = false;
 
@@ -74,7 +74,6 @@ bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle)
         aggregatedCandle.close = newTick.price;
         aggregatedCandle.volume = newTick.size;
         isNewCandle = true;
-        currentCandleTime = newTick.time - (newTick.time % timeFrame); // candle time should align with the nearest timeframe
     }
     else
     {
@@ -83,13 +82,9 @@ bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle)
 
     // this is the updated candle
     updatedCandle = aggregatedCandle;
+    currentCandleTime = newTick.time - (newTick.time % timeFrame); // candle time should align with the nearest timeframe
 
     return isNewCandle;
-}
-
-time_t CandleMaker::getUpdatedCandleTime()
-{
-    return currentCandleTime;
 }
 
 void CandleMaker::setRthOnly(bool rth)
