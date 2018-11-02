@@ -2,6 +2,7 @@
 
 #include "Common.h"
 #include <ctime>
+#include <vector>
 
 struct DataPoint
 {
@@ -9,7 +10,6 @@ struct DataPoint
 	double value;
 };
 
-#include <vector>
 
 // the two virtual functions are free to be modified by the user to yield different results
 // however, the input and output structure must stay the same in order to use dynamic linking.
@@ -22,7 +22,10 @@ template<typename T>
 class Indicator
 {
 public:
-	// this computes an indicator point and permanently adds it to the chart
+    Indicator(){}
+    virtual ~Indicator(){}
+
+    // this computes an indicator point and permanently adds it to the chart
 	virtual std::vector<DataPoint> computeIndicatorPoint(const DataPoint& sample) = 0;
 	
 	// for reflecting real time tick changes by removing the last computed point and 

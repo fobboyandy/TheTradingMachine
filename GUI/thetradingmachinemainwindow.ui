@@ -88,8 +88,20 @@
     <property name="title">
      <string>Indicators</string>
     </property>
-    <addaction name="actionSMA"/>
-    <addaction name="actionVolume"/>
+    <widget class="QMenu" name="menuVolume_Chart">
+     <property name="title">
+      <string>Volume Chart</string>
+     </property>
+     <addaction name="actionSimple_Moving_Average"/>
+    </widget>
+    <widget class="QMenu" name="menuPrice_Chart">
+     <property name="title">
+      <string>Price Chart</string>
+     </property>
+     <addaction name="actionSimple_Moving_Average_2"/>
+    </widget>
+    <addaction name="menuPrice_Chart"/>
+    <addaction name="menuVolume_Chart"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -124,22 +136,6 @@
   <action name="actionDelete_Ticker">
    <property name="text">
     <string>Play</string>
-   </property>
-  </action>
-  <action name="actionSMA">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>Simple Moving Average</string>
-   </property>
-   <property name="toolTip">
-    <string>Simple Moving Average</string>
-   </property>
-  </action>
-  <action name="actionVolume">
-   <property name="text">
-    <string>Volume</string>
    </property>
   </action>
   <action name="actionNew_Session">
@@ -194,6 +190,22 @@
   <action name="actionExit">
    <property name="text">
     <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionSimple_Moving_Average">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Simple Moving Average</string>
+   </property>
+  </action>
+  <action name="actionSimple_Moving_Average_2">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Simple Moving Average</string>
    </property>
   </action>
  </widget>

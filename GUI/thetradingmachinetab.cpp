@@ -137,30 +137,30 @@ QString TheTradingMachineTab::formatTabName(const QString &input)
 
 void TheTradingMachineTab::updatePlotNewCandle(const time_t candleTime, const Bar &candle)
 {
-    candleVolumePlot_ ->updatePlotNewCandle(candleTime, candle);
+    candleVolumePlot_->updatePlotNewCandle(candleTime, candle);
 
-//    // add new bar to all active indicators' plots
-//    for(auto& activePlotIt: activePlots_)
-//    {
-//        for(auto& plotIt: activePlotIt.second)
-//        {
-//            plotIt->updatePlotNewCandle(candleTime, candle);
-//        }
-//    }
+    // add new bar to all active indicators' plots
+    for(auto& activePlotIt: activePlots_)
+    {
+        for(auto& plotIt: activePlotIt.second)
+        {
+            plotIt->updatePlotNewCandle(candleTime, candle);
+        }
+    }
 }
 
 void TheTradingMachineTab::updatePlotReplaceCandle(const time_t candleTime, const Bar &candle)
 {
-    candleVolumePlot_ ->updatePlotReplaceCandle(candleTime, candle);
+    candleVolumePlot_->updatePlotReplaceCandle(candleTime, candle);
 
-//    //update active indicators' plots
-//    for(auto& activePlotIt: activePlots_)
-//    {
-//        for(auto& plotIt: activePlotIt.second)
-//        {
-//            plotIt->updatePlotReplaceCandle(candleTime, candle);
-//        }
-//    }
+    //update active indicators' plots
+    for(auto& activePlotIt: activePlots_)
+    {
+        for(auto& plotIt: activePlotIt.second)
+        {
+            plotIt->updatePlotReplaceCandle(candleTime, candle);
+        }
+    }
 }
 
 void TheTradingMachineTab::updatePlot(void)
@@ -176,11 +176,10 @@ void TheTradingMachineTab::updatePlot(void)
 
     for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
     {
-        time_t candleTime;
         Bar candle;
         // candleTime holds the time of the most recent candle
-        bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], candle, candleTime);
-        // getUpdatedCandleTime will return the updated time to the nearest timeFrame
+        bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], candle);
+        auto candleTime = candleMaker_.getUpdatedCandleTime();
 
         //update the plot with a new candle.
         if(isNewCandle)

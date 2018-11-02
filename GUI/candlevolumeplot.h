@@ -23,7 +23,7 @@ private:
     QCPAxisRect& volumeAxisRect_;
 
     // graph
-    QCPFinancial* candlesBars_;
+    QCPFinancial* candleBars_;
     QCPBars* volumeBars_;
 
     // data containers

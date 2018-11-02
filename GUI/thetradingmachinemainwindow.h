@@ -32,6 +32,7 @@ public:
     ~TheTradingMachineMainWindow();
     bool valid();
 
+// toolbar controls
 private slots:
     void newSession();
     void play();
@@ -39,9 +40,7 @@ private slots:
     void connectInteractiveBroker();
     void closeAll();
     void closeTab(int tabIndex);
-
     void checkInteractiveBrokerConnection();
-
 
 //members
 private:
@@ -51,6 +50,7 @@ private:
     static std::shared_ptr<InteractiveBrokersClient> client_;
     static QTimer clientReadyTimer_;
 
+    // monitor for duplicate instances of the same algorithm
     static std::unordered_set<std::wstring> algorithmInstances_;
 
     // dll interface
@@ -58,11 +58,21 @@ private:
     HMODULE dllHndl_;
     TheTradingMachineTab::AlgorithmApi api_;
 
+    // currentTab
+    TheTradingMachineTab* currentTab;
+
     bool valid_;
 
-//functions
+// functions
     bool promptLoadAlgorithm();
     void connectDefaulSlots();
+
+
+// indicator slots
+private slots:
+    void simpleMovingAveragePrice(void);
+    void simpleMovingAverageVolume(void);
+
 };
 
 #endif // THETRADINGMACHINEMAINWINDOW_H

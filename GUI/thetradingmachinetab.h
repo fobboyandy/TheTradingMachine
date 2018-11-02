@@ -58,6 +58,7 @@ private:
     QCPAxisRect* volumeAxisRect_;
 
     // candle data
+    Bar currentCandle_;
     int timeFrame_;
     CandleMaker candleMaker_;
     std::vector<double>::size_type lastPlotDataIndex_;

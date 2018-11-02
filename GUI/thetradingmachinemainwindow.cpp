@@ -161,6 +161,15 @@ void TheTradingMachineMainWindow::connectDefaulSlots()
     connect(&clientReadyTimer_, &QTimer::timeout, this, &TheTradingMachineMainWindow::checkInteractiveBrokerConnection);
 }
 
+void TheTradingMachineMainWindow::simpleMovingAveragePrice()
+{
+}
+
+void TheTradingMachineMainWindow::simpleMovingAverageVolume()
+{
+
+}
+
 bool TheTradingMachineMainWindow::promptLoadAlgorithm()
 {
     valid_ = false;

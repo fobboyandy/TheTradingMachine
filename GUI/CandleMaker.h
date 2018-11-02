@@ -18,7 +18,13 @@ public:
 	//
     // Given a new tick, updates the candle and the latest candle time. returns true for new candles.
     //
-    bool updateCandle(const Tick& newTick, Bar& updatedCandle, time_t& currentCandleTime);
+    bool updateCandle(const Tick& newTick, Bar& updatedCandle);
+
+    //
+    // getUpdatedCandleTime will return the updated time to the nearest timeFrame relative
+    // to the last time updateCandle was called.
+    //
+    time_t getUpdatedCandleTime();
 
     void setRthOnly(bool rth);
 
@@ -55,7 +61,7 @@ private:
     //
     // Used to keep track of the time that the latest candle belongs to
     //
-//    time_t currentCandleTime;
+    time_t currentCandleTime;
 
     bool rthOnly;
 
