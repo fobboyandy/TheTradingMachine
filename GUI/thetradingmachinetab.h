@@ -53,12 +53,11 @@ private:
     std::shared_ptr<InteractiveBrokersClient> client_;
     std::shared_ptr<PlotData> plotData_;
 
-    // axisRects for candle and volume
+    // upper and lower axis rect. upper for candle lower for volume
     QCPAxisRect* candleAxisRect_;
     QCPAxisRect* volumeAxisRect_;
 
     // candle data
-    Bar currentCandle_;
     int timeFrame_;
     CandleMaker candleMaker_;
     std::vector<double>::size_type lastPlotDataIndex_;
@@ -69,7 +68,9 @@ private:
     // all activated plots
     std::unordered_map<IPlotIndex, std::list<std::unique_ptr<IPlot>>> activePlots_;
 
-    std::unique_ptr<CandleVolumePlot> candleVolume_;
+    // keep CandleVolumePlot_ separately since we need to access the
+    // it to maintain the layout of the rects
+    std::unique_ptr<CandleVolumePlot> candleVolumePlot_;
 
     //plot scale control
     bool autoScale_;
@@ -77,9 +78,7 @@ private:
     bool valid_;
 
 private:
-    void candleGraphSetup(void);
-    void volumeGraphSetup(void);
-    void spacingSetup(void);
+    void layoutSetup();
     void legendSetup(void);
 
     QString formatTabName(const QString& input);
@@ -91,6 +90,116 @@ private:
 private slots:
     void updatePlot(void);
     void xAxisChanged(QCPRange range);
+};
+
+// define IPlotIndex
+enum class TheTradingMachineTab::IPlotIndex
+{
+    CANDLEVOLUME,
+    ABS,
+    ACOS,
+    AD,
+    ADD,
+    ADOSC,
+    ADX,
+    ADXR,
+    AO,
+    APO,
+    AROON,
+    AROONOSC,
+    ASIN,
+    ATAN,
+    ATR,
+    AVGPRICE,
+    BBANDS,
+    BOP,
+    CCI,
+    CEIL,
+    CMO,
+    COS,
+    COSH,
+    CROSSANY,
+    CROSSOVER,
+    CVI,
+    DECAY,
+    DEMA,
+    DI,
+    DIV,
+    DM,
+    DPO,
+    DX,
+    EDECAY,
+    EMA,
+    EMV,
+    EXP,
+    FISHER,
+    FLOOR,
+    FOSC,
+    HMA,
+    KAMA,
+    KVO,
+    LAG,
+    LINREG,
+    LINREGINTERCEPT,
+    LINREGSLOPE,
+    LN,
+    LOG10,
+    MACD,
+    MARKETFI,
+    MASS,
+    MAX,
+    MD,
+    MEDPRICE,
+    MFI,
+    MIN,
+    MOM,
+    MSW,
+    MUL,
+    NATR,
+    NVI,
+    OBV,
+    PPO,
+    PSAR,
+    PVI,
+    QSTICK,
+    ROC,
+    ROCR,
+    ROUND,
+    RSI,
+    SIN,
+    SINH,
+    SMA,
+    SQRT,
+    STDDEV,
+    STDERR,
+    STOCH,
+    STOCHRSI,
+    SUB,
+    SUM,
+    TAN,
+    TANH,
+    TEMA,
+    TODEG,
+    TORAD,
+    TR,
+    TRIMA,
+    TRIX,
+    TRUNC,
+    TSF,
+    TYPPRICE,
+    ULTOSC,
+    VAR,
+    VHF,
+    VIDYA,
+    VOLATILITY,
+    VOSC,
+    VWMA,
+    WAD,
+    WCPRICE,
+    WILDERS,
+    WILLR,
+    WMA,
+    ZLEMA
 };
 
 #endif // THETRADINGMACHINETAB_H

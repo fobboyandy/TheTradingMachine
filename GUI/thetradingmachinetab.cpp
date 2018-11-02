@@ -6,12 +6,9 @@
 
 TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<InteractiveBrokersClient> client, QWidget* parent) :
     QWidget(parent),
-    gridLayout_(nullptr),
-    plot_(nullptr),
     replotTimer_(new QTimer(this)),
     api_(api),
     client_(client),
-    plotData_(nullptr),
     timeFrame_(60),
     candleMaker_(timeFrame_),
     lastPlotDataIndex_(0),
@@ -29,13 +26,13 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     plot_->setInteraction(QCP::iRangeZoom);
     gridLayout_->addWidget(plot_, 0, 0, 1, 1);
 
-    candleGraphSetup();
-    volumeGraphSetup();
-    candleVolume_ = std::make_unique<CandleVolumePlot>(*candleAxisRect_, *volumeAxisRect_);
-    legendSetup();
-    spacingSetup();
+    // this sets up the axis rect necessary for our plots
+    layoutSetup();
+    candleVolumePlot_ = std::make_unique<CandleVolumePlot>(*candleAxisRect_, *volumeAxisRect_);
 
-    // interconnect x axis ranges of main and bottom axis rects:
+    // make upper and lower rects scroll together
+    // all active plots range will be notified of the change since they are registered
+    // to volume and candle rect axes
     connect(candleAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), volumeAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
     connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), candleAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
     connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
@@ -82,39 +79,32 @@ QString TheTradingMachineTab::tabName() const
     return name_;
 }
 
-void TheTradingMachineTab::candleGraphSetup()
+void TheTradingMachineTab::layoutSetup()
 {
-    //set up Candle Stick Graph
+    // create a time axis. we don't plan on modifying
+    // the time axis so we dont need to keep the handle.
+    // once axis rect has ownership, it will do the clean up
+    auto xTimeAxis = QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime);
+    xTimeAxis->setDateTimeFormat("hh:mm:ss");
+
+    // set up candle rect
     candleAxisRect_ = new QCPAxisRect(plot_);
     candleAxisRect_->setRangeDrag(Qt::Horizontal);
     candleAxisRect_->setRangeZoom(Qt::Horizontal);
-    //create the time axis here since we don't need to use the handle later
-    auto xTimeAxis = QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime);
-    xTimeAxis->setDateTimeFormat("hh:mm:ss");
     candleAxisRect_->axis(QCPAxis::atBottom)->setTicker(xTimeAxis);
     plot_->plotLayout()->addElement(0, 0, candleAxisRect_);
-}
 
-void TheTradingMachineTab::volumeGraphSetup()
-{
-    //set up Volume graph
+    // set up volume rect
     volumeAxisRect_ = new QCPAxisRect(plot_);
     volumeAxisRect_->setRangeDrag(Qt::Horizontal);
     volumeAxisRect_->setRangeZoom(Qt::Horizontal);
     volumeAxisRect_->setMaximumSize(QSize(QWIDGETSIZE_MAX, 100));
     volumeAxisRect_->axis(QCPAxis::atBottom)->setLayer("axes");
     volumeAxisRect_->axis(QCPAxis::atBottom)->grid()->setLayer("grid");
-
-    //create the time axis here since we don't need to use the handle later
-    auto xTimeAxis = QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime);
-    xTimeAxis->setDateTimeFormat("hh:mm:ss");
     volumeAxisRect_->axis(QCPAxis::atBottom)->setTicker(xTimeAxis);
     plot_->plotLayout()->addElement(1, 0, volumeAxisRect_);
-}
 
-void TheTradingMachineTab::spacingSetup()
-{
-    // bring bottom and main axis rect closer together:
+    // set up the spacing
     plot_->plotLayout()->setRowSpacing(0);
     volumeAxisRect_->setAutoMargins(QCP::msLeft|QCP::msRight|QCP::msBottom);
     volumeAxisRect_->setMargins(QMargins(0, 0, 0, 0));
@@ -123,14 +113,6 @@ void TheTradingMachineTab::spacingSetup()
     QCPMarginGroup *group = new QCPMarginGroup(plot_);
     candleAxisRect_->setMarginGroup(QCP::msLeft|QCP::msRight, group);
     volumeAxisRect_->setMarginGroup(QCP::msLeft|QCP::msRight, group);
-}
-
-void TheTradingMachineTab::legendSetup()
-{
-//    candleGraphLegend_ = new QCPLegend();
-//    candleSticksAxisRect_->insetLayout()->addElement(candleGraphLegend_, Qt::AlignTop | Qt::AlignRight);
-//    plot_->setAutoAddPlottableToLegend(false);
-//    candleGraphLegend_->addItem(new QCPPlottableLegendItem(candleGraphLegend_, candleSticksGraph_));
 }
 
 QString TheTradingMachineTab::formatTabName(const QString &input)
@@ -155,14 +137,30 @@ QString TheTradingMachineTab::formatTabName(const QString &input)
 
 void TheTradingMachineTab::updatePlotNewCandle(const time_t candleTime, const Bar &candle)
 {
-    // add new bar to all active indicators' plots
-    candleVolume_->updatePlotNewCandle(candleTime, candle);
+    candleVolumePlot_ ->updatePlotNewCandle(candleTime, candle);
+
+//    // add new bar to all active indicators' plots
+//    for(auto& activePlotIt: activePlots_)
+//    {
+//        for(auto& plotIt: activePlotIt.second)
+//        {
+//            plotIt->updatePlotNewCandle(candleTime, candle);
+//        }
+//    }
 }
 
 void TheTradingMachineTab::updatePlotReplaceCandle(const time_t candleTime, const Bar &candle)
 {
-    //update active indicators' plots
-    candleVolume_->updatePlotReplaceCandle(candleTime, candle);
+    candleVolumePlot_ ->updatePlotReplaceCandle(candleTime, candle);
+
+//    //update active indicators' plots
+//    for(auto& activePlotIt: activePlots_)
+//    {
+//        for(auto& plotIt: activePlotIt.second)
+//        {
+//            plotIt->updatePlotReplaceCandle(candleTime, candle);
+//        }
+//    }
 }
 
 void TheTradingMachineTab::updatePlot(void)
@@ -178,20 +176,21 @@ void TheTradingMachineTab::updatePlot(void)
 
     for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
     {
-        time_t currentCandleTime;
+        time_t candleTime;
+        Bar candle;
         // candleTime holds the time of the most recent candle
-        bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], currentCandle_, currentCandleTime);
+        bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], candle, candleTime);
         // getUpdatedCandleTime will return the updated time to the nearest timeFrame
 
         //update the plot with a new candle.
         if(isNewCandle)
         {
-            candleVolume_->updatePlotNewCandle(currentCandleTime, currentCandle_);
+            updatePlotNewCandle(candleTime, candle);
         }
         //keep the plot up to date with an updated candle
         else
         {
-            candleVolume_->updatePlotReplaceCandle(currentCandleTime, currentCandle_);
+            updatePlotReplaceCandle(candleTime, candle);
         }
     }
 
@@ -211,125 +210,14 @@ void TheTradingMachineTab::updatePlot(void)
 
 void TheTradingMachineTab::xAxisChanged(QCPRange range)
 {
-    if(floor(range.lower) <= candleVolume_->lowerRange() &&
-        ceil(range.upper) >= candleVolume_->upperRange())
+    if(floor(range.lower) <= candleVolumePlot_->lowerRange() &&
+        ceil(range.upper) >= candleVolumePlot_->upperRange())
     {
         autoScale_ = true;
     }
     else
     {
         autoScale_ = false;
-        candleVolume_->rescaleValueAxisAutofit();
+        candleVolumePlot_->rescaleValueAxisAutofit();
     }
 }
-
-enum class TheTradingMachineTab::IPlotIndex
-{
-    CANDLE,
-    VOLUME,
-    ABS,
-    ACOS,
-    AD,
-    ADD,
-    ADOSC,
-    ADX,
-    ADXR,
-    AO,
-    APO,
-    AROON,
-    AROONOSC,
-    ASIN,
-    ATAN,
-    ATR,
-    AVGPRICE,
-    BBANDS,
-    BOP,
-    CCI,
-    CEIL,
-    CMO,
-    COS,
-    COSH,
-    CROSSANY,
-    CROSSOVER,
-    CVI,
-    DECAY,
-    DEMA,
-    DI,
-    DIV,
-    DM,
-    DPO,
-    DX,
-    EDECAY,
-    EMA,
-    EMV,
-    EXP,
-    FISHER,
-    FLOOR,
-    FOSC,
-    HMA,
-    KAMA,
-    KVO,
-    LAG,
-    LINREG,
-    LINREGINTERCEPT,
-    LINREGSLOPE,
-    LN,
-    LOG10,
-    MACD,
-    MARKETFI,
-    MASS,
-    MAX,
-    MD,
-    MEDPRICE,
-    MFI,
-    MIN,
-    MOM,
-    MSW,
-    MUL,
-    NATR,
-    NVI,
-    OBV,
-    PPO,
-    PSAR,
-    PVI,
-    QSTICK,
-    ROC,
-    ROCR,
-    ROUND,
-    RSI,
-    SIN,
-    SINH,
-    SMA,
-    SQRT,
-    STDDEV,
-    STDERR,
-    STOCH,
-    STOCHRSI,
-    SUB,
-    SUM,
-    TAN,
-    TANH,
-    TEMA,
-    TODEG,
-    TORAD,
-    TR,
-    TRIMA,
-    TRIX,
-    TRUNC,
-    TSF,
-    TYPPRICE,
-    ULTOSC,
-    VAR,
-    VHF,
-    VIDYA,
-    VOLATILITY,
-    VOSC,
-    VWMA,
-    WAD,
-    WCPRICE,
-    WILDERS,
-    WILLR,
-    WMA,
-    ZLEMA
-};
-
