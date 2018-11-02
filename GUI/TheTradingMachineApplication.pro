@@ -33,7 +33,8 @@ SOURCES += \
     thetradingmachinemainwindow.cpp \
     playdialog.cpp \
     thetradingmachinetab.cpp \
-    CandleMaker.cpp
+    CandleMaker.cpp \
+    candlevolumeplot.cpp
 
 HEADERS += \
         qcustomplot.h \
@@ -45,7 +46,9 @@ HEADERS += \
     ../Indicators/Indicators/Common.h \
     ../Indicators/Indicators/Indicator.h \
     ../Indicators/Indicators/SimpleMovingAverage.h \
-    indicatorgraph.h
+    iplot.h \
+    indicatorplot.h \
+    candlevolumeplot.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \

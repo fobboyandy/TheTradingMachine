@@ -7,28 +7,20 @@
 class INDICATORSDLL SimpleMovingAverage : Indicator<SimpleMovingAverage>
 {
 public:
+
+	// indices for output datapoints for this indicator
+	enum class DataPointIndex
+	{
+		MOVING_AVERAGE
+	};
+
 	SimpleMovingAverage(int period);
 	~SimpleMovingAverage();
 
-	IndicatorPoint<SimpleMovingAverage> computeIndicatorPoint(const SamplePoint<SimpleMovingAverage>& sample) override;
-	IndicatorPoint<SimpleMovingAverage> recomputeIndicatorPoint(const SamplePoint<SimpleMovingAverage>& sample) override;
+	std::vector<DataPoint> computeIndicatorPoint(const DataPoint& sample) override;
+	std::vector<DataPoint> recomputeIndicatorPoint(const DataPoint& sample) override;
 
 private:
 	class SimpleMovingAverageImpl;
 	SimpleMovingAverageImpl* impl_;
-};
-
-// template specialization
-template<>
-struct IndicatorPoint<SimpleMovingAverage>
-{
-	time_t time;
-	double value;
-};
-
-template<>
-struct SamplePoint<SimpleMovingAverage>
-{
-	time_t time;
-	double value;
 };

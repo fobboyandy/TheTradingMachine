@@ -7,10 +7,13 @@
 #include <QTimer>
 #include <memory>
 #include <thread>
+#include <unordered_map>
+#include <list>
 #include "qcustomplot.h"
 #include "CandleMaker.h"
 #include "../InteractiveBrokersClient/InteractiveBrokersClient/InteractiveBrokersClient.h"
 #include "../BaseAlgorithm/BaseAlgorithm/PlotData.h"
+#include "iplot.h"
 
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTab : public QWidget
@@ -62,6 +65,12 @@ private:
     QCPAxisRect* volumeAxisRect_;
     QCPBars* volumeBarsGraph_;
     QSharedPointer<QCPBarsDataContainer> volumeBarsDataContainer_;
+
+    // enumeration for predefined mapping for various indicators
+    enum class IPlotIndex;
+
+    // all activated plots
+    std::unordered_map<IPlotIndex, std::list<IPlot*>> activePlots_;
 
     //plot scale control
     bool autoScale_;
