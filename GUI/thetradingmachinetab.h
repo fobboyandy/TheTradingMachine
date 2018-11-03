@@ -72,7 +72,8 @@ private:
     enum class IPlotIndex;
 
     // all activated plots
-    std::unordered_map<IPlotIndex, std::list<std::unique_ptr<IPlot>>> activePlots_;
+    std::unordered_map<IPlotIndex, std::list<std::unique_ptr<IPlot>>> activeCandlePlots_;
+    std::unordered_map<IPlotIndex, std::list<std::unique_ptr<IPlot>>> activeVolumePlots_;
 
     //plot scale control
     bool autoScale_;

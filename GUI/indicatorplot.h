@@ -16,8 +16,8 @@ public:
     IndicatorPlot(QCPAxisRect& axisRect, std::unique_ptr<IndicatorType> indicator);
     ~IndicatorPlot() override;
 
-    void updatePlotNewCandle(const time_t candleTime, const Bar &candle) override;
-    void updatePlotReplaceCandle(const time_t candleTime, const Bar &candle) override;
+    void updatePlotAdd(const time_t candleTime, double value) override;
+    void updatePlotReplace(const time_t candleTime, double value) override;
     void rescaleValueAxisAutofit() override;
 
 private:
@@ -53,9 +53,9 @@ IndicatorPlot<IndicatorType>::~IndicatorPlot()
 }
 
 template <typename IndicatorType>
-void IndicatorPlot<IndicatorType>::updatePlotNewCandle(const time_t candleTime, const Bar &candle)
+void IndicatorPlot<IndicatorType>::updatePlotAdd(const time_t candleTime, double value)
 {
-    auto indicatorDataPoints = indicator_->computeIndicatorPoint(DataPoint{candleTime, candle.close});
+    auto indicatorDataPoints = indicator_->computeIndicatorPoint(DataPoint{candleTime, value});
 
     // indicatorDataPoints return the same number of points as
     // our number of graphs in graphs_. Plot these points
@@ -67,13 +67,13 @@ void IndicatorPlot<IndicatorType>::updatePlotNewCandle(const time_t candleTime, 
 }
 
 template <typename IndicatorType>
-void IndicatorPlot<IndicatorType>::updatePlotReplaceCandle(const time_t candleTime, const Bar &candle)
+void IndicatorPlot<IndicatorType>::updatePlotReplace(const time_t candleTime, double value)
 {
     for(int i = 0; i < IndicatorType::SIZE; ++i)
     {
         if (graphDataContainers_[i]->size() > 0)
         {
-            auto indicatorDataPoints = indicator_->recomputeIndicatorPoint(DataPoint{candleTime, candle.close});
+            auto indicatorDataPoints = indicator_->recomputeIndicatorPoint(DataPoint{candleTime, value});
 
             // replace the previous point with the updated value;
             graphDataContainers_[i]->set(graphDataContainers_[i]->size() - 1, QCPGraphData(indicatorDataPoints[i].time, indicatorDataPoints[i].value));

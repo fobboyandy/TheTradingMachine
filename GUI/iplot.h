@@ -15,8 +15,8 @@ public:
     virtual ~IPlot(){}
 
     // interface for updating the plot
-    virtual void updatePlotNewCandle(const time_t candleTime, const Bar &candle) = 0;
-    virtual void updatePlotReplaceCandle(const time_t candleTime, const Bar &candle) = 0;
+    virtual void updatePlotAdd(const time_t candleTime, double value) = 0;
+    virtual void updatePlotReplace(const time_t candleTime, double value) = 0;
     virtual void rescaleValueAxisAutofit() = 0;
 
 };

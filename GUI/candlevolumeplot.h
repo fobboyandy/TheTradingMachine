@@ -5,14 +5,14 @@
 #include "iplot.h"
 
 // class for controlling and updating candle and volume
-class CandleVolumePlot : public IPlot
+class CandleVolumePlot
 {
 public:
     CandleVolumePlot(QCPAxisRect& candleAxisRect, QCPAxisRect& volumeAxisRect);
-    ~CandleVolumePlot() override;
-    void updatePlotNewCandle(const time_t candleTime, const Bar &candle) override;
-    void updatePlotReplaceCandle(const time_t candleTime, const Bar &candle) override;
-    void rescaleValueAxisAutofit() override;
+    ~CandleVolumePlot() ;
+    void updatePlotNewCandle(const time_t candleTime, const Bar &candle);
+    void updatePlotReplaceCandle(const time_t candleTime, const Bar &candle);
+    void rescaleValueAxisAutofit();
 
     double lowerRange();
     double upperRange();
