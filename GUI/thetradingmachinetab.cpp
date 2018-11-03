@@ -17,30 +17,21 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     plotActive_(false),
     valid_(false)
 {
-    this->setObjectName(QStringLiteral("TheTradingMachineTab"));
-    gridLayout_ = new QGridLayout(this);
-    gridLayout_->setObjectName(QStringLiteral("gridLayout"));
-    plot_ = new QCustomPlot(this);
-    plot_->plotLayout()->clear(); //remove all layouts so we can start from scratch
-    plot_->setObjectName(QStringLiteral("plot"));
-    plot_->setInteraction(QCP::iRangeDrag);
-    plot_->setInteraction(QCP::iRangeZoom);
-    gridLayout_->addWidget(plot_, 0, 0, 1, 1);
-
     // this sets up the axis rect necessary for our plots
     layoutSetup();
+    plotRightClickMenuSetup();
+    // create basic plots
     candleVolumePlot_ = std::make_unique<CandleVolumePlot>(*candleAxisRect_, *volumeAxisRect_);
 
-    // test sma
-    auto smaPlot = std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*candleAxisRect_, std::make_unique<SimpleMovingAverage>(5));
-    activePlots_[IPlotIndex::SMA].push_back(std::move(smaPlot));
+//    // test sma
+//    auto smaPlot = std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*candleAxisRect_, std::make_unique<SimpleMovingAverage>(5));
+//    activePlots_[IPlotIndex::SMA].push_back(std::move(smaPlot));
 
-    // make upper and lower rects scroll together
-    // all active plots range will be notified of the change since they are registered
-    // to volume and candle rect axes
-    connect(candleAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), volumeAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
-    connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), candleAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
-    connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
+
+    plot_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(plot_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextMenuRequest(QPoint)));
+
+
 
     // prompt user for the input method. real time or historical ticks
     PlayDialog loadInput(this);
@@ -86,6 +77,18 @@ QString TheTradingMachineTab::tabName() const
 
 void TheTradingMachineTab::layoutSetup()
 {
+    // allocate memory and set up each item in the plot
+    this->setObjectName(QStringLiteral("TheTradingMachineTab"));
+    gridLayout_ = new QGridLayout(this);
+    gridLayout_->setObjectName(QStringLiteral("gridLayout"));
+    plot_ = new QCustomPlot(this);
+    plot_->plotLayout()->clear(); //remove all layouts so we can start from scratch
+    plot_->setObjectName(QStringLiteral("plot"));
+    plot_->setInteraction(QCP::iRangeDrag);
+    plot_->setInteraction(QCP::iRangeZoom);
+    plot_->setInteraction(QCP::Interaction::iSelectPlottables);
+    gridLayout_->addWidget(plot_, 0, 0, 1, 1);
+
     // create a time axis. we don't plan on modifying
     // the time axis so we dont need to keep the handle.
     // once axis rect has ownership, it will do the clean up
@@ -118,6 +121,23 @@ void TheTradingMachineTab::layoutSetup()
     QCPMarginGroup *group = new QCPMarginGroup(plot_);
     candleAxisRect_->setMarginGroup(QCP::msLeft|QCP::msRight, group);
     volumeAxisRect_->setMarginGroup(QCP::msLeft|QCP::msRight, group);
+
+    // make upper and lower rects scroll together
+    // all active plots range will be notified of the change since they are registered
+    // to volume and candle rect axes
+    connect(candleAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), volumeAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
+    connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), candleAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
+    connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
+}
+
+void TheTradingMachineTab::plotRightClickMenuSetup()
+{
+    plotRightClickMenu = new QMenu(this);
+    plotRightClickMenu->addAction("Simple Moving Average", this, [this]
+    {
+        auto smaPlot = std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*candleAxisRect_, std::make_unique<SimpleMovingAverage>(5));
+        activePlots_[IPlotIndex::SMA].push_back(std::move(smaPlot));
+    });
 }
 
 QString TheTradingMachineTab::formatTabName(const QString &input)
@@ -224,4 +244,9 @@ void TheTradingMachineTab::xAxisChanged(QCPRange range)
         autoScale_ = false;
         candleVolumePlot_->rescaleValueAxisAutofit();
     }
+}
+
+void TheTradingMachineTab::contextMenuRequest(QPoint pos)
+{
+    plotRightClickMenu->popup(plot_->mapToGlobal(pos));
 }

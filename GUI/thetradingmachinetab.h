@@ -42,10 +42,12 @@ public:
     bool valid() const;
 
 private:
+    // plot items
     QGridLayout *gridLayout_;
     QCustomPlot *plot_;
     QTimer* replotTimer_;
     QString name_;
+    QMenu *plotRightClickMenu;
 
     //algorithm api
     AlgorithmApi api_;
@@ -56,6 +58,9 @@ private:
     // upper and lower axis rect. upper for candle lower for volume
     QCPAxisRect* candleAxisRect_;
     QCPAxisRect* volumeAxisRect_;
+    // keep CandleVolumePlot_ separately since we need to access the
+    // it to maintain the layout of the rects
+    std::unique_ptr<CandleVolumePlot> candleVolumePlot_;
 
     // candle data
     Bar currentCandle_;
@@ -69,10 +74,6 @@ private:
     // all activated plots
     std::unordered_map<IPlotIndex, std::list<std::unique_ptr<IPlot>>> activePlots_;
 
-    // keep CandleVolumePlot_ separately since we need to access the
-    // it to maintain the layout of the rects
-    std::unique_ptr<CandleVolumePlot> candleVolumePlot_;
-
     //plot scale control
     bool autoScale_;
     bool plotActive_;
@@ -80,7 +81,7 @@ private:
 
 private:
     void layoutSetup();
-    void legendSetup(void);
+    void plotRightClickMenuSetup();
 
     QString formatTabName(const QString& input);
 
@@ -91,6 +92,8 @@ private:
 private slots:
     void updatePlot(void);
     void xAxisChanged(QCPRange range);
+    void contextMenuRequest(QPoint pos);
+
 };
 
 // define IPlotIndex
