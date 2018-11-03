@@ -7,8 +7,8 @@ public:
 	SimpleMovingAverageImpl(int period);
 	~SimpleMovingAverageImpl();
 
-	std::vector<DataPoint> computeIndicatorPoint(const DataPoint& sample);
-	std::vector<DataPoint> recomputeIndicatorPoint(const DataPoint& sample);
+	std::array<DataPoint, SimpleMovingAverage::SIZE> computeIndicatorPoint(const DataPoint& sample);
+	std::array<DataPoint, SimpleMovingAverage::SIZE> recomputeIndicatorPoint(const DataPoint& sample);
 private:
 	const int period_;
 	double sum_;
@@ -31,13 +31,13 @@ SimpleMovingAverage::~SimpleMovingAverage()
 	}
 }
 
-std::vector<DataPoint> SimpleMovingAverage::computeIndicatorPoint(const DataPoint& sample)
+std::array<DataPoint, SimpleMovingAverage::SIZE> SimpleMovingAverage::computeIndicatorPoint(const DataPoint& sample)
 {
 
 	return impl_->computeIndicatorPoint(sample);
 }
 
-std::vector<DataPoint> SimpleMovingAverage::recomputeIndicatorPoint(const DataPoint& sample)
+std::array<DataPoint, SimpleMovingAverage::SIZE> SimpleMovingAverage::recomputeIndicatorPoint(const DataPoint& sample)
 {
 	return impl_->recomputeIndicatorPoint(sample);
 }
@@ -57,7 +57,7 @@ SimpleMovingAverage::SimpleMovingAverageImpl::~SimpleMovingAverageImpl()
 {
 }
 
-std::vector<DataPoint> SimpleMovingAverage::SimpleMovingAverageImpl::computeIndicatorPoint(const DataPoint& sample)
+std::array<DataPoint, SimpleMovingAverage::SIZE> SimpleMovingAverage::SimpleMovingAverageImpl::computeIndicatorPoint(const DataPoint& sample)
 {
 	sum_ -= window_.back();
 	window_.pop_back();
@@ -65,14 +65,10 @@ std::vector<DataPoint> SimpleMovingAverage::SimpleMovingAverageImpl::computeIndi
 	sum_ += sample.value;
 	window_.push_front(sample.value);
 
-	DataPoint outputPoint{ sample.time, sum_ / period_ };
-	std::vector<DataPoint> outDataPoints;
-	outDataPoints.push_back(outputPoint);
-
-	return outDataPoints;
+	return std::array<DataPoint, SimpleMovingAverage::SIZE>{DataPoint{ sample.time, sum_ / period_ }};
 }
 
-std::vector<DataPoint> SimpleMovingAverage::SimpleMovingAverageImpl::recomputeIndicatorPoint(const DataPoint& sample)
+std::array<DataPoint, SimpleMovingAverage::SIZE> SimpleMovingAverage::SimpleMovingAverageImpl::recomputeIndicatorPoint(const DataPoint& sample)
 {
 
 	// recompute the current moving average by replacing the latest point with sample
@@ -84,9 +80,6 @@ std::vector<DataPoint> SimpleMovingAverage::SimpleMovingAverageImpl::recomputeIn
 
 	sum_ += sample.value;
 
-	DataPoint outputPoint{ sample.time, sum_ / period_ };
-	std::vector<DataPoint> outDataPoints;
-	outDataPoints.push_back(outputPoint);
+	return std::array<DataPoint, SimpleMovingAverage::SIZE>{DataPoint{ sample.time, sum_ / period_ }};
 
-	return outDataPoints;
 }

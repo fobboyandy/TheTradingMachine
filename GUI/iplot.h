@@ -18,6 +18,7 @@ public:
     virtual void updatePlotNewCandle(const time_t candleTime, const Bar &candle) = 0;
     virtual void updatePlotReplaceCandle(const time_t candleTime, const Bar &candle) = 0;
     virtual void rescaleValueAxisAutofit() = 0;
+
 };
 
 #endif // IPLOT_H

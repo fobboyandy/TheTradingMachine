@@ -10,8 +10,18 @@
 // (IndicatorPoint and SamplePoint) remain the same. 
 //
 
+
 #ifdef INDICATORS_EXPORTS
 #define INDICATORSDLL __declspec(dllexport)
 #else
 #define INDICATORSDLL __declspec(dllimport)
 #endif
+
+#include <ctime>
+
+struct DataPoint
+{
+	time_t time;
+	double value;
+};
+

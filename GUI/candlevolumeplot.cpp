@@ -7,7 +7,7 @@ CandleVolumePlot::CandleVolumePlot(QCPAxisRect &candleAxisRect, QCPAxisRect &vol
     volumeBars_(new QCPBars(volumeAxisRect.axis(QCPAxis::atBottom), volumeAxisRect.axis(QCPAxis::atLeft))),
     candleBarsDataContainer_(new QCPFinancialDataContainer),
     volumeBarsDataContainer_(new QCPBarsDataContainer),
-    size(0)
+    size_(0)
 {
     candleBars_->setData(candleBarsDataContainer_);
     candleBars_->setWidthType(QCPFinancial::WidthType::wtPlotCoords);
@@ -32,15 +32,15 @@ void CandleVolumePlot::updatePlotNewCandle(const time_t candleTime, const Bar &c
     // add a new bar volume and candlesticks
     candleBarsDataContainer_->add(QCPFinancialData(candleTime, candle.open, candle.high, candle.low, candle.close));
     volumeBarsDataContainer_->add(QCPBarsData(candleTime, candle.volume));
-    ++size;
+    ++size_;
 }
 
 void CandleVolumePlot::updatePlotReplaceCandle(const time_t candleTime, const Bar &candle)
 {
-    if(size > 0)
+    if(size_ > 0)
     {
-        candleBarsDataContainer_->set(size - 1, QCPFinancialData(candleTime , candle.open, candle.high, candle.low, candle.close));
-        volumeBarsDataContainer_->set(size - 1, QCPBarsData(candleTime, candle.volume));
+        candleBarsDataContainer_->set(size_ - 1, QCPFinancialData(candleTime , candle.open, candle.high, candle.low, candle.close));
+        volumeBarsDataContainer_->set(size_ - 1, QCPBarsData(candleTime, candle.volume));
     }
 }
 
@@ -58,4 +58,9 @@ double CandleVolumePlot::lowerRange()
 double CandleVolumePlot::upperRange()
 {
     return candleBars_->data()->at(candleBars_->data()->size() - 1)->mainKey();
+}
+
+int CandleVolumePlot::size()
+{
+    return size_;
 }

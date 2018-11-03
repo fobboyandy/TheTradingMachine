@@ -3,6 +3,7 @@
 #include "playdialog.h"
 #include <iostream>
 #include "../Indicators/Indicators/SimpleMovingAverage.h"
+#include "indicatorplot.h"
 
 TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<InteractiveBrokersClient> client, QWidget* parent) :
     QWidget(parent),
@@ -29,6 +30,10 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     // this sets up the axis rect necessary for our plots
     layoutSetup();
     candleVolumePlot_ = std::make_unique<CandleVolumePlot>(*candleAxisRect_, *volumeAxisRect_);
+
+    // test sma
+    auto smaPlot = std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*candleAxisRect_, std::make_unique<SimpleMovingAverage>(5));
+    activePlots_[IPlotIndex::SMA].push_back(std::move(smaPlot));
 
     // make upper and lower rects scroll together
     // all active plots range will be notified of the change since they are registered

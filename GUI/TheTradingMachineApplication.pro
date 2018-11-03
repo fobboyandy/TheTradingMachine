@@ -44,7 +44,6 @@ HEADERS += \
     CandleMaker.h \
     ../BaseAlgorithm/BaseAlgorithm/PlotData.h \
     ../Indicators/Indicators/Common.h \
-    ../Indicators/Indicators/Indicator.h \
     ../Indicators/Indicators/SimpleMovingAverage.h \
     iplot.h \
     indicatorplot.h \

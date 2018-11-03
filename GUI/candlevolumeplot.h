@@ -16,6 +16,7 @@ public:
 
     double lowerRange();
     double upperRange();
+    int size();
 
 private:
     // axisRect ref
@@ -30,7 +31,7 @@ private:
     QSharedPointer<QCPFinancialDataContainer> candleBarsDataContainer_;
     QSharedPointer<QCPBarsDataContainer> volumeBarsDataContainer_;
 
-    int size;
+    int size_;
 };
 
 #endif // CANDLEVOLUMEPLOT_H

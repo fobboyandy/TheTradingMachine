@@ -1,24 +1,25 @@
 #pragma once
 
 #include "Common.h"
-#include "Indicator.h"
 #include <ctime>
+#include <array>
 
-class INDICATORSDLL SimpleMovingAverage : Indicator<SimpleMovingAverage>
+class INDICATORSDLL SimpleMovingAverage
 {
 public:
 
 	// indices for output datapoints for this indicator
-	enum class DataPointIndex
+	enum DataPointIndex
 	{
-		MOVING_AVERAGE
+		MOVING_AVERAGE,
+		SIZE
 	};
 
 	SimpleMovingAverage(int period);
 	~SimpleMovingAverage();
 
-	std::vector<DataPoint> computeIndicatorPoint(const DataPoint& sample) override;
-	std::vector<DataPoint> recomputeIndicatorPoint(const DataPoint& sample) override;
+	std::array<DataPoint, SIZE> computeIndicatorPoint(const DataPoint& sample);
+	std::array<DataPoint, SIZE> recomputeIndicatorPoint(const DataPoint& sample);
 
 private:
 	class SimpleMovingAverageImpl;
