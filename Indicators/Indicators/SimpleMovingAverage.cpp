@@ -42,11 +42,6 @@ SimpleMovingAverage::SimpleMovingAverageImpl::SimpleMovingAverageImpl(int period
 	period_(period),
 	sum_(0)
 {
-	// initialize a queue of 0's with size == period
-	for (int i = 0; i < period_; i++)
-	{
-		window_.push_front(0);
-	}
 }
 
 SimpleMovingAverage::SimpleMovingAverageImpl::~SimpleMovingAverageImpl()
@@ -55,13 +50,21 @@ SimpleMovingAverage::SimpleMovingAverageImpl::~SimpleMovingAverageImpl()
 
 SimpleMovingAverage::array_type SimpleMovingAverage::SimpleMovingAverageImpl::computeIndicatorPoint(const DataPoint& sample)
 {
-	sum_ -= window_.back();
-	window_.pop_back();
-
-	sum_ += sample.value;
 	window_.push_front(sample.value);
+	sum_ += sample.value;
+	
+	// we only need to start removing from the back of window_
+	// when the window_ has grown to the size > period_. 
+	// otherwise, we simply take the average until the
+	// window_ reaches a constant size. this way, we begin
+	// averaging with the first received point
+	if (window_.size() > period_)
+	{
+		sum_ -= window_.back();
+		window_.pop_back();
+	}
 
-	return std::array<DataPoint, SimpleMovingAverage::SIZE>{DataPoint{ sample.time, sum_ / period_ }};
+	return std::array<DataPoint, SimpleMovingAverage::SIZE>{DataPoint{ sample.time, sum_ / window_.size() }};
 }
 
 SimpleMovingAverage::array_type SimpleMovingAverage::SimpleMovingAverageImpl::recomputeIndicatorPoint(const DataPoint& sample)
@@ -76,6 +79,6 @@ SimpleMovingAverage::array_type SimpleMovingAverage::SimpleMovingAverageImpl::re
 
 	sum_ += sample.value;
 
-	return std::array<DataPoint, SimpleMovingAverage::SIZE>{DataPoint{ sample.time, sum_ / period_ }};
+	return std::array<DataPoint, SimpleMovingAverage::SIZE>{DataPoint{ sample.time, sum_ / window_.size() }};
 
 }
