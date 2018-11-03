@@ -40,6 +40,7 @@ IndicatorPlot<IndicatorType>::IndicatorPlot(QCPAxisRect &axisRect, std::unique_p
 {
     for(int i = 0; i < IndicatorType::SIZE; ++i)
     {
+        graphDataContainers_[i] = QSharedPointer<QCPDataContainer<QCPGraphData>>(new QCPDataContainer<QCPGraphData>);
         graphs_[i] = std::make_unique<QCPGraph>(axisRect_.axis(QCPAxis::atBottom), axisRect_.axis(QCPAxis::atLeft));
         graphs_[i]->setData(graphDataContainers_[i]);
     }

@@ -7,8 +7,8 @@ public:
 	SimpleMovingAverageImpl(int period);
 	~SimpleMovingAverageImpl();
 
-	std::array<DataPoint, SimpleMovingAverage::SIZE> computeIndicatorPoint(const DataPoint& sample);
-	std::array<DataPoint, SimpleMovingAverage::SIZE> recomputeIndicatorPoint(const DataPoint& sample);
+	SimpleMovingAverage::array_type computeIndicatorPoint(const DataPoint& sample);
+	SimpleMovingAverage::array_type recomputeIndicatorPoint(const DataPoint& sample);
 private:
 	const int period_;
 	double sum_;
@@ -25,19 +25,15 @@ SimpleMovingAverage::SimpleMovingAverage(int period):
 
 SimpleMovingAverage::~SimpleMovingAverage()
 {
-	if (impl_ != nullptr)
-	{
-		delete impl_;
-	}
+	delete impl_;
 }
 
-std::array<DataPoint, SimpleMovingAverage::SIZE> SimpleMovingAverage::computeIndicatorPoint(const DataPoint& sample)
+SimpleMovingAverage::array_type SimpleMovingAverage::computeIndicatorPoint(const DataPoint& sample)
 {
-
 	return impl_->computeIndicatorPoint(sample);
 }
 
-std::array<DataPoint, SimpleMovingAverage::SIZE> SimpleMovingAverage::recomputeIndicatorPoint(const DataPoint& sample)
+SimpleMovingAverage::array_type SimpleMovingAverage::recomputeIndicatorPoint(const DataPoint& sample)
 {
 	return impl_->recomputeIndicatorPoint(sample);
 }
@@ -57,7 +53,7 @@ SimpleMovingAverage::SimpleMovingAverageImpl::~SimpleMovingAverageImpl()
 {
 }
 
-std::array<DataPoint, SimpleMovingAverage::SIZE> SimpleMovingAverage::SimpleMovingAverageImpl::computeIndicatorPoint(const DataPoint& sample)
+SimpleMovingAverage::array_type SimpleMovingAverage::SimpleMovingAverageImpl::computeIndicatorPoint(const DataPoint& sample)
 {
 	sum_ -= window_.back();
 	window_.pop_back();
@@ -68,7 +64,7 @@ std::array<DataPoint, SimpleMovingAverage::SIZE> SimpleMovingAverage::SimpleMovi
 	return std::array<DataPoint, SimpleMovingAverage::SIZE>{DataPoint{ sample.time, sum_ / period_ }};
 }
 
-std::array<DataPoint, SimpleMovingAverage::SIZE> SimpleMovingAverage::SimpleMovingAverageImpl::recomputeIndicatorPoint(const DataPoint& sample)
+SimpleMovingAverage::array_type SimpleMovingAverage::SimpleMovingAverageImpl::recomputeIndicatorPoint(const DataPoint& sample)
 {
 
 	// recompute the current moving average by replacing the latest point with sample

@@ -15,11 +15,13 @@ public:
 		SIZE
 	};
 
+	using array_type = std::array<DataPoint, SIZE>;
+
 	SimpleMovingAverage(int period);
 	~SimpleMovingAverage();
 
-	std::array<DataPoint, SIZE> computeIndicatorPoint(const DataPoint& sample);
-	std::array<DataPoint, SIZE> recomputeIndicatorPoint(const DataPoint& sample);
+	array_type computeIndicatorPoint(const DataPoint& sample);
+	array_type recomputeIndicatorPoint(const DataPoint& sample);
 
 private:
 	class SimpleMovingAverageImpl;
