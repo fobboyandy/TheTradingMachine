@@ -29,7 +29,7 @@ private:
     //
     // one graph for each output from indicator class
     //
-    std::array<std::unique_ptr<QCPGraph>, IndicatorType::SIZE> graphs_;
+    std::array<QCPGraph*, IndicatorType::SIZE> graphs_;
     std::array<QSharedPointer<QCPDataContainer<QCPGraphData>>, IndicatorType::SIZE> graphDataContainers_;
 };
 
@@ -41,7 +41,7 @@ IndicatorPlot<IndicatorType>::IndicatorPlot(QCPAxisRect &axisRect, std::unique_p
     for(int i = 0; i < IndicatorType::SIZE; ++i)
     {
         graphDataContainers_[i] = QSharedPointer<QCPDataContainer<QCPGraphData>>(new QCPDataContainer<QCPGraphData>);
-        graphs_[i] = std::make_unique<QCPGraph>(axisRect_.axis(QCPAxis::atBottom), axisRect_.axis(QCPAxis::atLeft));
+        graphs_[i] = new QCPGraph(axisRect_.axis(QCPAxis::atBottom), axisRect_.axis(QCPAxis::atLeft));
         graphs_[i]->setData(graphDataContainers_[i]);
     }
 }
@@ -49,7 +49,6 @@ IndicatorPlot<IndicatorType>::IndicatorPlot(QCPAxisRect &axisRect, std::unique_p
 template <typename IndicatorType>
 IndicatorPlot<IndicatorType>::~IndicatorPlot()
 {
-    // simply delete. new can't return nullptr so graph_ can't be nullptr
 }
 
 template <typename IndicatorType>
