@@ -14,16 +14,20 @@ public:
     IPlot(){}
     virtual ~IPlot(){}
 
-    enum class IPlotIndex;
+    enum class IndicatorType;
+    enum class ValueType;
     // interface for updating the plot
     virtual void updatePlotAdd(const time_t candleTime, double value) = 0;
     virtual void updatePlotReplace(const time_t candleTime, double value) = 0;
     virtual void rescaleValueAxisAutofit() = 0;
 
+    // indicates which value this plot monitors.
+    // o/h/l/c, volume, or just value.
+    ValueType valueType;
 };
 
 // define IPlotIndex
-enum class IPlot::IPlotIndex
+enum class IPlot::IndicatorType
 {
     CANDLEVOLUME,
     ABS,
@@ -131,6 +135,17 @@ enum class IPlot::IPlotIndex
     WMA,
     ZLEMA
 };
+
+enum class IPlot::ValueType
+{
+    OPEN,
+    HIGH,
+    LOW,
+    CLOSE,
+    VOLUME,
+    VALUE
+};
+
 #endif // IPLOT_H
 
 

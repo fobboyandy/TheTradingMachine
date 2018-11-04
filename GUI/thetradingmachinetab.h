@@ -48,7 +48,6 @@ private:
     QCustomPlot *plot_;
     QTimer* replotTimer_;
     QString name_;
-    QMenu *plotRightClickMenu;
 
     //algorithm api
     AlgorithmApi api_;
@@ -67,10 +66,6 @@ private:
     int timeFrame_;
     CandleMaker candleMaker_;
     std::vector<double>::size_type lastPlotDataIndex_;
-
-    // all activated plots
-    std::unordered_map<IPlot::IPlotIndex, std::list<std::unique_ptr<IPlot>>> activeCandlePlots_;
-    std::unordered_map<IPlot::IPlotIndex, std::list<std::unique_ptr<IPlot>>> activeVolumePlots_;
 
     //plot scale control
     bool autoScale_;

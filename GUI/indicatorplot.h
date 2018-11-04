@@ -9,11 +9,11 @@
 #include <iostream>
 
 // Templatize for indicators
-template <typename IndicatorType>
+template <typename T>
 class IndicatorPlot : public IPlot
 {
 public:
-    IndicatorPlot(QCPAxisRect& axisRect, std::unique_ptr<IndicatorType> indicator);
+    IndicatorPlot(QCPAxisRect& axisRect, std::unique_ptr<T> indicator, IPlot::ValueType valueType);
     ~IndicatorPlot() override;
 
     void updatePlotAdd(const time_t candleTime, double value) override;
@@ -21,25 +21,20 @@ public:
     void rescaleValueAxisAutofit() override;
 
 private:
-
-    //use polymorphism to handle various indicators
-    std::unique_ptr<IndicatorType> indicator_;
-    // all plots must have an axis rect and a graph
     QCPAxisRect& axisRect_;
+    std::array<QCPGraph*, T::SIZE> graphs_; // one graph for each output from indicator class
+    std::array<QSharedPointer<QCPDataContainer<QCPGraphData>>, T::SIZE> graphDataContainers_;
+    std::unique_ptr<T> indicator_;
 
-    //
-    // one graph for each output from indicator class
-    //
-    std::array<QCPGraph*, IndicatorType::SIZE> graphs_;
-    std::array<QSharedPointer<QCPDataContainer<QCPGraphData>>, IndicatorType::SIZE> graphDataContainers_;
 };
 
-template <typename IndicatorType>
-IndicatorPlot<IndicatorType>::IndicatorPlot(QCPAxisRect &axisRect, std::unique_ptr<IndicatorType> indicator):
+template <typename T>
+IndicatorPlot<T>::IndicatorPlot(QCPAxisRect &axisRect, std::unique_ptr<T> indicator, IPlot::ValueType type):
     indicator_(std::move(indicator)),
     axisRect_(axisRect)
 {
-    for(int i = 0; i < IndicatorType::SIZE; ++i)
+    valueType = type;
+    for(int i = 0; i < T::SIZE; ++i)
     {
         graphDataContainers_[i] = QSharedPointer<QCPDataContainer<QCPGraphData>>(new QCPDataContainer<QCPGraphData>);
         graphs_[i] = new QCPGraph(axisRect_.axis(QCPAxis::atBottom), axisRect_.axis(QCPAxis::atLeft));
@@ -47,29 +42,29 @@ IndicatorPlot<IndicatorType>::IndicatorPlot(QCPAxisRect &axisRect, std::unique_p
     }
 }
 
-template <typename IndicatorType>
-IndicatorPlot<IndicatorType>::~IndicatorPlot()
+template <typename T>
+IndicatorPlot<T>::~IndicatorPlot()
 {
 }
 
-template <typename IndicatorType>
-void IndicatorPlot<IndicatorType>::updatePlotAdd(const time_t candleTime, double value)
+template <typename T>
+void IndicatorPlot<T>::updatePlotAdd(const time_t candleTime, double value)
 {
     auto indicatorDataPoints = indicator_->computeIndicatorPoint(DataPoint{candleTime, value});
 
     // indicatorDataPoints return the same number of points as
     // our number of graphs in graphs_. Plot these points
     // as separate graphs
-    for(int i = 0; i < IndicatorType::SIZE; ++i)
+    for(int i = 0; i < T::SIZE; ++i)
     {
         graphDataContainers_[i]->add(QCPGraphData(indicatorDataPoints[i].time, indicatorDataPoints[i].value));
     }
 }
 
-template <typename IndicatorType>
-void IndicatorPlot<IndicatorType>::updatePlotReplace(const time_t candleTime, double value)
+template <typename T>
+void IndicatorPlot<T>::updatePlotReplace(const time_t candleTime, double value)
 {
-    for(int i = 0; i < IndicatorType::SIZE; ++i)
+    for(int i = 0; i < T::SIZE; ++i)
     {
         if (graphDataContainers_[i]->size() > 0)
         {
@@ -81,10 +76,10 @@ void IndicatorPlot<IndicatorType>::updatePlotReplace(const time_t candleTime, do
     }
 }
 
-template <typename IndicatorType>
-void IndicatorPlot<IndicatorType>::rescaleValueAxisAutofit()
+template <typename T>
+void IndicatorPlot<T>::rescaleValueAxisAutofit()
 {
-    for(int i = 0; i < IndicatorType::SIZE; ++i)
+    for(int i = 0; i < T::SIZE; ++i)
     {
         graphs_[i]->rescaleValueAxis(false, true);
     }

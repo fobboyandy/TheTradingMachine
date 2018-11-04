@@ -58,6 +58,16 @@ void VolumePlot::rescaleValueAxisAutofit()
     volumeBars_->rescaleValueAxis(false, true);
 }
 
+void VolumePlot::addIndicator(IPlot::IndicatorType indicatorType, std::unique_ptr<IPlot> indicatorPlot)
+{
+    // keep the indicatorPlot up to date with all the candles we currently have
+    for(auto& it: *dataContainer_)
+    {
+        indicatorPlot->updatePlotAdd( static_cast<time_t>(it.key), it.value);
+    }
+    activeIndicatorPlots_[indicatorType].push_back(std::move(indicatorPlot));
+}
+
 double VolumePlot::lowerRange()
 {
     return volumeBars_->data()->at(0)->mainKey();
