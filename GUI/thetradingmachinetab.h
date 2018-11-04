@@ -14,7 +14,8 @@
 #include "../InteractiveBrokersClient/InteractiveBrokersClient/InteractiveBrokersClient.h"
 #include "../BaseAlgorithm/BaseAlgorithm/PlotData.h"
 #include "iplot.h"
-#include "candlevolumeplot.h"
+#include "candleplot.h"
+#include "volumeplot.h"
 
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTab : public QWidget
@@ -58,9 +59,8 @@ private:
     // upper and lower axis rect. upper for candle lower for volume
     QCPAxisRect* candleAxisRect_;
     QCPAxisRect* volumeAxisRect_;
-    // keep CandleVolumePlot_ separately since we need to access the
-    // it to maintain the layout of the rects
-    std::unique_ptr<CandleVolumePlot> candleVolumePlot_;
+    std::unique_ptr<CandlePlot> candlePlot_;
+    std::unique_ptr<VolumePlot> volumePlot_;
 
     // candle data
     Bar currentCandle_;
@@ -68,12 +68,9 @@ private:
     CandleMaker candleMaker_;
     std::vector<double>::size_type lastPlotDataIndex_;
 
-    // enumeration for predefined mapping for various indicators
-    enum class IPlotIndex;
-
     // all activated plots
-    std::unordered_map<IPlotIndex, std::list<std::unique_ptr<IPlot>>> activeCandlePlots_;
-    std::unordered_map<IPlotIndex, std::list<std::unique_ptr<IPlot>>> activeVolumePlots_;
+    std::unordered_map<IPlot::IPlotIndex, std::list<std::unique_ptr<IPlot>>> activeCandlePlots_;
+    std::unordered_map<IPlot::IPlotIndex, std::list<std::unique_ptr<IPlot>>> activeVolumePlots_;
 
     //plot scale control
     bool autoScale_;
@@ -95,116 +92,6 @@ private slots:
     void xAxisChanged(QCPRange range);
     void contextMenuRequest(QPoint pos);
 
-};
-
-// define IPlotIndex
-enum class TheTradingMachineTab::IPlotIndex
-{
-    CANDLEVOLUME,
-    ABS,
-    ACOS,
-    AD,
-    ADD,
-    ADOSC,
-    ADX,
-    ADXR,
-    AO,
-    APO,
-    AROON,
-    AROONOSC,
-    ASIN,
-    ATAN,
-    ATR,
-    AVGPRICE,
-    BBANDS,
-    BOP,
-    CCI,
-    CEIL,
-    CMO,
-    COS,
-    COSH,
-    CROSSANY,
-    CROSSOVER,
-    CVI,
-    DECAY,
-    DEMA,
-    DI,
-    DIV,
-    DM,
-    DPO,
-    DX,
-    EDECAY,
-    EMA,
-    EMV,
-    EXP,
-    FISHER,
-    FLOOR,
-    FOSC,
-    HMA,
-    KAMA,
-    KVO,
-    LAG,
-    LINREG,
-    LINREGINTERCEPT,
-    LINREGSLOPE,
-    LN,
-    LOG10,
-    MACD,
-    MARKETFI,
-    MASS,
-    MAX,
-    MD,
-    MEDPRICE,
-    MFI,
-    MIN,
-    MOM,
-    MSW,
-    MUL,
-    NATR,
-    NVI,
-    OBV,
-    PPO,
-    PSAR,
-    PVI,
-    QSTICK,
-    ROC,
-    ROCR,
-    ROUND,
-    RSI,
-    SIN,
-    SINH,
-    SMA,
-    SQRT,
-    STDDEV,
-    STDERR,
-    STOCH,
-    STOCHRSI,
-    SUB,
-    SUM,
-    TAN,
-    TANH,
-    TEMA,
-    TODEG,
-    TORAD,
-    TR,
-    TRIMA,
-    TRIX,
-    TRUNC,
-    TSF,
-    TYPPRICE,
-    ULTOSC,
-    VAR,
-    VHF,
-    VIDYA,
-    VOLATILITY,
-    VOSC,
-    VWMA,
-    WAD,
-    WCPRICE,
-    WILDERS,
-    WILLR,
-    WMA,
-    ZLEMA
 };
 
 #endif // THETRADINGMACHINETAB_H

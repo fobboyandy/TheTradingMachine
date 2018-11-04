@@ -19,19 +19,12 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
 {
     // this sets up the axis rect necessary for our plots
     layoutSetup();
-    plotRightClickMenuSetup();
     // create basic plots
-    candleVolumePlot_ = std::make_unique<CandleVolumePlot>(*candleAxisRect_, *volumeAxisRect_);
+    candlePlot_ = std::make_unique<CandlePlot>(*candleAxisRect_);
+    volumePlot_ = std::make_unique<VolumePlot>(*volumeAxisRect_);
 
-//    // test sma
-//    auto smaPlot = std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*candleAxisRect_, std::make_unique<SimpleMovingAverage>(5));
-//    activePlots_[IPlotIndex::SMA].push_back(std::move(smaPlot));
-
-
-    plot_->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(plot_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextMenuRequest(QPoint)));
-
-
+    // menu setup
+    plotRightClickMenuSetup();
 
     // prompt user for the input method. real time or historical ticks
     PlayDialog loadInput(this);
@@ -132,66 +125,68 @@ void TheTradingMachineTab::layoutSetup()
 
 void TheTradingMachineTab::plotRightClickMenuSetup()
 {
-    plotRightClickMenu = new QMenu(this);
+//    plotRightClickMenu = new QMenu(this);
 
-    auto getSelectedAxisRect = [this]()
-    {
-        qDebug("getSelectedAxisRect");
-        QCPAxisRect* selectedAxisRect = nullptr;
+//    auto getSelectedAxisRect = [this]()
+//    {
+//        qDebug("getSelectedAxisRect");
+//        QCPAxisRect* selectedAxisRect = nullptr;
 
-        if(plot_->selectedPlottables().size() > 0)
-        {
-            if(plot_->selectedPlottables().first()->keyAxis() == candleAxisRect_->axis(QCPAxis::AxisType::atBottom))
-            {
-                qDebug("candleAxisRect_");
-                selectedAxisRect = candleAxisRect_;
-            }
-            else if(plot_->selectedPlottables().first()->keyAxis() == volumeAxisRect_->axis(QCPAxis::AxisType::atBottom))
-            {
-                qDebug("volumeAxisRect_");
-                selectedAxisRect = volumeAxisRect_;
-            }
-        }
-        return selectedAxisRect;
-    };
-    auto getSelectedActivePlot = [this]()
-    {
-        qDebug("getSelectedActivePlot");
-        std::unordered_map<IPlotIndex, std::list<std::unique_ptr<IPlot>>>* selectedActivePlot = nullptr;
+//        if(plot_->selectedPlottables().size() > 0)
+//        {
+//            if(plot_->selectedPlottables().first()->keyAxis() == candleAxisRect_->axis(QCPAxis::AxisType::atBottom))
+//            {
+//                qDebug("candleAxisRect_");
+//                selectedAxisRect = candleAxisRect_;
+//            }
+//            else if(plot_->selectedPlottables().first()->keyAxis() == volumeAxisRect_->axis(QCPAxis::AxisType::atBottom))
+//            {
+//                qDebug("volumeAxisRect_");
+//                selectedAxisRect = volumeAxisRect_;
+//            }
+//        }
+//        return selectedAxisRect;
+//    };
+//    auto getSelectedActivePlot = [this]()
+//    {
+//        qDebug("getSelectedActivePlot");
+//        std::unordered_map<IPlotIndex, std::list<std::unique_ptr<IPlot>>>* selectedActivePlot = nullptr;
 
-        if(plot_->selectedPlottables().size() > 0)
-        {
-            if(plot_->selectedPlottables().takeFirst()->keyAxis() == candleAxisRect_->axis(QCPAxis::AxisType::atBottom))
-            {
-                qDebug("activeCandlePlots_");
-                selectedActivePlot = &activeCandlePlots_;
-            }
-            else if(plot_->selectedPlottables().takeFirst()->keyAxis() == volumeAxisRect_->axis(QCPAxis::AxisType::atBottom))
-            {
-                qDebug("activeVolumePlots_");
-                selectedActivePlot = &activeVolumePlots_;
-            }
-        }
-        return selectedActivePlot;
-    };
+//        if(plot_->selectedPlottables().size() > 0)
+//        {
+//            if(plot_->selectedPlottables().takeFirst()->keyAxis() == candleAxisRect_->axis(QCPAxis::AxisType::atBottom))
+//            {
+//                qDebug("activeCandlePlots_");
+//                selectedActivePlot = &activeCandlePlots_;
+//            }
+//            else if(plot_->selectedPlottables().takeFirst()->keyAxis() == volumeAxisRect_->axis(QCPAxis::AxisType::atBottom))
+//            {
+//                qDebug("activeVolumePlots_");
+//                selectedActivePlot = &activeVolumePlots_;
+//            }
+//        }
+//        return selectedActivePlot;
+//    };
 
-    // capture the above lambdas by value because this lambda will be called from another context
-    // and the references will be dangling
-    plotRightClickMenu->addAction("Simple Moving Average", this, [getSelectedAxisRect, getSelectedActivePlot]
-    {
-        auto smaPlot = std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*getSelectedAxisRect(), std::make_unique<SimpleMovingAverage>(5));
-        (*(getSelectedActivePlot()))[IPlotIndex::SMA].push_back(std::move(smaPlot));
-
-
-        smaPlot = std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*getSelectedAxisRect(), std::make_unique<SimpleMovingAverage>(10));
-        (*(getSelectedActivePlot()))[IPlotIndex::SMA].push_back(std::move(smaPlot));
+//    // capture the above lambdas by value because this lambda will be called from another context
+//    // and the references will be dangling
+//    plotRightClickMenu->addAction("Simple Moving Average", this, [getSelectedAxisRect, getSelectedActivePlot]
+//    {
+//        auto smaPlot = std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*getSelectedAxisRect(), std::make_unique<SimpleMovingAverage>(5));
+//        (*(getSelectedActivePlot()))[IPlotIndex::SMA].push_back(std::move(smaPlot));
 
 
-        smaPlot = std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*getSelectedAxisRect(), std::make_unique<SimpleMovingAverage>(20));
-        (*(getSelectedActivePlot()))[IPlotIndex::SMA].push_back(std::move(smaPlot));
+//        smaPlot = std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*getSelectedAxisRect(), std::make_unique<SimpleMovingAverage>(10));
+//        (*(getSelectedActivePlot()))[IPlotIndex::SMA].push_back(std::move(smaPlot));
 
-    });
 
+//        smaPlot = std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*getSelectedAxisRect(), std::make_unique<SimpleMovingAverage>(20));
+//        (*(getSelectedActivePlot()))[IPlotIndex::SMA].push_back(std::move(smaPlot));
+
+//    });
+
+//    plot_->setContextMenuPolicy(Qt::CustomContextMenu);
+//    connect(plot_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextMenuRequest(QPoint)));
 }
 
 QString TheTradingMachineTab::formatTabName(const QString &input)
@@ -216,47 +211,31 @@ QString TheTradingMachineTab::formatTabName(const QString &input)
 
 void TheTradingMachineTab::updatePlotNewCandle(const time_t candleTime, const Bar &candle)
 {
-    candleVolumePlot_->updatePlotNewCandle(candleTime, candle);
-    // add new candle bar to all active candle indicators' plots
-    for(auto& activePlotIt: activeCandlePlots_)
-    {
-        for(auto& plotIt: activePlotIt.second)
-        {
-            plotIt->updatePlotAdd(candleTime, candle.close);
-        }
-    }
-
-    // add new candle bar to all active candle indicators' plots
-    for(auto& activePlotIt: activeVolumePlots_)
-    {
-        for(auto& plotIt: activePlotIt.second)
-        {
-            plotIt->updatePlotAdd(candleTime, candle.volume);
-        }
-    }
-
+    candlePlot_->updatePlotAdd(candleTime, candle);
+    volumePlot_->updatePlotAdd(candleTime, candle);
 }
 
 void TheTradingMachineTab::updatePlotReplaceCandle(const time_t candleTime, const Bar &candle)
 {
-    candleVolumePlot_->updatePlotReplaceCandle(candleTime, candle);
-    //update active candle indicators' plots
-    for(auto& activePlotIt: activeCandlePlots_)
-    {
-        for(auto& plotIt: activePlotIt.second)
-        {
-            plotIt->updatePlotReplace(candleTime, candle.close);
-        }
-    }
+    candlePlot_->updatePlotReplace(candleTime, candle);
+    volumePlot_->updatePlotReplace(candleTime, candle);
 
-    //update active candle indicators' plots
-    for(auto& activePlotIt: activeVolumePlots_)
-    {
-        for(auto& plotIt: activePlotIt.second)
-        {
-            plotIt->updatePlotReplace(candleTime, candle.volume);
-        }
-    }
+//    for(auto& activePlotIt: activeCandlePlots_)
+//    {
+//        for(auto& plotIt: activePlotIt.second)
+//        {
+//            plotIt->updatePlotReplace(candleTime, candle.close);
+//        }
+//    }
+
+//    //update active candle indicators' plots
+//    for(auto& activePlotIt: activeVolumePlots_)
+//    {
+//        for(auto& plotIt: activePlotIt.second)
+//        {
+//            plotIt->updatePlotReplace(candleTime, candle.volume);
+//        }
+//    }
 }
 
 void TheTradingMachineTab::updatePlot(void)
@@ -305,15 +284,15 @@ void TheTradingMachineTab::updatePlot(void)
 
 void TheTradingMachineTab::xAxisChanged(QCPRange range)
 {
-    if(floor(range.lower) <= candleVolumePlot_->lowerRange() &&
-        ceil(range.upper) >= candleVolumePlot_->upperRange())
+    if(floor(range.lower) <= candlePlot_->lowerRange() &&
+        ceil(range.upper) >= candlePlot_->upperRange())
     {
         autoScale_ = true;
     }
     else
     {
         autoScale_ = false;
-        candleVolumePlot_->rescaleValueAxisAutofit();
+        candlePlot_->rescaleValueAxisAutofit();
     }
 }
 
