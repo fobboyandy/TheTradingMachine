@@ -72,20 +72,20 @@ private:
     bool plotActive_;
     bool valid_;
 
+    enum MenuType
+    {
+        CANDLE_MENU, VOLUME_MENU
+    };
+
 private:
     void layoutSetup();
-    void plotRightClickMenuSetup();
-
     QString formatTabName(const QString& input);
-
-private:
     void updatePlotNewCandle(const time_t candleTime, const Bar &candle);
     void updatePlotReplaceCandle(const time_t candleTime, const Bar &candle);
 
 private slots:
     void updatePlot(void);
     void xAxisChanged(QCPRange range);
-    void contextMenuRequest(QPoint pos);
 
 };
 

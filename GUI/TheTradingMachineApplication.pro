@@ -35,7 +35,8 @@ SOURCES += \
     thetradingmachinetab.cpp \
     CandleMaker.cpp \
     candleplot.cpp \
-    volumeplot.cpp
+    volumeplot.cpp \
+    indicatordialog.cpp
 
 HEADERS += \
         qcustomplot.h \
@@ -49,11 +50,13 @@ HEADERS += \
     iplot.h \
     indicatorplot.h \
     candleplot.h \
-    volumeplot.h
+    volumeplot.h \
+    indicatordialog.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \
-    playdialog.ui
+    playdialog.ui \
+    indicatordialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

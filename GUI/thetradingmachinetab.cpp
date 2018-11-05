@@ -20,11 +20,8 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     // this sets up the axis rect necessary for our plots
     layoutSetup();
     // create basic plots
-    candlePlot_ = std::make_unique<CandlePlot>(*candleAxisRect_);
+    candlePlot_ = std::make_unique<CandlePlot>(*plot_, *candleAxisRect_);
     volumePlot_ = std::make_unique<VolumePlot>(*volumeAxisRect_);
-
-    // menu setup
-    plotRightClickMenuSetup();
 
     // prompt user for the input method. real time or historical ticks
     PlayDialog loadInput(this);
@@ -123,12 +120,6 @@ void TheTradingMachineTab::layoutSetup()
     connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
 }
 
-void TheTradingMachineTab::plotRightClickMenuSetup()
-{
-    plot_->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(plot_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextMenuRequest(QPoint)));
-}
-
 QString TheTradingMachineTab::formatTabName(const QString &input)
 {
     QString inputFormatted;
@@ -215,31 +206,7 @@ void TheTradingMachineTab::xAxisChanged(QCPRange range)
     else
     {
         autoScale_ = false;
+        //rescale everything
         candlePlot_->rescaleValueAxisAutofit();
-    }
-}
-
-void TheTradingMachineTab::contextMenuRequest(QPoint pos)
-{
-    qDebug("rightclick");
-    auto menu = new QMenu(this);
-    menu->setAttribute(Qt::WidgetAttribute::WA_DeleteOnClose);
-    static int i = 1;
-//    // menu only valid in the two axis rects
-    if(candleAxisRect_->rect().contains(pos))
-    {
-        menu->addAction("Simple Moving Average", this, [&, this]()
-        {
-            candlePlot_->addIndicator(IPlot::IndicatorType::SMA, std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*candleAxisRect_, std::make_unique<SimpleMovingAverage>(i++), IPlot::ValueType::CLOSE));
-        });
-        menu->popup(plot_->mapToGlobal(pos));
-    }
-    else if(volumeAxisRect_->rect().contains(pos))
-    {
-        menu->addAction("Simple Moving Average", this, [this]()
-        {
-           volumePlot_->addIndicator(IPlot::IndicatorType::SMA, std::make_unique<IndicatorPlot<SimpleMovingAverage>>(*volumeAxisRect_, std::make_unique<SimpleMovingAverage>(i++), IPlot::ValueType::VOLUME));
-        });
-        menu->popup(plot_->mapToGlobal(pos));
     }
 }

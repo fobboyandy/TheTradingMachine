@@ -6,6 +6,8 @@
 // indicator plots in a container
 
 #include "../InteractiveBrokersClient/InteractiveBrokersApi/bar.h"
+#include "qcustomplot.h"
+#include <list>
 #include <ctime>
 
 class IPlot
@@ -20,6 +22,7 @@ public:
     virtual void updatePlotAdd(const time_t candleTime, double value) = 0;
     virtual void updatePlotReplace(const time_t candleTime, double value) = 0;
     virtual void rescaleValueAxisAutofit() = 0;
+    virtual std::list<QCPAbstractPlottable*> getPlottables(void) = 0;
 
     // indicates which value this plot monitors.
     // o/h/l/c, volume, or just value.

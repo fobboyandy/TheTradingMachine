@@ -19,6 +19,7 @@ public:
     void updatePlotAdd(const time_t candleTime, double value) override;
     void updatePlotReplace(const time_t candleTime, double value) override;
     void rescaleValueAxisAutofit() override;
+    std::list<QCPAbstractPlottable *> getPlottables(void) override;
 
 private:
     QCPAxisRect& axisRect_;
@@ -83,6 +84,17 @@ void IndicatorPlot<T>::rescaleValueAxisAutofit()
     {
         graphs_[i]->rescaleValueAxis(false, true);
     }
+}
+
+template<typename T>
+std::list<QCPAbstractPlottable *> IndicatorPlot<T>::getPlottables()
+{
+    std::list<QCPAbstractPlottable *> plottables;
+    for(int i = 0; i < T::SIZE; ++i)
+    {
+        plottables.push_back(graphs_[i]);
+    }
+    return plottables;
 }
 
 #endif // INDICATORGRAPH_H
