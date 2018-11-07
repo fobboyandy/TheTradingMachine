@@ -15,7 +15,7 @@ public:
     void updatePlotAdd(const time_t candleTime, const Bar &candle);
     void updatePlotReplace(const time_t candleTime, const Bar &candle);
     void rescaleValueAxisAutofit();
-    void addIndicator(IPlot::IndicatorType indicatorType, std::unique_ptr<IPlot> indicatorPlot);
+    void addIndicator(IndicatorType indicatorType, std::unique_ptr<IPlot> indicatorPlot);
 
     double lowerRange();
     double upperRange();
@@ -32,7 +32,7 @@ private:
     QSharedPointer<QCPBarsDataContainer> dataContainer_;
 
     // active indicators
-    std::unordered_map<IPlot::IndicatorType, std::list<std::unique_ptr<IPlot>>> activeIndicatorPlots_;
+    std::unordered_map<IndicatorType, std::list<std::unique_ptr<IPlot>>> activeIndicatorPlots_;
 
     int size_;
 };

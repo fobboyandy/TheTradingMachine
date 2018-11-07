@@ -17,11 +17,4 @@
 #define INDICATORSDLL __declspec(dllimport)
 #endif
 
-#include <ctime>
-
-struct DataPoint
-{
-	time_t time;
-	double value;
-};
-
+#include <array>

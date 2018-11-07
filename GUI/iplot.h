@@ -9,28 +9,8 @@
 #include "qcustomplot.h"
 #include <list>
 #include <ctime>
-
-class IPlot
-{
-public:
-    IPlot(){}
-    virtual ~IPlot(){}
-
-    enum class IndicatorType;
-    enum class ValueType;
-    // interface for updating the plot
-    virtual void updatePlotAdd(const time_t candleTime, double value) = 0;
-    virtual void updatePlotReplace(const time_t candleTime, double value) = 0;
-    virtual void rescaleValueAxisAutofit() = 0;
-    virtual std::list<QCPAbstractPlottable*> getPlottables(void) = 0;
-
-    // indicates which value this plot monitors.
-    // o/h/l/c, volume, or just value.
-    ValueType valueType;
-};
-
 // define IPlotIndex
-enum class IPlot::IndicatorType
+enum class IndicatorType
 {
     CANDLEVOLUME,
     ABS,
@@ -139,7 +119,7 @@ enum class IPlot::IndicatorType
     ZLEMA
 };
 
-enum class IPlot::ValueType
+enum class OhlcType
 {
     OPEN,
     HIGH,
@@ -148,6 +128,24 @@ enum class IPlot::ValueType
     VOLUME,
     VALUE
 };
+
+class IPlot
+{
+public:
+    IPlot(){}
+    virtual ~IPlot(){}
+    // interface for updating the plot
+    virtual void updatePlotAdd(const time_t candleTime, double value) = 0;
+    virtual void updatePlotReplace(const time_t candleTime, double value) = 0;
+    virtual void rescaleValueAxisAutofit() = 0;
+    virtual std::list<QCPAbstractPlottable*> getPlottables(void) = 0;
+
+    // indicates which value this plot monitors.
+    // o/h/l/c, volume, or just value.
+    OhlcType valueType;
+};
+
+
 
 #endif // IPLOT_H
 

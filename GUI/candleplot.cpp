@@ -1,6 +1,6 @@
 #include "candleplot.h"
 #include "indicatorplot.h"
-#include "../Indicators/Indicators/SimpleMovingAverage.h"
+#include "../Indicators/Indicators/Indicators.h"
 #include "indicatordialog.h"
 #include <unordered_set>
 #include <memory>
@@ -19,7 +19,7 @@ CandlePlot::CandlePlot(QCustomPlot& parentPlot, QCPAxisRect& axisRect):
 
 
     parentPlot_.setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(&parentPlot_, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextMenuRequest(QPoint)));
+    connect(&parentPlot_, &QCustomPlot::customContextMenuRequested, this, &CandlePlot::menuShowSlot);
 }
 
 CandlePlot::~CandlePlot()
@@ -47,22 +47,22 @@ void CandlePlot::updatePlotAdd(const time_t candleTime, const Bar &candle)
         {
             switch(activePlotIt.second->valueType)
             {
-            case IPlot::ValueType::OPEN:
+            case OhlcType::OPEN:
                 activePlotIt.second->updatePlotAdd( candleTime, candle.open);
                 break;
 
-            case IPlot::ValueType::HIGH:
+            case OhlcType::HIGH:
                 activePlotIt.second->updatePlotAdd( candleTime, candle.high);
                 break;
 
-            case IPlot::ValueType::LOW:
+            case OhlcType::LOW:
                 activePlotIt.second->updatePlotAdd( candleTime, candle.low);
                 break;
 
-            case IPlot::ValueType::CLOSE:
-                activePlotIt.second->updatePlotAdd( candleTime, candle.close);
-                break;
+            // close values as default
+            case OhlcType::CLOSE:
             default:
+                activePlotIt.second->updatePlotAdd( candleTime, candle.close);
                 break;
             }
 
@@ -86,22 +86,22 @@ void CandlePlot::updatePlotReplace(const time_t candleTime, const Bar &candle)
             {
                 switch(activePlotIt.second->valueType)
                 {
-                case IPlot::ValueType::OPEN:
+                case OhlcType::OPEN:
                     activePlotIt.second->updatePlotReplace( candleTime, candle.open);
                     break;
 
-                case IPlot::ValueType::HIGH:
+                case OhlcType::HIGH:
                     activePlotIt.second->updatePlotReplace( candleTime, candle.high);
                     break;
 
-                case IPlot::ValueType::LOW:
+                case OhlcType::LOW:
                     activePlotIt.second->updatePlotReplace( candleTime, candle.low);
                     break;
 
-                case IPlot::ValueType::CLOSE:
-                    activePlotIt.second->updatePlotReplace( candleTime, candle.close);
-                    break;
+                // use closing value as default
+                case OhlcType::CLOSE:
                 default:
+                    activePlotIt.second->updatePlotReplace( candleTime, candle.close);
                     break;
                 }
 
@@ -119,19 +119,19 @@ void CandlePlot::pastCandlesPlotUpdate(std::shared_ptr<IPlot> iplot)
     {
         switch(iplot->valueType)
         {
-        case IPlot::ValueType::OPEN:
+        case OhlcType::OPEN:
             iplot->updatePlotAdd( static_cast<time_t>(it.key), it.open);
             break;
 
-        case IPlot::ValueType::HIGH:
+        case OhlcType::HIGH:
             iplot->updatePlotAdd( static_cast<time_t>(it.key), it.high);
             break;
 
-        case IPlot::ValueType::LOW:
+        case OhlcType::LOW:
             iplot->updatePlotAdd( static_cast<time_t>(it.key), it.low);
             break;
 
-        case IPlot::ValueType::CLOSE:
+        case OhlcType::CLOSE:
             iplot->updatePlotAdd( static_cast<time_t>(it.key), it.close);
             break;
         default:
@@ -175,7 +175,7 @@ void CandlePlot::rescaleValueAxisAutofit()
 //    activeIndicatorPlots_[indicatorType].push_back(std::move(indicatorPlot));
 //}
 
-void CandlePlot::indicatorSelectionMenu(QPoint pos)
+void CandlePlot::indicatorSelected(QPoint pos)
 {
     QMenu* menu = new QMenu();
     // destroy the menu after closing
@@ -197,7 +197,14 @@ void CandlePlot::indicatorSelectionMenu(QPoint pos)
     subMenu->addAction("Awesome Oscillator");
     subMenu = menu->addMenu("B");
     subMenu->addAction("Balance of Power");
-    subMenu->addAction("Bollinger Bands");
+    subMenu->addAction("Bollinger Bands", this, [this]()
+    {
+        qDebug("Bollinger Bands");
+        //prompt user
+        IndicatorDialog diag;
+        diag.exec();
+        indicatorLaunch<BollingerBands>(OhlcType::CLOSE, 5, 3);
+    });
     subMenu->addAction("Chaikins Volatility");
     subMenu = menu->addMenu("C");
     subMenu->addAction("Chande Momentum Oscillator");
@@ -255,7 +262,7 @@ void CandlePlot::indicatorSelectionMenu(QPoint pos)
     subMenu->addAction("Rate of Change Ratio");
     subMenu->addAction("Relative Strength Index");
     subMenu = menu->addMenu("S");
-    subMenu->addAction("Simple Moving Average", this, &CandlePlot::simpleMovingAverageSlot);
+    subMenu->addAction("Simple Moving Average", this, [](){});
     subMenu->addAction("Standard Deviation Over Period");
     subMenu->addAction("Standard Error Over Period");
     subMenu->addAction("Stochastic Oscillator");
@@ -349,13 +356,13 @@ int CandlePlot::size()
     return size_;
 }
 
-void CandlePlot::contextMenuRequest(QPoint pos)
+void CandlePlot::menuShowSlot(QPoint pos)
 {
     auto selectedPlottables = parentPlot_.selectedPlottables();
     // if no plottables were selected then show indicator selection
     if(selectedPlottables.size() == 0)
     {
-       indicatorSelectionMenu(pos);
+       indicatorSelected(pos);
     }
     else
     {
@@ -364,25 +371,35 @@ void CandlePlot::contextMenuRequest(QPoint pos)
     }
 }
 
-void CandlePlot::simpleMovingAverageSlot()
+template<typename IndicatorType, typename... Args>
+void CandlePlot::indicatorLaunch(OhlcType valueType, Args... args)
 {
-    qDebug("simpleMovingAverageSlot");
-    //prompt user
-    IndicatorDialog diag;
-    diag.exec();
 
-    for(int i = 0; i < 5; i++)
-    {
-        auto smaIndicator = std::make_unique<SimpleMovingAverage>(i);
-        auto smaPlot = std::make_shared<IndicatorPlot<SimpleMovingAverage>>(axisRect_, std::move(smaIndicator), IPlot::ValueType::CLOSE);
-        pastCandlesPlotUpdate(smaPlot);
-        auto plottables = smaPlot->getPlottables();
+    std:: cout << std::forward
 
-        // add these plottables to our iplot map
-        for(const auto& plottablesIt: plottables)
-        {
-            activeIndicatorPlots_[plottablesIt] = smaPlot;
-        }
-    }
+//    auto smaIndicator = std::make_unique<IndicatorType>(std::forward<Args>(args)...);
+//    auto smaPlot = std::make_shared<IndicatorPlot<IndicatorType>>(axisRect_, std::move(smaIndicator), valueType);
+//    pastCandlesPlotUpdate(smaPlot);
+//    auto plottables = smaPlot->getPlottables();
+
+//    // add these plottables to our iplot map
+//    for(const auto& plottablesIt: plottables)
+//    {
+//        activeIndicatorPlots_[plottablesIt] = smaPlot;
+//    }
 }
 
+//template<typename IndicatorType, typename... Args>
+//void CandlePlot::indicatorLaunch(Args... args)
+//{
+//    auto indicator = std::make_unique<IndicatorType>(std::forward<Args>(args)...);
+//    auto indicatorPlot = std::make_shared<IndicatorPlot<IndicatorType>>(axisRect_, std::move(indicator)); //default value type
+//    pastCandlesPlotUpdate(indicatorPlot);
+//    auto plottables = indicatorPlot->getPlottables();
+
+//    // add these plottables to our iplot map
+//    for(const auto& plottablesIt: plottables)
+//    {
+//        activeIndicatorPlots_[plottablesIt] = indicatorPlot;
+//    }
+//}

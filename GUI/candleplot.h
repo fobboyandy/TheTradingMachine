@@ -18,12 +18,18 @@ public:
     void pastCandlesPlotUpdate(std::shared_ptr<IPlot> iplot);
 
     void rescaleValueAxisAutofit();
-    void indicatorSelectionMenu(QPoint pos);
+    void indicatorSelected(QPoint pos);
     void removePlottable(QCPAbstractPlottable* plottable);
 
     double lowerRange();
     double upperRange();
     int size();
+
+    template<typename IndicatorType, typename... Args>
+    void indicatorLaunch(OhlcType valueType, Args... args);
+
+    template<typename IndicatorType, typename... Args>
+    void indicatorLaunch(Args... args);
 
 private:
     // keep a reference to the parent plot to remove an indicator
@@ -49,7 +55,7 @@ private:
     int size_;
 
 private slots:
-    void contextMenuRequest(QPoint pos);
-    void simpleMovingAverageSlot(void);
+    void menuShowSlot(QPoint pos);
+
 };
 #endif // CANDLEPLOT_H

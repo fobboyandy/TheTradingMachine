@@ -19,10 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BollingerBands.h" />
     <ClInclude Include="Common.h" />
+    <ClInclude Include="Indicators.h" />
+    <ClInclude Include="RelativeStrengthIndex.h" />
     <ClInclude Include="SimpleMovingAverage.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BollingerBands.cpp" />
+    <ClCompile Include="RelativeStrengthIndex.cpp" />
     <ClCompile Include="SimpleMovingAverage.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
