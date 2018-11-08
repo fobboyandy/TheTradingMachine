@@ -199,11 +199,19 @@ void CandlePlot::indicatorSelected(QPoint pos)
     subMenu->addAction("Balance of Power");
     subMenu->addAction("Bollinger Bands", this, [this]()
     {
-        qDebug("Bollinger Bands");
         //prompt user
         IndicatorDialog diag;
+        diag.addSpinbox("Period", 5, 1);
+        diag.addSpinbox("Standard Deviation Factor", 3, 1);
         diag.exec();
-        indicatorLaunch<BollingerBands>(OhlcType::CLOSE, 5, 3);
+
+        //if user pressed OK
+        if(diag.valid())
+        {
+            auto period = diag.getSpinboxValue("Period");
+            auto scale = diag.getSpinboxValue("Standard Deviation Factor");
+            indicatorLaunch<BollingerBands>(OhlcType::CLOSE, period, scale);
+        }
     });
     subMenu->addAction("Chaikins Volatility");
     subMenu = menu->addMenu("C");
@@ -262,7 +270,20 @@ void CandlePlot::indicatorSelected(QPoint pos)
     subMenu->addAction("Rate of Change Ratio");
     subMenu->addAction("Relative Strength Index");
     subMenu = menu->addMenu("S");
-    subMenu->addAction("Simple Moving Average", this, [](){});
+    subMenu->addAction("Simple Moving Average", this, [this]()
+    {
+        //prompt user
+        IndicatorDialog diag;
+        diag.addSpinbox("Period", 5, 1);
+        diag.exec();
+
+        //if user pressed OK
+        if(diag.valid())
+        {
+            auto period = diag.getSpinboxValue("Period");
+            indicatorLaunch<SimpleMovingAverage>(OhlcType::CLOSE, period);
+        }
+    });
     subMenu->addAction("Standard Deviation Over Period");
     subMenu->addAction("Standard Error Over Period");
     subMenu->addAction("Stochastic Oscillator");
@@ -374,19 +395,16 @@ void CandlePlot::menuShowSlot(QPoint pos)
 template<typename IndicatorType, typename... Args>
 void CandlePlot::indicatorLaunch(OhlcType valueType, Args... args)
 {
+    auto smaIndicator = std::make_unique<IndicatorType>(args...);
+    auto smaPlot = std::make_shared<IndicatorPlot<IndicatorType>>(axisRect_, std::move(smaIndicator), valueType);
+    pastCandlesPlotUpdate(smaPlot);
+    auto plottables = smaPlot->getPlottables();
 
-    std:: cout << std::forward
-
-//    auto smaIndicator = std::make_unique<IndicatorType>(std::forward<Args>(args)...);
-//    auto smaPlot = std::make_shared<IndicatorPlot<IndicatorType>>(axisRect_, std::move(smaIndicator), valueType);
-//    pastCandlesPlotUpdate(smaPlot);
-//    auto plottables = smaPlot->getPlottables();
-
-//    // add these plottables to our iplot map
-//    for(const auto& plottablesIt: plottables)
-//    {
-//        activeIndicatorPlots_[plottablesIt] = smaPlot;
-//    }
+    // add these plottables to our iplot map
+    for(const auto& plottablesIt: plottables)
+    {
+        activeIndicatorPlots_[plottablesIt] = smaPlot;
+    }
 }
 
 //template<typename IndicatorType, typename... Args>

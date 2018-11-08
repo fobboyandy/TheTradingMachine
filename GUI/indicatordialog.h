@@ -5,6 +5,11 @@
 #include <vector>
 #include <QSpinBox>
 #include <QCheckBox>
+#include <QGridLayout>
+#include <QDialogButtonBox>
+#include <QLabel>
+#include <unordered_map>
+#include <limits>
 
 namespace Ui {
 class IndicatorDialog;
@@ -16,14 +21,23 @@ class IndicatorDialog : public QDialog
 
 public:
     explicit IndicatorDialog(QWidget *parent = nullptr);
-    ~IndicatorDialog();
-    void addSpinbox(QString text, int minVal, int maxVal, int defaultVal = 5);
+    ~IndicatorDialog() override;
+
+    //inputs as keys are case sensitive
+    void addSpinbox(QString text, int defaultValue, int minVal = std::numeric_limits<int>::min(), int maxVal = std::numeric_limits<int>::max());
     void addCheckbox(QString text, bool defaultChecked = false);
+    int getSpinboxValue(QString text);
+    bool getCheckboxValue(QString text);
+    int exec() override;
+    bool valid();
 
 private:
-    Ui::IndicatorDialog *ui;
-    std::list<QWidget*> widgets_;
+    std::unordered_map<std::string, QWidget*> settings_;
+    QGridLayout *gridLayout;
+    int row_;
+    bool valid_;
 
+    QDialogButtonBox* buttonBox;
 };
 
 #endif // INDICATORDIALOG_H

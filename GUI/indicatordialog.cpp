@@ -1,69 +1,74 @@
 #include "indicatordialog.h"
-#include "ui_indicatordialog.h"
 
 IndicatorDialog::IndicatorDialog(QWidget *parent) :
-    QDialog(parent),
-    ui(new Ui::IndicatorDialog)
+    QDialog(parent)
 {
-    //ui->setupUi(this);
-    setWindowFlags(this->windowFlags() |= Qt::FramelessWindowHint);
+    gridLayout = new QGridLayout(this);
 
-    ui->buttonBox->setFocus();
+    //create button box
+    buttonBox = new QDialogButtonBox(this);
+    buttonBox->setOrientation(Qt::Horizontal);
+    buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
+
     resize(400, 100);
+    setWindowFlags(this->windowFlags() |= Qt::FramelessWindowHint);
+    setWindowTitle(QString("Indicator Settings"));
 
+    row_ = 0;
+    valid_ = false;
 
-        this->resize(270, 110);
-        ui->gridLayout = new QGridLayout(this);
-        ui->gridLayout->setObjectName(QStringLiteral("gridLayout"));
-
-        ui->buttonBox = new QDialogButtonBox(this);
-        ui->buttonBox->setObjectName(QStringLiteral("buttonBox"));
-        ui->buttonBox->setOrientation(Qt::Horizontal);
-        ui->buttonBox->setStandardButtons(QDialogButtonBox::Cancel|QDialogButtonBox::Ok);
-
-        ui->gridLayout->addWidget(ui->buttonBox, 1, 4, 1, 1);
-
-
-        ui->label = new QLabel(this);
-        ui->label->setObjectName(QStringLiteral("label"));
-
-        ui->gridLayout->addWidget(ui->label, 0, 2, 1, 1);
-
-
-        ui->spinBox = new QSpinBox(this);
-        ui->spinBox->setObjectName(QStringLiteral("spinBox"));
-
-        ui->gridLayout->addWidget(ui->spinBox, 0, 3, 1, 1);
-
-
-        //retranslateUi(this);
-        QObject::connect(ui->buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
-        QObject::connect(ui->buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
-
-        //QMetaObject::connectSlotsByName(IndicatorDialog);
-//    } // setupUi
-
-//    void retranslateUi(QDialog *IndicatorDialog)
-//    {
-//        IndicatorDialog->setWindowTitle(QApplication::translate("IndicatorDialog", "Dialog", nullptr));
-//        label->setText(QApplication::translate("IndicatorDialog", "TextLabel", nullptr));
-//    } // retranslateUi
-
-
-
+    connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
+    connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
+    connect(buttonBox, &QDialogButtonBox::accepted, this, [this](){valid_ = true;});
+    connect(buttonBox, &QDialogButtonBox::rejected, this, [this](){valid_ = false;});
 }
 
 IndicatorDialog::~IndicatorDialog()
 {
-    delete ui;
 }
 
-void IndicatorDialog::addSpinbox(QString text, int minVal, int maxVal, int defaultVal)
-{
 
+void IndicatorDialog::addSpinbox(QString text, int defaultValue, int minVal, int maxVal)
+{
+    auto label = new QLabel(this);
+    label->setText(text);
+
+    auto spinbox = new QSpinBox(this);
+    spinbox->setRange(minVal, maxVal);
+    spinbox->setValue(defaultValue);
+
+    gridLayout->addWidget(label, row_, 2, 1, 1);
+    gridLayout->addWidget(spinbox, row_, 3, 1, 1);
+
+    ++row_;
+    settings_[text.toStdString()] = spinbox;
 }
 
 void IndicatorDialog::addCheckbox(QString text, bool defaultChecked)
 {
 
+}
+
+int IndicatorDialog::getSpinboxValue(QString text)
+{
+    if(settings_.find(text.toStdString()) != settings_.end())
+    {
+        return static_cast<QSpinBox*>(settings_[text.toStdString()])->value();
+    }
+
+    return 0;
+}
+
+int IndicatorDialog::exec()
+{
+    //display the buttonbox at the appropriate place
+    gridLayout->addWidget(buttonBox, row_, 4, 1, 1);
+    buttonBox->setFocus();
+
+    return QDialog::exec();
+}
+
+bool IndicatorDialog::valid()
+{
+    return valid_;
 }

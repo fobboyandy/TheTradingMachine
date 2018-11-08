@@ -55,8 +55,7 @@ HEADERS += \
 
 FORMS += \
     thetradingmachinemainwindow.ui \
-    playdialog.ui \
-    indicatordialog.ui
+    playdialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
