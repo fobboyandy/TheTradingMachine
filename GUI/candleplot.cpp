@@ -268,7 +268,20 @@ void CandlePlot::indicatorSelected(QPoint pos)
     subMenu = menu->addMenu("R");
     subMenu->addAction("Rate of Change");
     subMenu->addAction("Rate of Change Ratio");
-    subMenu->addAction("Relative Strength Index");
+    subMenu->addAction("Relative Strength Index", this, [this]()
+    {
+        //prompt user
+        IndicatorDialog diag;
+        diag.addSpinbox("Period", 5, 1);
+        diag.exec();
+
+        //if user pressed OK
+        if(diag.valid())
+        {
+            auto period = diag.getSpinboxValue("Period");
+            indicatorLaunch<RelativeStrengthIndex>(OhlcType::CLOSE, period);
+        }
+    });
     subMenu = menu->addMenu("S");
     subMenu->addAction("Simple Moving Average", this, [this]()
     {
