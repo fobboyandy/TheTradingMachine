@@ -63,8 +63,6 @@ RelativeStrengthIndex::RelativeStrengthIndexImpl::~RelativeStrengthIndexImpl()
 
 RelativeStrengthIndex::array_type RelativeStrengthIndex::RelativeStrengthIndexImpl::computeIndicatorPoint(const double sample)
 {
-	array_type result;
-
 	// last modified values get stored into the p values;
 	pVal_ = cVal_;
 	pSUp_ = cSUp_;
@@ -92,8 +90,6 @@ RelativeStrengthIndex::array_type RelativeStrengthIndex::RelativeStrengthIndexIm
 
 RelativeStrengthIndex::array_type RelativeStrengthIndex::RelativeStrengthIndexImpl::recomputeIndicatorPoint(const double sample)
 {
-	array_type result;
-
 	double up, down;
 
 	// compare with pVal_ to assign up and down. we compute relative
