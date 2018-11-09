@@ -129,6 +129,14 @@ enum class OhlcType
     VALUE
 };
 
+enum class IndicatorDisplayType
+{
+    SIMPLE,
+    INDICATOR,
+    OVERLAY,
+    MATH
+};
+
 class IPlot
 {
 public:
@@ -143,6 +151,7 @@ public:
     // indicates which value this plot monitors.
     // o/h/l/c, volume, or just value.
     OhlcType valueType;
+    IndicatorDisplayType displayType;
 };
 
 

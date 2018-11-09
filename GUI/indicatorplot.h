@@ -13,7 +13,7 @@ template <typename T>
 class IndicatorPlot : public IPlot
 {
 public:
-    IndicatorPlot(QCPAxisRect& axisRect, std::unique_ptr<T> indicator, OhlcType type = OhlcType::VALUE);
+    IndicatorPlot(QCPAxisRect& axisRect, std::unique_ptr<T> indicator, OhlcType type, IndicatorDisplayType display);
     ~IndicatorPlot() override;
 
     void updatePlotAdd(const time_t candleTime, double value) override;
@@ -23,6 +23,9 @@ public:
 
 private:
     QCPAxisRect& axisRect_;
+    QCPAxis* keyAxis_;
+    QCPAxis* valueAxis_;
+
     std::array<QCPGraph*, T::SIZE> graphs_; // one graph for each output from indicator class
     std::array<QSharedPointer<QCPDataContainer<QCPGraphData>>, T::SIZE> graphDataContainers_;
     std::unique_ptr<T> indicator_;
@@ -30,16 +33,39 @@ private:
 };
 
 template <typename T>
-IndicatorPlot<T>::IndicatorPlot(QCPAxisRect &axisRect, std::unique_ptr<T> indicator, OhlcType type):
+IndicatorPlot<T>::IndicatorPlot(QCPAxisRect &axisRect, std::unique_ptr<T> indicator, OhlcType type, IndicatorDisplayType display):
     indicator_(std::move(indicator)),
     axisRect_(axisRect)
 {
     valueType = type;
+    displayType = display;
     size_ = 0;
+
     for(int i = 0; i < T::SIZE; ++i)
     {
         graphDataContainers_[i] = QSharedPointer<QCPDataContainer<QCPGraphData>>(new QCPDataContainer<QCPGraphData>);
-        graphs_[i] = new QCPGraph(axisRect_.axis(QCPAxis::atBottom), axisRect_.axis(QCPAxis::atLeft));
+        keyAxis_ = axisRect_.axis(QCPAxis::atBottom);
+
+        switch(display)
+        {
+            // for indicators, we make a new axis
+            // so that we can share the same display
+            case IndicatorDisplayType::INDICATOR:
+                valueAxis_ = axisRect.addAxis(QCPAxis::atLeft);
+                break;
+
+            case IndicatorDisplayType::MATH:
+                break;
+
+            // for overlays, we share the same axis as the rect
+            case IndicatorDisplayType::OVERLAY:
+                valueAxis_ = axisRect_.axis(QCPAxis::atLeft);
+                break;
+
+            case IndicatorDisplayType::SIMPLE:
+                break;
+        }
+        graphs_[i] = new QCPGraph(keyAxis_, valueAxis_);
         graphs_[i]->setData(graphDataContainers_[i]);
     }
 }
@@ -83,7 +109,7 @@ void IndicatorPlot<T>::rescaleValueAxisAutofit()
 {
     for(int i = 0; i < T::SIZE; ++i)
     {
-        graphs_[i]->rescaleValueAxis(false, true);
+        graphs_[i]->rescaleValueAxis(true, true);
     }
 }
 

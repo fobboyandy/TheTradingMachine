@@ -143,37 +143,58 @@ void CandlePlot::pastCandlesPlotUpdate(std::shared_ptr<IPlot> iplot)
 void CandlePlot::rescaleValueAxisAutofit()
 {
     candleBars_->rescaleValueAxis(false, true);
+
+    // we need to rescale each graph with respect to
+    // their axes. For each axis, we need to autofit
+    // all (can be more than one) the graphs. We iterate
+    // through the existing axies and find the max range
+    // one by one.
+
+    //initialize maxRange to the candle plot
+    bool foundRange = false;
+    QCP::SignDomain signDomain = QCP::sdBoth;
+    if (axisRect_.axis(QCPAxis::atLeft)->scaleType() == QCPAxis::stLogarithmic)
+    {
+        signDomain = (axisRect_.axis(QCPAxis::atLeft)->range().upper < 0 ? QCP::sdNegative : QCP::sdPositive);
+    }
+    auto maxRange = candleBars_->getValueRange(foundRange, signDomain, axisRect_.axis(QCPAxis::atBottom)->range());
+    //valueAxis->setRange(newRange);
+
+    // get all our value axes
+    auto axes = axisRect_.axes(QCPAxis::atLeft | QCPAxis::atRight);
+    for(auto& axesIt: axes)
+    {
+        // graphs in this axis
+        auto commonGraphs = axesIt->graphs();
+        for(auto& commonGraphsIt : commonGraphs)
+        {
+            foundRange = false;
+            signDomain = QCP::sdBoth;
+            if (axisRect_.axis(QCPAxis::atLeft)->scaleType() == QCPAxis::stLogarithmic)
+            {
+                signDomain = (axisRect_.axis(QCPAxis::atLeft)->range().upper < 0 ? QCP::sdNegative : QCP::sdPositive);
+            }
+
+            // find the range for the current visible key range
+            auto graphRange = commonGraphsIt->getValueRange(foundRange, signDomain, axisRect_.axis(QCPAxis::atBottom)->range());
+
+            // find the max range
+            if(graphRange.lower < maxRange.lower)
+            {
+                maxRange.lower = graphRange.lower;
+            }
+
+            if(graphRange.upper > maxRange.upper)
+            {
+                maxRange.upper = graphRange.upper;
+            }
+        }
+
+        // rescale the current axis to the max range
+        axesIt->setRange(maxRange);
+//        axesIt->rescaleValueAxis(false, true);
+    }
 }
-
-//void CandlePlot::addIndicator(std::unique_ptr<IPlot> indicatorPlot)
-//{
-//    // keep the indicatorPlot up to date with all the candles we currently have
-//    for(auto& it: *dataContainer_)
-//    {
-//        switch(indicatorPlot->valueType)
-//        {
-//        case IPlot::ValueType::OPEN:
-//            indicatorPlot->updatePlotAdd( static_cast<time_t>(it.key), it.open);
-//            break;
-
-//        case IPlot::ValueType::HIGH:
-//            indicatorPlot->updatePlotAdd( static_cast<time_t>(it.key), it.high);
-//            break;
-
-//        case IPlot::ValueType::LOW:
-//            indicatorPlot->updatePlotAdd( static_cast<time_t>(it.key), it.low);
-//            break;
-
-//        case IPlot::ValueType::CLOSE:
-//            indicatorPlot->updatePlotAdd( static_cast<time_t>(it.key), it.close);
-//            break;
-//        default:
-//            break;
-//        }
-//    }
-//    //add this indicator to our list
-//    activeIndicatorPlots_[indicatorType].push_back(std::move(indicatorPlot));
-//}
 
 void CandlePlot::indicatorSelected(QPoint pos)
 {
@@ -210,7 +231,7 @@ void CandlePlot::indicatorSelected(QPoint pos)
         {
             auto period = diag.getSpinboxValue("Period");
             auto scale = diag.getSpinboxValue("Standard Deviation Factor");
-            indicatorLaunch<BollingerBands>(OhlcType::CLOSE, period, scale);
+            indicatorLaunch<BollingerBands>(OhlcType::CLOSE, IndicatorDisplayType::OVERLAY, period, scale);
         }
     });
     subMenu->addAction("Chaikins Volatility");
@@ -279,7 +300,7 @@ void CandlePlot::indicatorSelected(QPoint pos)
         if(diag.valid())
         {
             auto period = diag.getSpinboxValue("Period");
-            indicatorLaunch<RelativeStrengthIndex>(OhlcType::CLOSE, period);
+            indicatorLaunch<RelativeStrengthIndex>(OhlcType::CLOSE, IndicatorDisplayType::INDICATOR, period);
         }
     });
     subMenu = menu->addMenu("S");
@@ -294,7 +315,7 @@ void CandlePlot::indicatorSelected(QPoint pos)
         if(diag.valid())
         {
             auto period = diag.getSpinboxValue("Period");
-            indicatorLaunch<SimpleMovingAverage>(OhlcType::CLOSE, period);
+            indicatorLaunch<SimpleMovingAverage>(OhlcType::CLOSE, IndicatorDisplayType::OVERLAY, period);
         }
     });
     subMenu->addAction("Standard Deviation Over Period");
@@ -406,31 +427,16 @@ void CandlePlot::menuShowSlot(QPoint pos)
 }
 
 template<typename IndicatorType, typename... Args>
-void CandlePlot::indicatorLaunch(OhlcType valueType, Args... args)
+void CandlePlot::indicatorLaunch(OhlcType valueType, IndicatorDisplayType displayType, Args... args)
 {
-    auto smaIndicator = std::make_unique<IndicatorType>(args...);
-    auto smaPlot = std::make_shared<IndicatorPlot<IndicatorType>>(axisRect_, std::move(smaIndicator), valueType);
-    pastCandlesPlotUpdate(smaPlot);
-    auto plottables = smaPlot->getPlottables();
+    auto indicator = std::make_unique<IndicatorType>(args...);
+    auto plot = std::make_shared<IndicatorPlot<IndicatorType>>(axisRect_, std::move(indicator), valueType, displayType);
+    pastCandlesPlotUpdate(plot);
+    auto plottables = plot->getPlottables();
 
     // add these plottables to our iplot map
     for(const auto& plottablesIt: plottables)
     {
-        activeIndicatorPlots_[plottablesIt] = smaPlot;
+        activeIndicatorPlots_[plottablesIt] = plot;
     }
 }
-
-//template<typename IndicatorType, typename... Args>
-//void CandlePlot::indicatorLaunch(Args... args)
-//{
-//    auto indicator = std::make_unique<IndicatorType>(std::forward<Args>(args)...);
-//    auto indicatorPlot = std::make_shared<IndicatorPlot<IndicatorType>>(axisRect_, std::move(indicator)); //default value type
-//    pastCandlesPlotUpdate(indicatorPlot);
-//    auto plottables = indicatorPlot->getPlottables();
-
-//    // add these plottables to our iplot map
-//    for(const auto& plottablesIt: plottables)
-//    {
-//        activeIndicatorPlots_[plottablesIt] = indicatorPlot;
-//    }
-//}

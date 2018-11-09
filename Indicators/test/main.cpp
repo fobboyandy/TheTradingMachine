@@ -32,9 +32,22 @@ void test(IndicatorTemplate<T> it, Arg1 arg1, Args... args)
 	test(it, args...);
 }
 
+template<template<typename> typename T, typename B>
+void test2(T<B> indicator)
+{
+
+}
+
+template<typename T>
+struct testStruct
+{
+	T x;
+};
 
 int main()
 {
+	test2(testStruct<int>());
+	//test2(testStruct<int>());
 
 	test(IndicatorTemplate<RelativeStrengthIndex>(5),
 		81.591,

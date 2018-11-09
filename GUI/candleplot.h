@@ -26,10 +26,7 @@ public:
     int size();
 
     template<typename IndicatorType, typename... Args>
-    void indicatorLaunch(OhlcType valueType, Args... args);
-
-    template<typename IndicatorType, typename... Args>
-    void indicatorLaunch(Args... args);
+    void indicatorLaunch(OhlcType valueType, IndicatorDisplayType displayType, Args... args);
 
 private:
     // keep a reference to the parent plot to remove an indicator
