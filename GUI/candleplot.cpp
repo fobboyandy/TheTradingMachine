@@ -381,8 +381,13 @@ void CandlePlot::removePlottable(QCPAbstractPlottable *plottable)
     {
         auto iplot = iPlotFindIt->second;
 
-        //find the other associated plottables. eg macd has 3 and bollinger has 2
+        // find the other associated plottables. eg macd and bollinger has multiple plottables
+        // together
         auto plottables = iplot->getPlottables();
+
+        // get the value axis shared by these plots. check the number
+        // of remaining plottables after removing them
+        auto commonValueAxis = plottables.front()->valueAxis();
 
         //remove the entries of these plottables
         for(const auto& it: plottables)
@@ -392,6 +397,13 @@ void CandlePlot::removePlottable(QCPAbstractPlottable *plottable)
 
             // remove the entry
             activeIndicatorPlots_.erase(it);
+        }
+
+        // if there are no more plottables associated with
+        // this axis, remove the axis
+        if(commonValueAxis->plottables().size() == 0)
+        {
+            axisRect_.removeAxis(commonValueAxis);
         }
     }
 }
