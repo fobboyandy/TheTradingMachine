@@ -30,6 +30,7 @@ private:
     std::array<QSharedPointer<QCPDataContainer<QCPGraphData>>, T::SIZE> graphDataContainers_;
     std::unique_ptr<T> indicator_;
     int size_;
+
 };
 
 template <typename T>
@@ -123,5 +124,4 @@ std::list<QCPAbstractPlottable *> IndicatorPlot<T>::getPlottables()
     }
     return plottables;
 }
-
 #endif // INDICATORGRAPH_H

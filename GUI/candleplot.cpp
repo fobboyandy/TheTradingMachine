@@ -17,14 +17,13 @@ CandlePlot::CandlePlot(QCustomPlot& parentPlot, QCPAxisRect& axisRect):
     candleBars_->setWidthType(QCPFinancial::WidthType::wtPlotCoords);
     candleBars_->setWidth(60);
 
-
     parentPlot_.setContextMenuPolicy(Qt::CustomContextMenu);
     connect(&parentPlot_, &QCustomPlot::customContextMenuRequested, this, &CandlePlot::menuShowSlot);
+
 }
 
 CandlePlot::~CandlePlot()
 {
-
 }
 
 void CandlePlot::updatePlotAdd(const time_t candleTime, const Bar &candle)
@@ -192,11 +191,11 @@ void CandlePlot::rescaleValueAxisAutofit()
 
         // rescale the current axis to the max range
         axesIt->setRange(maxRange);
-//        axesIt->rescaleValueAxis(false, true);
+
     }
 }
 
-void CandlePlot::indicatorSelected(QPoint pos)
+void CandlePlot::indicatorSelectionMenu(QPoint pos)
 {
     QMenu* menu = new QMenu();
     // destroy the menu after closing
@@ -374,29 +373,28 @@ void CandlePlot::indicatorSelected(QPoint pos)
     menu->popup(parentPlot_.mapToGlobal(pos));
 }
 
-void CandlePlot::removePlottable(QCPAbstractPlottable *plottable)
+void CandlePlot::removeIndicatorMenu(QPoint pos, QList<QCPAbstractPlottable*> plottables)
 {
-    auto iPlotFindIt = activeIndicatorPlots_.find(plottable);
-    if(iPlotFindIt != activeIndicatorPlots_.end())
+    QMenu* menu = new QMenu();
+    // destroy the menu after closing
+    menu->setAttribute(Qt::WidgetAttribute::WA_DeleteOnClose);
+
+    menu->addAction("Remove Indicator", this, [this, plottables]()
     {
-        auto iplot = iPlotFindIt->second;
-
-        // find the other associated plottables. eg macd and bollinger has multiple plottables
-        // together
-        auto plottables = iplot->getPlottables();
-
         // get the value axis shared by these plots. check the number
         // of remaining plottables after removing them
         auto commonValueAxis = plottables.front()->valueAxis();
 
-        //remove the entries of these plottables
-        for(const auto& it: plottables)
+        // all plottables associated with a chosen iplot
+        // are provided by the argument
+        for(auto& plottable: plottables)
         {
-            // first remove these from the visible plot
-            parentPlot_.removePlottable(it);
+            // erase the plot entries
+            activeIndicatorPlots_.erase(plottable);
 
-            // remove the entry
-            activeIndicatorPlots_.erase(it);
+            // remove it from the graph
+            parentPlot_.removePlottable(plottable);
+
         }
 
         // if there are no more plottables associated with
@@ -405,7 +403,9 @@ void CandlePlot::removePlottable(QCPAbstractPlottable *plottable)
         {
             axisRect_.removeAxis(commonValueAxis);
         }
-    }
+    });
+
+    menu->popup(parentPlot_.mapToGlobal(pos));
 }
 
 double CandlePlot::lowerRange()
@@ -429,12 +429,37 @@ void CandlePlot::menuShowSlot(QPoint pos)
     // if no plottables were selected then show indicator selection
     if(selectedPlottables.size() == 0)
     {
-       indicatorSelected(pos);
+        indicatorSelectionMenu(pos);
     }
     else
     {
-        // we disabled multiple selection for now
-        removePlottable(selectedPlottables.first());
+        removeIndicatorMenu(pos, selectedPlottables);
+    }
+}
+
+void CandlePlot::plotSelectslot(bool selected)
+{
+    // mark the other graphs as selected as well
+    if(selected)
+    {
+        std::shared_ptr<IPlot> selectedPlot;
+
+        // find the graph that is currently selected
+        for(auto& plottableEntry: activeIndicatorPlots_)
+        {
+            if(plottableEntry.first->selected())
+            {
+                selectedPlot = plottableEntry.second;
+                break; // we know only one will be selected
+            }
+        }
+
+        auto plottables = selectedPlot->getPlottables();
+        for(auto& plottable: plottables)
+        {
+            // cast to qcpgraph since we only have qcpgraphs at the moment
+            plottable->setSelection(QCPDataSelection(static_cast<QCPGraph*>(plottable)->data()->dataRange()));
+        }
     }
 }
 
@@ -447,8 +472,9 @@ void CandlePlot::indicatorLaunch(OhlcType valueType, IndicatorDisplayType displa
     auto plottables = plot->getPlottables();
 
     // add these plottables to our iplot map
-    for(const auto& plottablesIt: plottables)
+    for(auto& plottable: plottables)
     {
-        activeIndicatorPlots_[plottablesIt] = plot;
+        activeIndicatorPlots_[plottable] = plot;
+        connect(plottable, SIGNAL(selectionChanged(bool)), this, SLOT(plotSelectslot(bool)));
     }
 }

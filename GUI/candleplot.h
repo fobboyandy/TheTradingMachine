@@ -18,8 +18,8 @@ public:
     void pastCandlesPlotUpdate(std::shared_ptr<IPlot> iplot);
 
     void rescaleValueAxisAutofit();
-    void indicatorSelected(QPoint pos);
-    void removePlottable(QCPAbstractPlottable* plottable);
+    void indicatorSelectionMenu(QPoint pos);
+    void removeIndicatorMenu(QPoint pos, QList<QCPAbstractPlottable*> plottables);
 
     double lowerRange();
     double upperRange();
@@ -53,6 +53,7 @@ private:
 
 private slots:
     void menuShowSlot(QPoint pos);
+    void plotSelectslot(bool selected);
 
 };
 #endif // CANDLEPLOT_H
