@@ -1,11 +1,11 @@
-#ifndef BASICPLOT_H
-#define BASICPLOT_H
+#ifndef ANNOTATION_H
+#define ANNOTATION_H
 
 #include <string>
 
-namespace BasicPlot
+namespace Annotation
 {
-    enum class BasicPlotType
+    enum class AnnotationType
     {
         LINE,
         DOT,
@@ -21,11 +21,11 @@ namespace BasicPlot
         int blue;
     };
 
-    class IBasicPlot
+    class IAnnotation
     {
     public:
-        IBasicPlot(BasicPlotType t_type);
-        virtual ~IBasicPlot();
+        IAnnotation(AnnotationType t_type);
+        virtual ~IAnnotation();
 
         void setWidth(int t_width);
         void setColor(int t_r, int t_g, int t_b);
@@ -35,14 +35,14 @@ namespace BasicPlot
         void color(int& t_r, int& t_g, int& t_b);
 
     private:
-        const BasicPlotType type_;
+        const AnnotationType type_;
         int width_;
 
         // color
         ColorType color_;
     };
 
-    struct Line : public IBasicPlot
+    struct Line : public IAnnotation
     {
         Line(double t_startX, double t_startY, double t_endX, double t_endY);
         // plot coordinates
@@ -52,14 +52,14 @@ namespace BasicPlot
         const double endY_;
     };
 
-    struct Dot : public IBasicPlot
+    struct Dot : public IAnnotation
     {
         Dot(double t_x, double t_y);
         const double x_;
         const double y_;
     };
 
-    struct Circle: public IBasicPlot
+    struct Circle: public IAnnotation
     {
         Circle(double t_x, double t_y, int t_radius);
         const double x_;
@@ -67,7 +67,7 @@ namespace BasicPlot
         const int radius_;
     };
 
-    struct Label: public IBasicPlot
+    struct Label: public IAnnotation
     {
         Label(std::string t_text, double t_x, double t_y);
         const std::string text_;
@@ -75,4 +75,4 @@ namespace BasicPlot
         const double y_;
     };
 }
-#endif // BASICPLOT_H
+#endif

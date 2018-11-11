@@ -1,8 +1,8 @@
-#include "basicplot.h"
+#include "annotation.h"
 
-namespace BasicPlot
+namespace Annotation
 {
-    IBasicPlot::IBasicPlot(BasicPlotType t_type):
+    IAnnotation::IAnnotation(AnnotationType t_type):
         type_(t_type),
         width_(1),
         color_{255, 255, 255}
@@ -10,39 +10,39 @@ namespace BasicPlot
 
     }
 
-    IBasicPlot::~IBasicPlot()
+    IAnnotation::~IAnnotation()
     {
 
     }
 
-    void IBasicPlot::setWidth(int t_width)
+    void IAnnotation::setWidth(int t_width)
     {
         width_ = t_width;
     }
 
-    void IBasicPlot::setColor(int t_r, int t_g, int t_b)
+    void IAnnotation::setColor(int t_r, int t_g, int t_b)
     {
         color_.red = t_r;
         color_.green = t_g;
         color_.blue = t_b;
     }
 
-    void IBasicPlot::setColor(ColorType t_color)
+    void IAnnotation::setColor(ColorType t_color)
     {
         color_ = t_color;
     }
 
-    int IBasicPlot::width()
+    int IAnnotation::width()
     {
         return width_;
     }
 
-    ColorType BasicPlot::IBasicPlot::color()
+    ColorType Annotation::IAnnotation::color()
     {
         return color_;
     }
 
-    void IBasicPlot::color(int &t_r, int &t_g, int &t_b)
+    void IAnnotation::color(int &t_r, int &t_g, int &t_b)
     {
         t_r = color_.red;
         t_g = color_.green;
@@ -50,7 +50,7 @@ namespace BasicPlot
     }
 
     Line::Line(double t_startX, double t_startY, double t_endX, double t_endY):
-        IBasicPlot (BasicPlotType::LINE),
+        IAnnotation (AnnotationType::LINE),
         startX_(t_startX),
         startY_(t_startY),
         endX_(t_endX),
@@ -60,7 +60,7 @@ namespace BasicPlot
     }
 
     Dot::Dot(double t_x, double t_y):
-        IBasicPlot (BasicPlotType::DOT),
+        IAnnotation (AnnotationType::DOT),
         x_(t_x),
         y_(t_y)
     {
@@ -68,7 +68,7 @@ namespace BasicPlot
     }
 
     Circle::Circle(double t_x, double t_y, int t_radius):
-        IBasicPlot (BasicPlotType::CIRCLE),
+        IAnnotation (AnnotationType::CIRCLE),
         x_(t_x),
         y_(t_y),
         radius_(t_radius)
@@ -77,7 +77,7 @@ namespace BasicPlot
     }
 
     Label::Label(std::string t_text, double t_x, double t_y):
-        IBasicPlot (BasicPlotType::LABEL),
+        IAnnotation (AnnotationType::LABEL),
         text_(t_text),
         x_(t_x),
         y_(t_y)
