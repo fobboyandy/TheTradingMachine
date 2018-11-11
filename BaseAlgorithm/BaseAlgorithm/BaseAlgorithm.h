@@ -29,18 +29,19 @@ extern "C" 																											\
 		std::shared_ptr<InteractiveBrokersClient> ibInst,															\
 		bool live) 																									\
 	{ 																												\
-		return PlayAlgorithmT<CLASSNAME>(dataInput, dataOut, ibInst, live);											\
+		return PlayAlgorithmT<CLASSNAME>(AlgorithmInstances, dataInput, dataOut, ibInst, live);						\
 	} 																												\
 																													\
 	__declspec(dllexport) bool StopAlgorithm(int instHandle) 														\
 	{ 																												\
-		return StopAlgorithmT<CLASSNAME>(instHandle);																\
+		return StopAlgorithmT<CLASSNAME>(AlgorithmInstances, instHandle);											\
 	} 																												\
 }
 
 // not really sure how to define these template functions outside of a macro
 template<class Algorithm>
 __declspec(dllexport) int PlayAlgorithmT(
+	std::unordered_map<int, std::unique_ptr<Algorithm>>& algorithmInstances,
 	std::string dataInput,
 	std::shared_ptr<PlotData>* dataOut,
 	std::shared_ptr<InteractiveBrokersClient> ibInst,
@@ -52,7 +53,7 @@ __declspec(dllexport) int PlayAlgorithmT(
 		auto newInstance = std::make_unique<Algorithm>(dataInput, ibInst, live);
 		*dataOut = newInstance->getPlotData();
 		newInstance->run();
-		AlgorithmInstances[uniqueInstanceHandles] = std::move(newInstance);
+		algorithmInstances[uniqueInstanceHandles] = std::move(newInstance);
 		return static_cast<int>(uniqueInstanceHandles++);
 	}
 	catch (const std::runtime_error&)
@@ -62,15 +63,18 @@ __declspec(dllexport) int PlayAlgorithmT(
 }
 
 template<class Algorithm>
-__declspec(dllexport) bool StopAlgorithmT(int instHandle)
+__declspec(dllexport) bool StopAlgorithmT(
+	std::unordered_map<int, std::unique_ptr<Algorithm>>& algorithmInstances,
+	int instHandle)
 {
-	if (AlgorithmInstances.find(instHandle) != AlgorithmInstances.end())
+	if (algorithmInstances.find(instHandle) != algorithmInstances.end())
 	{
-		AlgorithmInstances[instHandle]->stop();
-		AlgorithmInstances.erase(instHandle);
+		algorithmInstances[instHandle]->stop();
+		algorithmInstances.erase(instHandle);
 	}
 	return true;
 }
+
 #endif
 
 class BASEALGORITHMDLL BaseAlgorithm
