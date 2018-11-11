@@ -157,7 +157,6 @@ void TheTradingMachineTab::updatePlot(void)
     std::unique_lock<std::mutex> lock(plotData_->plotDataMtx);
 
     const size_t plotDataSz = plotData_->ticks.size();
-    plotActive_ = !plotData_->finished;
     // according to stl, "Concurrently accessing or modifying different elements is safe."
     // as long as other thread is always pushing to the end and we are accessing the middle,
     // the rule is satisfied

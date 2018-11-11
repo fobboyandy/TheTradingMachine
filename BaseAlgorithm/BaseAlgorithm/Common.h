@@ -2,6 +2,7 @@
 #include <functional>
 #include <vector>
 #include "Position.h"
+#include "Annotation.h"
 #include "../../InteractiveBrokersClient/InteractiveBrokersClient/InteractiveBrokersClient.h"
 #include "../../InteractiveBrokersClient/InteractiveBrokersApi/Tick.h"
 #include "../../InteractiveBrokersClient/InteractiveBrokersApi/bar.h"
