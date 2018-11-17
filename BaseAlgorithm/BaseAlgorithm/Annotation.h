@@ -59,6 +59,10 @@ namespace Annotation
 			t_b = color_.blue;
 		}
 
+        AnnotationType type()
+        {
+            return type_;
+        }
 	private:
 		const AnnotationType type_;
 		int width_;

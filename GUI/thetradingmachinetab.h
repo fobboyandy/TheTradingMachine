@@ -16,6 +16,7 @@
 #include "iplot.h"
 #include "candleplot.h"
 #include "volumeplot.h"
+#include "annotationplot.h"
 
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTab : public QWidget
@@ -66,6 +67,10 @@ private:
     int timeFrame_;
     CandleMaker candleMaker_;
     std::vector<double>::size_type lastPlotDataIndex_;
+    std::vector<double>::size_type lastAnnotationIndex_;
+
+    // annotations
+    std::unique_ptr<AnnotationPlot> candleAnnotationPlot_;
 
     //plot scale control
     bool autoScale_;

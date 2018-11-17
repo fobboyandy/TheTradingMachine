@@ -13,6 +13,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     timeFrame_(60),
     candleMaker_(timeFrame_),
     lastPlotDataIndex_(0),
+    lastAnnotationIndex_(0),
     autoScale_(true),
     plotActive_(false),
     valid_(false)
@@ -22,6 +23,8 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     // create basic plots
     candlePlot_ = std::make_unique<CandlePlot>(*plot_, *candleAxisRect_);
     volumePlot_ = std::make_unique<VolumePlot>(*volumeAxisRect_);
+
+    candleAnnotationPlot_ = std::make_unique<AnnotationPlot>(*candleAxisRect_->axis(QCPAxis::atBottom), *candleAxisRect_->axis(QCPAxis::atLeft));
 
     // prompt user for the input method. real time or historical ticks
     PlayDialog loadInput(this);
@@ -181,14 +184,16 @@ void TheTradingMachineTab::updatePlot(void)
         }
     }
 
+    // update new annotations
+    for(; lastAnnotationIndex_ < )
+    {
+
+    }
+
+
     if(autoScale_)
     {
         plot_->rescaleAxes();
-    }
-
-    if(!plotActive_)
-    {
-        replotTimer_->stop();
     }
 
     //replot should always be happening to update the drawing
