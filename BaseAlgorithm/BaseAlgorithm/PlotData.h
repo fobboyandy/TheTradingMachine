@@ -12,5 +12,5 @@ struct PlotData
 {
 	std::mutex plotDataMtx;
 	std::vector<Tick> ticks;
-	std::queue<std::shared_ptr<Annotation::IAnnotation>> annotations;
+    std::vector<std::shared_ptr<Annotation::IAnnotation>> annotations;
 };

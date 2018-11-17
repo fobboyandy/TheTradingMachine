@@ -160,6 +160,7 @@ void TheTradingMachineTab::updatePlot(void)
     std::unique_lock<std::mutex> lock(plotData_->plotDataMtx);
 
     const size_t plotDataSz = plotData_->ticks.size();
+    const size_t annotationDataSz = plotData_->annotations.size();
     // according to stl, "Concurrently accessing or modifying different elements is safe."
     // as long as other thread is always pushing to the end and we are accessing the middle,
     // the rule is satisfied
@@ -185,11 +186,10 @@ void TheTradingMachineTab::updatePlot(void)
     }
 
     // update new annotations
-    for(; lastAnnotationIndex_ < )
+    for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
     {
-
+        candleAnnotationPlot_->addAnnotation(plotData_->annotations[lastAnnotationIndex_]);
     }
-
 
     if(autoScale_)
     {
