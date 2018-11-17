@@ -10,16 +10,13 @@ CandlePlot::CandlePlot(QCustomPlot& parentPlot, QCPAxisRect& axisRect):
     parentPlot_(parentPlot),
     axisRect_(axisRect),
     candleBars_(new QCPFinancial(axisRect.axis(QCPAxis::atBottom), axisRect.axis(QCPAxis::atLeft))),
-    dataContainer_(new QCPFinancialDataContainer),
     size_(0)
 {
-    candleBars_->setData(dataContainer_);
     candleBars_->setWidthType(QCPFinancial::WidthType::wtPlotCoords);
     candleBars_->setWidth(60);
 
     parentPlot_.setContextMenuPolicy(Qt::CustomContextMenu);
     connect(&parentPlot_, &QCustomPlot::customContextMenuRequested, this, &CandlePlot::menuShowSlot);
-
 }
 
 CandlePlot::~CandlePlot()
@@ -28,8 +25,8 @@ CandlePlot::~CandlePlot()
 
 void CandlePlot::updatePlotAdd(const time_t candleTime, const Bar &candle)
 {
-    // add a new bar volume and candlesticks
-    dataContainer_->add(QCPFinancialData(candleTime, candle.open, candle.high, candle.low, candle.close));
+    // add a new bar
+    candleBars_->addData(candleTime, candle.open, candle.high, candle.low, candle.close);
     ++size_;
 
     // since activeIndicatorPlots_ entires map plottables to
@@ -75,7 +72,7 @@ void CandlePlot::updatePlotReplace(const time_t candleTime, const Bar &candle)
 {
     if(size_ > 0)
     {
-        dataContainer_->set(size_ - 1, QCPFinancialData(candleTime , candle.open, candle.high, candle.low, candle.close));
+        candleBars_->data()->set(size_ - 1, QCPFinancialData(candleTime , candle.open, candle.high, candle.low, candle.close));
 
         std::unordered_set<std::shared_ptr<IPlot>> updatedIndicators;
         // update all the indicators belonging to this plot
@@ -111,10 +108,14 @@ void CandlePlot::updatePlotReplace(const time_t candleTime, const Bar &candle)
     }
 }
 
+
+// keep the indicatorPlot up to date with all the candles we currently have
+// this is used when we add an indicator after a graph has started
+// for a while already. we still want to be able to plot the indicator for
+// the previous candles
 void CandlePlot::pastCandlesPlotUpdate(std::shared_ptr<IPlot> iplot)
 {
-    // keep the indicatorPlot up to date with all the candles we currently have
-    for(auto& it: *dataContainer_)
+    for(auto& it: *candleBars_->data())
     {
         switch(iplot->valueType)
         {

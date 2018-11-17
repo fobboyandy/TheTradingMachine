@@ -38,9 +38,6 @@ private:
     // graph
     QCPFinancial* candleBars_;
 
-    // data container
-    QSharedPointer<QCPFinancialDataContainer> dataContainer_;
-
     // to create a new indicator entry, we first instantiate an iplot and get the
     // associated plottables. we create an entry and map the plottable to the new iplot.
     // when we select a graph in qcp for removal, we first get back a qcpabstractplottable

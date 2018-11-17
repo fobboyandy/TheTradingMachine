@@ -3,10 +3,8 @@
 VolumePlot::VolumePlot(QCPAxisRect &axisRect):
     axisRect_(axisRect),
     volumeBars_(new QCPBars(axisRect.axis(QCPAxis::atBottom), axisRect.axis(QCPAxis::atLeft))),
-    dataContainer_(new QCPBarsDataContainer),
     size_(0)
 {
-    volumeBars_->setData(dataContainer_);
     volumeBars_->setWidthType(QCPBars::WidthType::wtPlotCoords);
     volumeBars_->setWidth(60);
 
@@ -23,7 +21,7 @@ VolumePlot::~VolumePlot()
 void VolumePlot::updatePlotAdd(const time_t candleTime, const Bar &candle)
 {
     // add a new bar volume and candlesticks
-    dataContainer_->add(QCPBarsData(candleTime, candle.volume));
+    volumeBars_->addData(candleTime, candle.volume);
     ++size_;
 
     // recursively update all the indicators belonging to this plot
@@ -40,7 +38,7 @@ void VolumePlot::updatePlotReplace(const time_t candleTime, const Bar &candle)
 {
     if(size_ > 0)
     {
-        dataContainer_->set(size_ - 1, QCPBarsData(candleTime, candle.volume));
+        volumeBars_->data()->set(size_ - 1, QCPBarsData(candleTime, candle.volume));
 
         // recursively update all the indicators belonging to this plot
         for(auto& activePlotIt: activeIndicatorPlots_)
@@ -61,7 +59,7 @@ void VolumePlot::rescaleValueAxisAutofit()
 void VolumePlot::addIndicator(IndicatorType indicatorType, std::unique_ptr<IPlot> indicatorPlot)
 {
     // keep the indicatorPlot up to date with all the candles we currently have
-    for(auto& it: *dataContainer_)
+    for(auto& it: *volumeBars_->data())
     {
         indicatorPlot->updatePlotAdd( static_cast<time_t>(it.key), it.value);
     }

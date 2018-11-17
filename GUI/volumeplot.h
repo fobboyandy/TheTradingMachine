@@ -28,9 +28,6 @@ private:
     // graph
     QCPBars* volumeBars_;
 
-    // data container
-    QSharedPointer<QCPBarsDataContainer> dataContainer_;
-
     // active indicators
     std::unordered_map<IndicatorType, std::list<std::unique_ptr<IPlot>>> activeIndicatorPlots_;
 
