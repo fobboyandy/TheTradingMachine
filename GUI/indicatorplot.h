@@ -5,12 +5,155 @@
 #include <array>
 #include "qcustomplot.h"
 #include "../Indicators/Indicators/Common.h"
-#include "iplot.h"
 #include <iostream>
+
+enum class IndicatorType
+{
+    CANDLEVOLUME,
+    ABS,
+    ACOS,
+    AD,
+    ADD,
+    ADOSC,
+    ADX,
+    ADXR,
+    AO,
+    APO,
+    AROON,
+    AROONOSC,
+    ASIN,
+    ATAN,
+    ATR,
+    AVGPRICE,
+    BBANDS,
+    BOP,
+    CCI,
+    CEIL,
+    CMO,
+    COS,
+    COSH,
+    CROSSANY,
+    CROSSOVER,
+    CVI,
+    DECAY,
+    DEMA,
+    DI,
+    DIV,
+    DM,
+    DPO,
+    DX,
+    EDECAY,
+    EMA,
+    EMV,
+    EXP,
+    FISHER,
+    FLOOR,
+    FOSC,
+    HMA,
+    KAMA,
+    KVO,
+    LAG,
+    LINREG,
+    LINREGINTERCEPT,
+    LINREGSLOPE,
+    LN,
+    LOG10,
+    MACD,
+    MARKETFI,
+    MASS,
+    MAX,
+    MD,
+    MEDPRICE,
+    MFI,
+    MIN,
+    MOM,
+    MSW,
+    MUL,
+    NATR,
+    NVI,
+    OBV,
+    PPO,
+    PSAR,
+    PVI,
+    QSTICK,
+    ROC,
+    ROCR,
+    ROUND,
+    RSI,
+    SIN,
+    SINH,
+    SMA,
+    SQRT,
+    STDDEV,
+    STDERR,
+    STOCH,
+    STOCHRSI,
+    SUB,
+    SUM,
+    TAN,
+    TANH,
+    TEMA,
+    TODEG,
+    TORAD,
+    TR,
+    TRIMA,
+    TRIX,
+    TRUNC,
+    TSF,
+    TYPPRICE,
+    ULTOSC,
+    VAR,
+    VHF,
+    VIDYA,
+    VOLATILITY,
+    VOSC,
+    VWMA,
+    WAD,
+    WCPRICE,
+    WILDERS,
+    WILLR,
+    WMA,
+    ZLEMA
+};
+
+enum class OhlcType
+{
+    OPEN,
+    HIGH,
+    LOW,
+    CLOSE,
+    VOLUME,
+    VALUE
+};
+
+enum class IndicatorDisplayType
+{
+    SIMPLE,
+    INDICATOR,
+    OVERLAY,
+    MATH
+};
+
+class IIndicatorPlot
+{
+public:
+    IIndicatorPlot(){}
+    virtual ~IIndicatorPlot(){}
+    // interface for updating the plot
+    virtual void updatePlotAdd(const time_t candleTime, double value) = 0;
+    virtual void updatePlotReplace(const time_t candleTime, double value) = 0;
+    virtual void rescaleValueAxisAutofit() = 0;
+    virtual std::list<QCPAbstractPlottable*> getPlottables(void) = 0;
+
+    // indicates which value this plot monitors.
+    // o/h/l/c, volume, or just value.
+    OhlcType valueType;
+    IndicatorDisplayType displayType;
+};
 
 // Templatize for indicators
 template <typename T>
-class IndicatorPlot : public IPlot
+class IndicatorPlot : public IIndicatorPlot
 {
 public:
     IndicatorPlot(QCPAxisRect& axisRect, std::unique_ptr<T> indicator, OhlcType type, IndicatorDisplayType display);

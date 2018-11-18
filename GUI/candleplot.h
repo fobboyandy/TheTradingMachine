@@ -3,19 +3,21 @@
 
 #include "qcustomplot.h"
 #include "../InteractiveBrokersApi/bar.h"
-#include "iplot.h"
+#include "indicatorplot.h"
+#include "baseplot.h"
 #include <unordered_map>
 #include <ctime>
 
-class CandlePlot : public QObject
+class CandlePlot : public BasePlot
 {
     Q_OBJECT
 public:
-    CandlePlot(QCustomPlot& parentPlot, QCPAxisRect& axisRect);
-    ~CandlePlot() ;
+    CandlePlot(QCustomPlot& parentPlot);
+    ~CandlePlot() override;
     void updatePlotAdd(const time_t candleTime, const Bar &candle);
     void updatePlotReplace(const time_t candleTime, const Bar &candle);
-    void pastCandlesPlotUpdate(std::shared_ptr<IPlot> iplot);
+
+    void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot);
 
     void rescaleValueAxisAutofit();
     void indicatorSelectionMenu(QPoint pos);
@@ -29,12 +31,6 @@ public:
     void indicatorLaunch(OhlcType valueType, IndicatorDisplayType displayType, Args... args);
 
 private:
-    // keep a reference to the parent plot to remove an indicator
-    QCustomPlot& parentPlot_;
-
-    // axisRect ref
-    QCPAxisRect& axisRect_;
-
     // graph
     QCPFinancial* candleBars_;
 
@@ -44,13 +40,14 @@ private:
     // pointer from qcustomplot we can use this pointer to map to the iplot that it
     // corresponds to and remove the entry. refer to showMenu
     // we use a shared_ptr for multiple instances to the same iplot
-    std::unordered_map<QCPAbstractPlottable*, std::shared_ptr<IPlot>> activeIndicatorPlots_;
+    std::unordered_map<QCPAbstractPlottable*, std::shared_ptr<IIndicatorPlot>> activeIndicatorPlots_;
 
     int size_;
 
 private slots:
     void menuShowSlot(QPoint pos);
     void plotSelectslot(bool selected);
+    void xAxisChanged(QCPRange range) override;
 
 };
 #endif // CANDLEPLOT_H

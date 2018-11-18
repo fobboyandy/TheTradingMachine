@@ -13,7 +13,6 @@
 #include "CandleMaker.h"
 #include "../InteractiveBrokersClient/InteractiveBrokersClient/InteractiveBrokersClient.h"
 #include "../BaseAlgorithm/BaseAlgorithm/PlotData.h"
-#include "iplot.h"
 #include "candleplot.h"
 #include "volumeplot.h"
 #include "annotationplot.h"
@@ -56,21 +55,14 @@ private:
     std::shared_ptr<InteractiveBrokersClient> client_;
     std::shared_ptr<PlotData> plotData_;
 
-    // upper and lower axis rect. upper for candle lower for volume
-    QCPAxisRect* candleAxisRect_;
-    QCPAxisRect* volumeAxisRect_;
     std::unique_ptr<CandlePlot> candlePlot_;
     std::unique_ptr<VolumePlot> volumePlot_;
 
     // candle data
     Bar currentCandle_;
-    int timeFrame_;
     CandleMaker candleMaker_;
     std::vector<double>::size_type lastPlotDataIndex_;
     std::vector<double>::size_type lastAnnotationIndex_;
-
-    // annotations
-    std::unique_ptr<AnnotationPlot> candleAnnotationPlot_;
 
     //plot scale control
     bool autoScale_;

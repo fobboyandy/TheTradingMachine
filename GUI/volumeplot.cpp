@@ -1,16 +1,17 @@
 #include "volumeplot.h"
 
-VolumePlot::VolumePlot(QCPAxisRect &axisRect):
-    axisRect_(axisRect),
-    volumeBars_(new QCPBars(axisRect.axis(QCPAxis::atBottom), axisRect.axis(QCPAxis::atLeft))),
-    size_(0)
+VolumePlot::VolumePlot(QCustomPlot& t_parentPlot):
+    BasePlot(t_parentPlot)
 {
+    volumeBars_ = new QCPBars(axisRect_.axis(QCPAxis::atBottom), axisRect_.axis(QCPAxis::atLeft));
     volumeBars_->setWidthType(QCPBars::WidthType::wtPlotCoords);
     volumeBars_->setWidth(60);
 
     // set volume bars color
     volumeBars_->setPen(Qt::NoPen);
     volumeBars_->setBrush(QColor(30, 144, 255));
+
+    size_ = 0;
 }
 
 VolumePlot::~VolumePlot()
@@ -56,7 +57,7 @@ void VolumePlot::rescaleValueAxisAutofit()
     volumeBars_->rescaleValueAxis(false, true);
 }
 
-void VolumePlot::addIndicator(IndicatorType indicatorType, std::unique_ptr<IPlot> indicatorPlot)
+void VolumePlot::addIndicator(IndicatorType indicatorType, std::unique_ptr<IIndicatorPlot> indicatorPlot)
 {
     // keep the indicatorPlot up to date with all the candles we currently have
     for(auto& it: *volumeBars_->data())

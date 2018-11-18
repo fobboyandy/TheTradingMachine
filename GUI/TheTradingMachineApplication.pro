@@ -37,7 +37,8 @@ SOURCES += \
     candleplot.cpp \
     volumeplot.cpp \
     indicatordialog.cpp \
-    annotationplot.cpp
+    annotationplot.cpp \
+    baseplot.cpp
 
 HEADERS += \
         qcustomplot.h \
@@ -48,13 +49,13 @@ HEADERS += \
     ../BaseAlgorithm/BaseAlgorithm/PlotData.h \
     ../Indicators/Indicators/Common.h \
     ../Indicators/Indicators/SimpleMovingAverage.h \
-    iplot.h \
     indicatorplot.h \
     candleplot.h \
     volumeplot.h \
     indicatordialog.h \
     annotationplot.h \
-    ../BaseAlgorithm/BaseAlgorithm/Annotation.h
+    ../BaseAlgorithm/BaseAlgorithm/Annotation.h \
+    baseplot.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \

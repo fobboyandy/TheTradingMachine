@@ -10,21 +10,9 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     replotTimer_(new QTimer(this)),
     api_(api),
     client_(client),
-    timeFrame_(60),
-    candleMaker_(timeFrame_),
-    lastPlotDataIndex_(0),
-    lastAnnotationIndex_(0),
-    autoScale_(true),
-    plotActive_(false),
-    valid_(false)
+    candleMaker_(60)
 {
-    // this sets up the axis rect necessary for our plots
-    layoutSetup();
-    // create basic plots
-    candlePlot_ = std::make_unique<CandlePlot>(*plot_, *candleAxisRect_);
-    volumePlot_ = std::make_unique<VolumePlot>(*volumeAxisRect_);
-
-    candleAnnotationPlot_ = std::make_unique<AnnotationPlot>(*candleAxisRect_->axis(QCPAxis::atBottom), *candleAxisRect_->axis(QCPAxis::atLeft));
+    valid_ = false;
 
     // prompt user for the input method. real time or historical ticks
     PlayDialog loadInput(this);
@@ -32,19 +20,38 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     auto input = loadInput.getInput();
     name_ = formatTabName(input);
 
-    if(name_.size() > 0)
+    if(name_.size() == 0)
     {
-        //if real time, check for ib connection
-        // instantiate the algorithm for this ticker
-        algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_, false);
-        if(algorithmHandle_ != -1)
-        {
-            // tab should only be valid if play algorithm and getplotdata worked
-            valid_ = true;
-            connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
-            replotTimer_->start(50);
-        }
+        return;
     }
+
+    //if real time, check for ib connection
+    // instantiate the algorithm for this ticker
+    algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_, false);
+    if(algorithmHandle_ != -1)
+    {
+        // tab should only be valid if play algorithm and getplotdata worked
+        valid_ = true;
+        connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
+    }
+
+    // this sets up the widget grid and qcustomplot instance
+    layoutSetup();
+
+    // create basic plots
+    candlePlot_ = std::make_unique<CandlePlot>(*plot_);
+    volumePlot_ = std::make_unique<VolumePlot>(*plot_);
+
+    // initialize members here instead of the initializer list
+    // to keep the initializer list shorter. shouldn't be too much
+    // extra overhead
+    autoScale_ = true;
+    plotActive_ = false;
+    lastPlotDataIndex_ = 0;
+    lastAnnotationIndex_ = 0;
+
+    // start the plotting
+    replotTimer_->start(50);
 }
 
 TheTradingMachineTab::~TheTradingMachineTab()
@@ -80,47 +87,13 @@ void TheTradingMachineTab::layoutSetup()
     plot_->setInteraction(QCP::iRangeDrag);
     plot_->setInteraction(QCP::iRangeZoom);
     plot_->setInteraction(QCP::Interaction::iSelectPlottables);
+
+    // each plot takes a new row and are aligned vertically
+    plot_->plotLayout()->setFillOrder(QCPLayoutGrid::FillOrder::foColumnsFirst);
+    plot_->plotLayout()->setWrap(1);
+
+    // add our qcustomplot widget to the tab.
     gridLayout_->addWidget(plot_, 0, 0, 1, 1);
-
-    // create a time axis. we don't plan on modifying
-    // the time axis so we dont need to keep the handle.
-    // once axis rect has ownership, it will do the clean up
-    auto xTimeAxis = QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime);
-    xTimeAxis->setDateTimeFormat("hh:mm:ss");
-
-    // set up candle rect
-    candleAxisRect_ = new QCPAxisRect(plot_);
-    candleAxisRect_->setRangeDrag(Qt::Horizontal);
-    candleAxisRect_->setRangeZoom(Qt::Horizontal);
-    candleAxisRect_->axis(QCPAxis::atBottom)->setTicker(xTimeAxis);
-    plot_->plotLayout()->addElement(0, 0, candleAxisRect_);
-
-    // set up volume rect
-    volumeAxisRect_ = new QCPAxisRect(plot_);
-    volumeAxisRect_->setRangeDrag(Qt::Horizontal);
-    volumeAxisRect_->setRangeZoom(Qt::Horizontal);
-    volumeAxisRect_->setMaximumSize(QSize(QWIDGETSIZE_MAX, 100));
-    volumeAxisRect_->axis(QCPAxis::atBottom)->setLayer("axes");
-    volumeAxisRect_->axis(QCPAxis::atBottom)->grid()->setLayer("grid");
-    volumeAxisRect_->axis(QCPAxis::atBottom)->setTicker(xTimeAxis);
-    plot_->plotLayout()->addElement(1, 0, volumeAxisRect_);
-
-    // set up the spacing
-    plot_->plotLayout()->setRowSpacing(0);
-    volumeAxisRect_->setAutoMargins(QCP::msLeft|QCP::msRight|QCP::msBottom);
-    volumeAxisRect_->setMargins(QMargins(0, 0, 0, 0));
-
-    // make axis rects' left side line up:
-    QCPMarginGroup *group = new QCPMarginGroup(plot_);
-    candleAxisRect_->setMarginGroup(QCP::msLeft|QCP::msRight, group);
-    volumeAxisRect_->setMarginGroup(QCP::msLeft|QCP::msRight, group);
-
-    // make upper and lower rects scroll together
-    // all active plots range will be notified of the change since they are registered
-    // to volume and candle rect axes
-    connect(candleAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), volumeAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
-    connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), candleAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
-    connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
 }
 
 QString TheTradingMachineTab::formatTabName(const QString &input)
@@ -186,10 +159,10 @@ void TheTradingMachineTab::updatePlot(void)
     }
 
     // update new annotations
-    for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
-    {
-        candleAnnotationPlot_->addAnnotation(plotData_->annotations[lastAnnotationIndex_]);
-    }
+//    for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
+//    {
+//        candleAnnotationPlot_->addAnnotation(plotData_->annotations[lastAnnotationIndex_]);
+//    }
 
     if(autoScale_)
     {
