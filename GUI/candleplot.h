@@ -14,12 +14,11 @@ class CandlePlot : public BasePlot
 public:
     CandlePlot(QCustomPlot& parentPlot);
     ~CandlePlot() override;
-    void updatePlotAdd(const time_t candleTime, const Bar &candle);
-    void updatePlotReplace(const time_t candleTime, const Bar &candle);
+    void updatePlotAdd(const time_t candleTime, const Bar &candle) override;
+    void updatePlotReplace(const time_t candleTime, const Bar &candle) override;
+    void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot) override;
+    void rescalePlot() override;
 
-    void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot);
-
-    void rescaleValueAxisAutofit();
     void indicatorSelectionMenu(QPoint pos);
     void removeIndicatorMenu(QPoint pos, QList<QCPAbstractPlottable*> plottables);
 

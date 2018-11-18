@@ -139,59 +139,66 @@ void CandlePlot::pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot)
     }
 }
 
-void CandlePlot::rescaleValueAxisAutofit()
+void CandlePlot::rescalePlot()
 {
-    candleBars_->rescaleValueAxis(false, true);
-
-    // we need to rescale each graph with respect to
-    // their axes. For each axis, we need to autofit
-    // all (can be more than one) the graphs. We iterate
-    // through the existing axies and find the max range
-    // one by one.
-
-    //initialize maxRange to the candle plot
-    bool foundRange = false;
-    QCP::SignDomain signDomain = QCP::sdBoth;
-    if (axisRect_.axis(QCPAxis::atLeft)->scaleType() == QCPAxis::stLogarithmic)
+    if(autoScaleKeyAxis_)
     {
-        signDomain = (axisRect_.axis(QCPAxis::atLeft)->range().upper < 0 ? QCP::sdNegative : QCP::sdPositive);
+        axisRect_.axis(QCPAxis::AxisType::atBottom)->rescale();
+        axisRect_.axis(QCPAxis::AxisType::atLeft)->rescale();
     }
-    auto maxRange = candleBars_->getValueRange(foundRange, signDomain, axisRect_.axis(QCPAxis::atBottom)->range());
-    //valueAxis->setRange(newRange);
-
-    // get all our value axes
-    auto axes = axisRect_.axes(QCPAxis::atLeft | QCPAxis::atRight);
-    for(auto& axesIt: axes)
+    else
     {
-        // graphs in this axis
-        auto commonGraphs = axesIt->graphs();
-        for(auto& commonGraphsIt : commonGraphs)
+        candleBars_->rescaleValueAxis(false, true);
+
+        // we need to rescale each graph with respect to
+        // their axes. For each axis, we need to autofit
+        // all (can be more than one) the graphs. We iterate
+        // through the existing axies and find the max range
+        // one by one.
+
+        //initialize maxRange to the candle plot
+        bool foundRange = false;
+        QCP::SignDomain signDomain = QCP::sdBoth;
+        if (axisRect_.axis(QCPAxis::atLeft)->scaleType() == QCPAxis::stLogarithmic)
         {
-            foundRange = false;
-            signDomain = QCP::sdBoth;
-            if (axisRect_.axis(QCPAxis::atLeft)->scaleType() == QCPAxis::stLogarithmic)
-            {
-                signDomain = (axisRect_.axis(QCPAxis::atLeft)->range().upper < 0 ? QCP::sdNegative : QCP::sdPositive);
-            }
-
-            // find the range for the current visible key range
-            auto graphRange = commonGraphsIt->getValueRange(foundRange, signDomain, axisRect_.axis(QCPAxis::atBottom)->range());
-
-            // find the max range
-            if(graphRange.lower < maxRange.lower)
-            {
-                maxRange.lower = graphRange.lower;
-            }
-
-            if(graphRange.upper > maxRange.upper)
-            {
-                maxRange.upper = graphRange.upper;
-            }
+            signDomain = (axisRect_.axis(QCPAxis::atLeft)->range().upper < 0 ? QCP::sdNegative : QCP::sdPositive);
         }
+        auto maxRange = candleBars_->getValueRange(foundRange, signDomain, axisRect_.axis(QCPAxis::atBottom)->range());
+        //valueAxis->setRange(newRange);
 
-        // rescale the current axis to the max range
-        axesIt->setRange(maxRange);
+        // get all our value axes
+        auto axes = axisRect_.axes(QCPAxis::atLeft | QCPAxis::atRight);
+        for(auto& axesIt: axes)
+        {
+            // graphs in this axis
+            auto commonGraphs = axesIt->graphs();
+            for(auto& commonGraphsIt : commonGraphs)
+            {
+                foundRange = false;
+                signDomain = QCP::sdBoth;
+                if (axisRect_.axis(QCPAxis::atLeft)->scaleType() == QCPAxis::stLogarithmic)
+                {
+                    signDomain = (axisRect_.axis(QCPAxis::atLeft)->range().upper < 0 ? QCP::sdNegative : QCP::sdPositive);
+                }
 
+                // find the range for the current visible key range
+                auto graphRange = commonGraphsIt->getValueRange(foundRange, signDomain, axisRect_.axis(QCPAxis::atBottom)->range());
+
+                // find the max range
+                if(graphRange.lower < maxRange.lower)
+                {
+                    maxRange.lower = graphRange.lower;
+                }
+
+                if(graphRange.upper > maxRange.upper)
+                {
+                    maxRange.upper = graphRange.upper;
+                }
+            }
+
+            // rescale the current axis to the max range
+            axesIt->setRange(maxRange);
+        }
     }
 }
 
@@ -465,7 +472,20 @@ void CandlePlot::plotSelectslot(bool selected)
 
 void CandlePlot::xAxisChanged(QCPRange range)
 {
+    // compare the range of our zoom with our data.
+    // if the zoom contains all the data, then autoscale
+    if(floor(range.lower) <= candleBars_->data()->at(0)->mainKey() &&
+        ceil(range.upper) >= candleBars_->data()->at(candleBars_->data()->size() - 1)->mainKey())
+    {
+        autoScaleKeyAxis_ = true;
+    }
+    else
+    {
+        autoScaleKeyAxis_ = false;
+    }
 
+    //rescale our plot.
+    rescalePlot();
 }
 
 template<typename IndicatorType, typename... Args>

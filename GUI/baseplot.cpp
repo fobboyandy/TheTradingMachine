@@ -52,25 +52,10 @@ BasePlot::BasePlot(QCustomPlot &t_parentPlot):
     }
 
     connect(axisRect_.axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
+    autoScaleKeyAxis_ = true;
 }
 
 BasePlot::~BasePlot()
 {
 
-}
-
-void BasePlot::xAxisChanged(QCPRange range)
-{
-//    axisRect_.plottables().first()->
-//    if(floor(range.lower) <= candlePlot_->lowerRange() &&
-//        ceil(range.upper) >= candlePlot_->upperRange())
-//    {
-//        autoScale_ = true;
-//    }
-//    else
-//    {
-//        autoScale_ = false;
-//        //rescale everything
-//        candlePlot_->rescaleValueAxisAutofit();
-//    }
 }

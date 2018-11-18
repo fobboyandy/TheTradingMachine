@@ -13,15 +13,19 @@ class VolumePlot : public BasePlot
     Q_OBJECT
 public:
     VolumePlot(QCustomPlot& t_parentPlot);
-    ~VolumePlot() ;
-    void updatePlotAdd(const time_t candleTime, const Bar &candle);
-    void updatePlotReplace(const time_t candleTime, const Bar &candle);
-    void rescaleValueAxisAutofit();
+    ~VolumePlot() override;
+    void updatePlotAdd(const time_t candleTime, const Bar &candle) override;
+    void updatePlotReplace(const time_t candleTime, const Bar &candle) override;
+    void rescalePlot() override;
+    void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot) override;
     void addIndicator(IndicatorType indicatorType, std::unique_ptr<IIndicatorPlot> indicatorPlot);
 
     double lowerRange();
     double upperRange();
     int size();
+
+private slots:
+    void xAxisChanged(QCPRange range) override;
 
 private:
     // graph

@@ -55,8 +55,7 @@ private:
     std::shared_ptr<InteractiveBrokersClient> client_;
     std::shared_ptr<PlotData> plotData_;
 
-    std::unique_ptr<CandlePlot> candlePlot_;
-    std::unique_ptr<VolumePlot> volumePlot_;
+    std::list<std::shared_ptr<BasePlot>> plots_;
 
     // candle data
     Bar currentCandle_;

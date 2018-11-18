@@ -39,8 +39,8 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     layoutSetup();
 
     // create basic plots
-    candlePlot_ = std::make_unique<CandlePlot>(*plot_);
-    volumePlot_ = std::make_unique<VolumePlot>(*plot_);
+    plots_.push_back(std::make_unique<CandlePlot>(*plot_));
+    plots_.push_back(std::make_unique<VolumePlot>(*plot_));
 
     // initialize members here instead of the initializer list
     // to keep the initializer list shorter. shouldn't be too much
@@ -118,14 +118,18 @@ QString TheTradingMachineTab::formatTabName(const QString &input)
 
 void TheTradingMachineTab::updatePlotNewCandle(const time_t candleTime, const Bar &candle)
 {
-    candlePlot_->updatePlotAdd(candleTime, candle);
-    volumePlot_->updatePlotAdd(candleTime, candle);
+    for(auto plot: plots_)
+    {
+        plot->updatePlotAdd(candleTime, candle);
+    }
 }
 
 void TheTradingMachineTab::updatePlotReplaceCandle(const time_t candleTime, const Bar &candle)
 {
-    candlePlot_->updatePlotReplace(candleTime, candle);
-    volumePlot_->updatePlotReplace(candleTime, candle);
+    for(auto plot: plots_)
+    {
+        plot->updatePlotReplace(candleTime, candle);
+    }
 }
 
 void TheTradingMachineTab::updatePlot(void)
@@ -164,9 +168,9 @@ void TheTradingMachineTab::updatePlot(void)
 //        candleAnnotationPlot_->addAnnotation(plotData_->annotations[lastAnnotationIndex_]);
 //    }
 
-    if(autoScale_)
+    for(auto plot: plots_)
     {
-        plot_->rescaleAxes();
+        plot->rescalePlot();
     }
 
     //replot should always be happening to update the drawing
@@ -175,15 +179,15 @@ void TheTradingMachineTab::updatePlot(void)
 
 void TheTradingMachineTab::xAxisChanged(QCPRange range)
 {
-    if(floor(range.lower) <= candlePlot_->lowerRange() &&
-        ceil(range.upper) >= candlePlot_->upperRange())
-    {
-        autoScale_ = true;
-    }
-    else
-    {
-        autoScale_ = false;
-        //rescale everything
-        candlePlot_->rescaleValueAxisAutofit();
-    }
+//    if(floor(range.lower) <= candlePlot_->lowerRange() &&
+//        ceil(range.upper) >= candlePlot_->upperRange())
+//    {
+//        autoScale_ = true;
+//    }
+//    else
+//    {
+//        autoScale_ = false;
+//        //rescale everything
+//        candlePlot_->rescaleValueAxisAutofit();
+//    }
 }

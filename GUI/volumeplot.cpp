@@ -52,9 +52,14 @@ void VolumePlot::updatePlotReplace(const time_t candleTime, const Bar &candle)
     }
 }
 
-void VolumePlot::rescaleValueAxisAutofit()
+void VolumePlot::rescalePlot()
 {
     volumeBars_->rescaleValueAxis(false, true);
+}
+
+void VolumePlot::pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot)
+{
+
 }
 
 void VolumePlot::addIndicator(IndicatorType indicatorType, std::unique_ptr<IIndicatorPlot> indicatorPlot)
@@ -82,3 +87,20 @@ int VolumePlot::size()
     return size_;
 }
 
+void VolumePlot::xAxisChanged(QCPRange range)
+{
+    // compare the range of our zoom with our data.
+    // if the zoom contains all the data, then autoscale
+    if(floor(range.lower) <= volumeBars_->data()->at(0)->mainKey() &&
+        ceil(range.upper) >= volumeBars_->data()->at(volumeBars_->data()->size() - 1)->mainKey())
+    {
+        autoScaleKeyAxis_ = true;
+    }
+    else
+    {
+        autoScaleKeyAxis_ = false;
+    }
+
+    //rescale our plot.
+    rescalePlot();
+}
