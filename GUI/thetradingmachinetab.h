@@ -81,7 +81,6 @@ private:
 
 private slots:
     void updatePlot(void);
-    void xAxisChanged(QCPRange range);
 
 };
 

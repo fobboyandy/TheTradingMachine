@@ -88,7 +88,7 @@ void TheTradingMachineTab::layoutSetup()
     plot_->setInteraction(QCP::iRangeZoom);
     plot_->setInteraction(QCP::Interaction::iSelectPlottables);
 
-    // each plot takes a new row and are aligned vertically
+    // make each plot take a new row so that they are aligned vertically
     plot_->plotLayout()->setFillOrder(QCPLayoutGrid::FillOrder::foColumnsFirst);
     plot_->plotLayout()->setWrap(1);
 
@@ -175,19 +175,4 @@ void TheTradingMachineTab::updatePlot(void)
 
     //replot should always be happening to update the drawing
     plot_->replot();
-}
-
-void TheTradingMachineTab::xAxisChanged(QCPRange range)
-{
-//    if(floor(range.lower) <= candlePlot_->lowerRange() &&
-//        ceil(range.upper) >= candlePlot_->upperRange())
-//    {
-//        autoScale_ = true;
-//    }
-//    else
-//    {
-//        autoScale_ = false;
-//        //rescale everything
-//        candlePlot_->rescaleValueAxisAutofit();
-//    }
 }

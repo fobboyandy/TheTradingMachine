@@ -36,7 +36,6 @@ BasePlot::BasePlot(QCustomPlot &t_parentPlot):
     }
     axisRect_.setMarginGroup(QCP::msRight, rightMarginGroup);
 
-
     // make all rects scroll together in xAxis
     // by connecting this axisRect's xAxis signal to
     // the existing rects
