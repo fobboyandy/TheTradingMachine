@@ -444,7 +444,7 @@ void CandlePlot::menuShowSlot(QPoint pos)
     }
 }
 
-void CandlePlot::plotSelectslot(bool selected)
+void CandlePlot::plotSelectSlot(bool selected)
 {
     // mark the other graphs as selected as well
     if(selected)
@@ -500,6 +500,6 @@ void CandlePlot::indicatorLaunch(OhlcType valueType, IndicatorDisplayType displa
     for(auto& plottable: plottables)
     {
         activeIndicatorPlots_[plottable] = plot;
-        connect(plottable, SIGNAL(selectionChanged(bool)), this, SLOT(plotSelectslot(bool)));
+        connect(plottable, SIGNAL(selectionChanged(bool)), this, SLOT(plotSelectSlot(bool)));
     }
 }

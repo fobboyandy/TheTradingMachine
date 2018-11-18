@@ -166,8 +166,6 @@ public:
 
 private:
     QCPAxisRect& axisRect_;
-    QCPAxis* keyAxis_;
-    QCPAxis* valueAxis_;
 
     std::array<QCPGraph*, T::SIZE> graphs_; // one graph for each output from indicator class
     std::array<QSharedPointer<QCPDataContainer<QCPGraphData>>, T::SIZE> graphDataContainers_;
@@ -188,7 +186,8 @@ IndicatorPlot<T>::IndicatorPlot(QCPAxisRect &axisRect, std::unique_ptr<T> indica
     for(int i = 0; i < T::SIZE; ++i)
     {
         graphDataContainers_[i] = QSharedPointer<QCPDataContainer<QCPGraphData>>(new QCPDataContainer<QCPGraphData>);
-        keyAxis_ = axisRect_.axis(QCPAxis::atBottom);
+        QCPAxis* keyAxis_ = axisRect_.axis(QCPAxis::atBottom);
+        QCPAxis* valueAxis_ = nullptr;
 
         switch(display)
         {

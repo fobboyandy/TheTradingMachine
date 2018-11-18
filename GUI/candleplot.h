@@ -45,7 +45,7 @@ private:
 
 private slots:
     void menuShowSlot(QPoint pos);
-    void plotSelectslot(bool selected);
+    void plotSelectSlot(bool selected);
     void xAxisChanged(QCPRange range) override;
 
 };
