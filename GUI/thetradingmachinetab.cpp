@@ -162,12 +162,14 @@ void TheTradingMachineTab::updatePlot(void)
         }
     }
 
-    // update new annotations
-//    for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
-//    {
-//        candleAnnotationPlot_->addAnnotation(plotData_->annotations[lastAnnotationIndex_]);
-//    }
+    // update new annotations to candle plot for now
+    for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
+    {
+        plots_.front()->addAnnotation(plotData_->annotations[lastAnnotationIndex_]);
+    }
 
+    // rescale all the plots according to their own defined scaling
+    // function
     for(auto plot: plots_)
     {
         plot->rescalePlot();

@@ -58,3 +58,45 @@ BasePlot::~BasePlot()
 {
 
 }
+
+void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotation)
+{
+    switch(t_annotation->type())
+    {
+    case Annotation::AnnotationType::LINE:
+    {
+        auto newLineItem = new QCPItemLine(&parentPlot_);
+        auto lineAnnotation = std::dynamic_pointer_cast<Annotation::Line>(t_annotation);
+
+        // set to this axis rect
+        newLineItem->setClipToAxisRect(false);
+        newLineItem->start->setAxisRect(&axisRect_);
+        newLineItem->end->setAxisRect(&axisRect_);
+
+        // set coords
+        newLineItem->start->setCoords(lineAnnotation->startX_, lineAnnotation->startY_);
+        newLineItem->end->setCoords(lineAnnotation->endX_, lineAnnotation->endY_);
+    }
+        break;
+
+    case Annotation::AnnotationType::LABEL:
+    {
+
+    }
+        break;
+
+    case Annotation::AnnotationType::CIRCLE:
+    {
+
+    }
+        break;
+
+    case Annotation::AnnotationType::DOT:
+    {
+
+    }
+        break;
+
+    }
+
+}

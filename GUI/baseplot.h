@@ -4,6 +4,7 @@
 #include "qcustomplot.h"
 #include "indicatorplot.h"
 #include "../InteractiveBrokersClient/InteractiveBrokersApi/bar.h"
+#include "../BaseAlgorithm/BaseAlgorithm/Annotation.h"
 
 class BasePlot : public QObject
 {
@@ -15,7 +16,15 @@ public:
     virtual void updatePlotAdd(const time_t candleTime, const Bar &candle) = 0;
     virtual void updatePlotReplace(const time_t candleTime, const Bar &candle) = 0;
     virtual void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot) = 0;
+
+    // this is called periodically from an external event
+    // it must be implemented by the derived class to determine
+    // how to rescale its own plot
     virtual void rescalePlot() = 0;
+
+    // simply add the annotation to the default axis for now. later implementation will
+    // add the annotation to a chosen axis
+    void addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotation);
 
 private:
 
@@ -26,8 +35,9 @@ private slots:
     virtual void xAxisChanged(QCPRange range) = 0;
 
 protected:
-    // This is not a QT object. We simply allocate the object
-    // as a member instead of using pointers as in the QT model
+
+    // keeping a reference to the parentPlot because this object is not responsible
+    // of cleaning up dynamically allocated objects
     QCustomPlot& parentPlot_;
     QCPAxisRect axisRect_;
 
