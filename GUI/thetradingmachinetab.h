@@ -15,7 +15,6 @@
 #include "../BaseAlgorithm/BaseAlgorithm/PlotData.h"
 #include "candleplot.h"
 #include "volumeplot.h"
-#include "annotationplot.h"
 
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTab : public QWidget
