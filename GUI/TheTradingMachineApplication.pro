@@ -37,7 +37,6 @@ SOURCES += \
     candleplot.cpp \
     volumeplot.cpp \
     indicatordialog.cpp \
-    annotationplot.cpp \
     baseplot.cpp
 
 HEADERS += \
@@ -53,7 +52,6 @@ HEADERS += \
     candleplot.h \
     volumeplot.h \
     indicatordialog.h \
-    annotationplot.h \
     ../BaseAlgorithm/BaseAlgorithm/Annotation.h \
     baseplot.h
 
