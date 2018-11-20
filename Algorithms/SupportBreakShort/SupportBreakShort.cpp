@@ -1,5 +1,6 @@
 #include <memory>
 #include "SupportBreakShort.h"
+#include "../../BaseAlgorithm/BaseAlgorithm/Annotation.h"
 
 SupportBreakShort::SupportBreakShort(std::string input, std::shared_ptr<InteractiveBrokersClient> ibInst, bool live) :
 	BaseAlgorithm(input, ibInst, live),
@@ -15,6 +16,19 @@ SupportBreakShort::~SupportBreakShort()
 
 void SupportBreakShort::tickHandler(const Tick & tick)
 {
+
+	static bool fired = false;
+
+	if (!fired)
+	{
+		fired = true;
+		auto plotData = getPlotData();
+
+		//straight line from first candle to two minutes later
+		auto sampleLine = std::make_shared<Annotation::Line>(static_cast<double>(tick.time), tick.price, static_cast<double>(tick.time + 120), tick.price);
+		plotData->annotations.push_back(sampleLine);
+	}
+
 	// does nothing for now. all plot data is handled in base class
 
 	//Bar minuteBar;

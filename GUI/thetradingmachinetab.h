@@ -7,10 +7,14 @@
 #include <QTimer>
 #include <memory>
 #include <thread>
+#include <unordered_map>
+#include <list>
 #include "qcustomplot.h"
 #include "CandleMaker.h"
 #include "../InteractiveBrokersClient/InteractiveBrokersClient/InteractiveBrokersClient.h"
 #include "../BaseAlgorithm/BaseAlgorithm/PlotData.h"
+#include "candleplot.h"
+#include "volumeplot.h"
 
 // this is a tab set up for the tab pages in the trading machine
 class TheTradingMachineTab : public QWidget
@@ -38,6 +42,7 @@ public:
     bool valid() const;
 
 private:
+    // plot items
     QGridLayout *gridLayout_;
     QCustomPlot *plot_;
     QTimer* replotTimer_;
@@ -49,41 +54,33 @@ private:
     std::shared_ptr<InteractiveBrokersClient> client_;
     std::shared_ptr<PlotData> plotData_;
 
-    //inside candle graph rect
-    QCPAxisRect* candleSticksAxisRect_;
-    QCPFinancial* candleSticksGraph_;
-    QCPLegend* candleGraphLegend_;
-    QCPTextElement* candleGraphTitle;
-    QSharedPointer<QCPFinancialDataContainer> candleBarsDataContainer_;
+    std::list<std::shared_ptr<BasePlot>> plots_;
+
+    // candle data
     Bar currentCandle_;
-    int timeFrame_;
     CandleMaker candleMaker_;
     std::vector<double>::size_type lastPlotDataIndex_;
-    QCPLayoutInset* progressWindow_;
-
-    //inside volume graph rect
-    QCPAxisRect* volumeAxisRect_;
-    QCPBars* volumeBarsGraph_;
-    QSharedPointer<QCPBarsDataContainer> volumeBarsDataContainer_;
+    std::vector<double>::size_type lastAnnotationIndex_;
 
     //plot scale control
     bool autoScale_;
     bool plotActive_;
-
     bool valid_;
 
+    enum MenuType
+    {
+        CANDLE_MENU, VOLUME_MENU
+    };
 
 private:
-    void candleGraphSetup(void);
-    void volumeGraphSetup(void);
-    void spacingSetup(void);
-    void legendSetup(void);
-
+    void layoutSetup();
     QString formatTabName(const QString& input);
+    void updatePlotNewCandle(const time_t candleTime, const Bar &candle);
+    void updatePlotReplaceCandle(const time_t candleTime, const Bar &candle);
 
 private slots:
     void updatePlot(void);
-    void xAxisChanged(QCPRange range);
+
 };
 
 #endif // THETRADINGMACHINETAB_H

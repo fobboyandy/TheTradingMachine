@@ -1,26 +1,27 @@
 #pragma once
 #include "Common.h"
 
-class INDICATORSDLL SimpleMovingAverage
+class INDICATORSDLL BollingerBands
 {
 public:
+	BollingerBands(unsigned int period, double scale);
+	~BollingerBands();
 
 	// indices for output datapoints for this indicator
-	enum 
+	enum
 	{
-		MOVING_AVERAGE,
+		UPPER,
+		MIDDLE,
+		LOWER,
 		SIZE
 	};
 
 	using array_type = std::array<double, SIZE>;
 
-	SimpleMovingAverage(int period);
-	~SimpleMovingAverage();
-
 	array_type computeIndicatorPoint(const double sample);
 	array_type recomputeIndicatorPoint(const double sample);
 
 private:
-	class SimpleMovingAverageImpl;
-	SimpleMovingAverageImpl* impl_;
+	class BollingerBandsImpl;
+	BollingerBandsImpl* impl_;
 };

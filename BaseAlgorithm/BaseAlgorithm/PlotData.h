@@ -2,7 +2,6 @@
 #include <memory>
 #include <mutex>
 #include <vector>
-#include <string>
 #include <queue>
 #include "Common.h"
 
@@ -12,8 +11,6 @@
 struct PlotData
 {
 	std::mutex plotDataMtx;
-	bool finished;
-	std::queue<Tick> buffer;
 	std::vector<Tick> ticks;
-	std::vector<std::string> action;
+    std::vector<std::shared_ptr<Annotation::IAnnotation>> annotations;
 };

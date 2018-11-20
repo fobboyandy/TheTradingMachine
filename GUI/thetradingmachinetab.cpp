@@ -1,68 +1,57 @@
 #include "thetradingmachinetab.h"
 #include "CandleMaker.h"
 #include "playdialog.h"
-#include "../Indicators/Indicators/SimpleMovingAverage.h"
 #include <iostream>
+#include "../Indicators/Indicators/SimpleMovingAverage.h"
+#include "indicatorplot.h"
 
 TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<InteractiveBrokersClient> client, QWidget* parent) :
     QWidget(parent),
-    gridLayout_(nullptr),
-    plot_(nullptr),
     replotTimer_(new QTimer(this)),
     api_(api),
     client_(client),
-    plotData_(nullptr),
-    candleSticksAxisRect_(nullptr),
-    candleSticksGraph_(nullptr),
-    timeFrame_(60),
-    candleMaker_(timeFrame_),
-    lastPlotDataIndex_(0),
-    volumeAxisRect_(nullptr),
-    autoScale_(true),
-    plotActive_(false),
-    valid_(false)
+    candleMaker_(60)
 {
-    this->setObjectName(QStringLiteral("TheTradingMachineTab"));
-    gridLayout_ = new QGridLayout(this);
-    gridLayout_->setObjectName(QStringLiteral("gridLayout"));
-    plot_ = new QCustomPlot(this);
-    plot_->plotLayout()->clear(); //remove all layouts so we can start from scratch
-    plot_->setObjectName(QStringLiteral("plot"));
-    plot_->setInteraction(QCP::iRangeDrag);
-    plot_->setInteraction(QCP::iRangeZoom);
-    gridLayout_->addWidget(plot_, 0, 0, 1, 1);
-
-    candleGraphSetup();
-    volumeGraphSetup();
-    legendSetup();
-    spacingSetup();
-
-    // interconnect x axis ranges of main and bottom axis rects:
-    connect(candleSticksAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), volumeAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
-    connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), candleSticksAxisRect_->axis(QCPAxis::atBottom), SLOT(setRange(QCPRange)));
-    connect(volumeAxisRect_->axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
+    valid_ = false;
 
     // prompt user for the input method. real time or historical ticks
-    // std::wstring fpTest("..\\outputfiles\\Jul 19AMD.tickdat");
     PlayDialog loadInput(this);
     loadInput.exec();
     auto input = loadInput.getInput();
     name_ = formatTabName(input);
 
-    if(name_.size() > 0)
+    if(name_.size() == 0)
     {
-
-        //if real time, check for ib connection
-        // instantiate the algorithm for this ticker
-        algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_, false);
-        if(algorithmHandle_ != -1)
-        {
-            // tab should only be valid if play algorithm and getplotdata worked
-            valid_ = true;
-            connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
-            replotTimer_->start(50);
-        }
+        return;
     }
+
+    //if real time, check for ib connection
+    // instantiate the algorithm for this ticker
+    algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_, false);
+    if(algorithmHandle_ != -1)
+    {
+        // tab should only be valid if play algorithm and getplotdata worked
+        valid_ = true;
+        connect(replotTimer_, &QTimer::timeout, this, &TheTradingMachineTab::updatePlot);
+    }
+
+    // this sets up the widget grid and qcustomplot instance
+    layoutSetup();
+
+    // create basic plots
+    plots_.push_back(std::make_unique<CandlePlot>(*plot_));
+    plots_.push_back(std::make_unique<VolumePlot>(*plot_));
+
+    // initialize members here instead of the initializer list
+    // to keep the initializer list shorter. shouldn't be too much
+    // extra overhead
+    autoScale_ = true;
+    plotActive_ = false;
+    lastPlotDataIndex_ = 0;
+    lastAnnotationIndex_ = 0;
+
+    // start the plotting
+    replotTimer_->start(50);
 }
 
 TheTradingMachineTab::~TheTradingMachineTab()
@@ -86,81 +75,25 @@ QString TheTradingMachineTab::tabName() const
     return name_;
 }
 
-void TheTradingMachineTab::candleGraphSetup()
+void TheTradingMachineTab::layoutSetup()
 {
-    //set up Candle Stick Graph
-    candleSticksAxisRect_ = new QCPAxisRect(plot_);
-    candleSticksAxisRect_->setRangeDrag(Qt::Horizontal);
-    candleSticksAxisRect_->setRangeZoom(Qt::Horizontal);
-    candleSticksGraph_ = new QCPFinancial(candleSticksAxisRect_->axis(QCPAxis::atBottom), candleSticksAxisRect_->axis(QCPAxis::atLeft));
-    candleSticksGraph_->setWidthType(QCPFinancial::WidthType::wtPlotCoords);
-    candleSticksGraph_->setWidth(timeFrame_ - 2);
+    // allocate memory and set up each item in the plot
+    this->setObjectName(QStringLiteral("TheTradingMachineTab"));
+    gridLayout_ = new QGridLayout(this);
+    gridLayout_->setObjectName(QStringLiteral("gridLayout"));
+    plot_ = new QCustomPlot(this);
+    plot_->plotLayout()->clear(); //remove all layouts so we can start from scratch
+    plot_->setObjectName(QStringLiteral("plot"));
+    plot_->setInteraction(QCP::iRangeDrag);
+    plot_->setInteraction(QCP::iRangeZoom);
+    plot_->setInteraction(QCP::Interaction::iSelectPlottables);
 
-    //create the time axis here since we don't need to use the handle later
-    auto xTimeAxis = QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime);
-    xTimeAxis->setDateTimeFormat("hh:mm:ss");
-    candleSticksAxisRect_->axis(QCPAxis::atBottom)->setTicker(xTimeAxis);
+    // make each plot take a new row so that they are aligned vertically
+    plot_->plotLayout()->setFillOrder(QCPLayoutGrid::FillOrder::foColumnsFirst);
+    plot_->plotLayout()->setWrap(1);
 
-    candleBarsDataContainer_ = QSharedPointer<QCPFinancialDataContainer>(new QCPFinancialDataContainer);
-    candleSticksGraph_->setData(candleBarsDataContainer_);
-    plot_->plotLayout()->addElement(0, 0, candleSticksAxisRect_);
-
-    progressWindow_ = new QCPLayoutInset();
-    auto title = new QCPTextElement(plot_);
-    title->setText("Title");
-    progressWindow_->addElement(title, Qt::AlignTop | Qt::AlignHCenter);
-    candleSticksAxisRect_->insetLayout()->addElement(progressWindow_, Qt::AlignTop | Qt::AlignHCenter);
-
-}
-
-void TheTradingMachineTab::volumeGraphSetup()
-{
-    //set up Volume graph
-    volumeAxisRect_ = new QCPAxisRect(plot_);
-    volumeAxisRect_->setRangeDrag(Qt::Horizontal);
-    volumeAxisRect_->setRangeZoom(Qt::Horizontal);
-    volumeAxisRect_->setMaximumSize(QSize(QWIDGETSIZE_MAX, 100));
-    volumeAxisRect_->axis(QCPAxis::atBottom)->setLayer("axes");
-    volumeAxisRect_->axis(QCPAxis::atBottom)->grid()->setLayer("grid");
-
-    //create the time axis here since we don't need to use the handle later
-    auto xTimeAxis = QSharedPointer<QCPAxisTickerDateTime>(new QCPAxisTickerDateTime);
-    xTimeAxis->setDateTimeFormat("hh:mm:ss");
-    volumeAxisRect_->axis(QCPAxis::atBottom)->setTicker(xTimeAxis);
-
-    // create two bar plottables, for positive (green) and negative (red) volume bars:
-    volumeBarsGraph_ = new QCPBars(volumeAxisRect_->axis(QCPAxis::atBottom), volumeAxisRect_->axis(QCPAxis::atLeft));
-    // set the width of each bar to match the candle sticks
-    volumeBarsGraph_->setWidth(candleSticksGraph_->width());
-    volumeBarsGraph_->setWidthType(QCPBars::WidthType::wtPlotCoords);
-    volumeBarsGraph_->setWidth(timeFrame_ - 2);
-
-    volumeBarsGraph_->setPen(Qt::NoPen);
-    volumeBarsGraph_->setBrush(QColor(30, 144, 255));
-    volumeBarsDataContainer_ = QSharedPointer<QCPBarsDataContainer>(new QCPBarsDataContainer);
-    volumeBarsGraph_->setData(volumeBarsDataContainer_);
-    plot_->plotLayout()->addElement(1, 0, volumeAxisRect_);
-}
-
-void TheTradingMachineTab::spacingSetup()
-{
-    // bring bottom and main axis rect closer together:
-    plot_->plotLayout()->setRowSpacing(0);
-    volumeAxisRect_->setAutoMargins(QCP::msLeft|QCP::msRight|QCP::msBottom);
-    volumeAxisRect_->setMargins(QMargins(0, 0, 0, 0));
-
-    // make axis rects' left side line up:
-    QCPMarginGroup *group = new QCPMarginGroup(plot_);
-    candleSticksAxisRect_->setMarginGroup(QCP::msLeft|QCP::msRight, group);
-    volumeAxisRect_->setMarginGroup(QCP::msLeft|QCP::msRight, group);
-}
-
-void TheTradingMachineTab::legendSetup()
-{
-    candleGraphLegend_ = new QCPLegend();
-    candleSticksAxisRect_->insetLayout()->addElement(candleGraphLegend_, Qt::AlignTop | Qt::AlignRight);
-    plot_->setAutoAddPlottableToLegend(false);
-    candleGraphLegend_->addItem(new QCPPlottableLegendItem(candleGraphLegend_, candleSticksGraph_));
+    // add our qcustomplot widget to the tab.
+    gridLayout_->addWidget(plot_, 0, 0, 1, 1);
 }
 
 QString TheTradingMachineTab::formatTabName(const QString &input)
@@ -183,77 +116,65 @@ QString TheTradingMachineTab::formatTabName(const QString &input)
     return inputFormatted;
 }
 
+void TheTradingMachineTab::updatePlotNewCandle(const time_t candleTime, const Bar &candle)
+{
+    for(auto plot: plots_)
+    {
+        plot->updatePlotAdd(candleTime, candle);
+    }
+}
+
+void TheTradingMachineTab::updatePlotReplaceCandle(const time_t candleTime, const Bar &candle)
+{
+    for(auto plot: plots_)
+    {
+        plot->updatePlotReplace(candleTime, candle);
+    }
+}
+
 void TheTradingMachineTab::updatePlot(void)
 {
-    std::unique_lock<std::mutex> lock(plotData_->plotDataMtx, std::defer_lock);
-    // if gui was running on a faster thread for some reason than the algorithm
-    // then simply let the gui do something else while the algorithm is operating
-    // on the plotData buffer. neither side has to block
-    if(lock.try_lock())
+    std::unique_lock<std::mutex> lock(plotData_->plotDataMtx);
+
+    const size_t plotDataSz = plotData_->ticks.size();
+    const size_t annotationDataSz = plotData_->annotations.size();
+    // according to stl, "Concurrently accessing or modifying different elements is safe."
+    // as long as other thread is always pushing to the end and we are accessing the middle,
+    // the rule is satisfied
+    lock.unlock();
+
+    for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
     {
-        const size_t plotDataSz = plotData_->ticks.size();
-        plotActive_ = !plotData_->finished;
-        // according to stl, "Concurrently accessing or modifying different elements is safe."
-        // as long as other thread is always pushing to the end and we are accessing the middle,
-        // the rule is satisfied
-        lock.unlock();
+        Bar candle;
+        // candleTime holds the time of the most recent candle
+        bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], candle);
+        auto candleTime = candleMaker_.getUpdatedCandleTime();
 
-        for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
+        //update the plot with a new candle.
+        if(isNewCandle)
         {
-            // candleTime holds the time of the most recent candle
-            bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], currentCandle_);
-            // getUpdatedCandleTime will return the updated time to the nearest timeFrame
-            auto currentCandleTime = candleMaker_.getUpdatedCandleTime();
-			
-            SimpleMovingAverage sma;
-            SamplePoint<SimpleMovingAverage> sp;
-            sp.time = 0;
-            sp.value = 0;
-
-            auto throwAway = sma.recomputeIndicatorPoint(sp);
-
-            if(isNewCandle)
-            {
-                // add a new bar to the back
-                candleBarsDataContainer_->add(QCPFinancialData(currentCandleTime, currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
-                volumeBarsDataContainer_->add(QCPBarsData(currentCandleTime, currentCandle_.volume));
-            }
-            //keep the most recent added candle up to date
-            else if(candleBarsDataContainer_->size() > 0)
-            {
-                candleBarsDataContainer_->set(candleBarsDataContainer_->size() - 1, QCPFinancialData(currentCandleTime , currentCandle_.open, currentCandle_.high, currentCandle_.low, currentCandle_.close));
-                volumeBarsDataContainer_->set(volumeBarsDataContainer_->size() - 1, QCPBarsData(currentCandleTime, currentCandle_.volume));
-            }
+            updatePlotNewCandle(candleTime, candle);
         }
-
-        if(autoScale_)
+        //keep the plot up to date with an updated candle
+        else
         {
-            candleSticksGraph_->rescaleAxes();
-            volumeBarsGraph_->rescaleAxes();
+            updatePlotReplaceCandle(candleTime, candle);
         }
-
-        if(!plotActive_)
-        {
-            replotTimer_->stop();
-        }
-
-        //replot should always be happening to update the drawing
-        plot_->replot();
     }
+
+    // update new annotations to candle plot for now
+    for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
+    {
+        plots_.front()->addAnnotation(plotData_->annotations[lastAnnotationIndex_]);
+    }
+
+    // rescale all the plots according to their own defined scaling
+    // function
+    for(auto plot: plots_)
+    {
+        plot->rescalePlot();
+    }
+
+    //replot should always be happening to update the drawing
+    plot_->replot();
 }
-
-void TheTradingMachineTab::xAxisChanged(QCPRange range)
-{
-    if(floor(range.lower) <= candleSticksGraph_->data()->at(0)->mainKey() &&
-        ceil(range.upper) >= candleSticksGraph_->data()->at(candleSticksGraph_->data()->size() - 1)->mainKey())
-    {
-        autoScale_ = true;
-    }
-    else
-    {
-        autoScale_ = false;
-        candleSticksGraph_->rescaleValueAxis(false, true);
-        volumeBarsGraph_->rescaleValueAxis(false, true);
-    }
-}
-

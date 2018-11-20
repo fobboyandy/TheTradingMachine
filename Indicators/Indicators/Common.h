@@ -10,8 +10,11 @@
 // (IndicatorPoint and SamplePoint) remain the same. 
 //
 
+
 #ifdef INDICATORS_EXPORTS
-#define INDICATORDLL __declspec(dllexport)
+#define INDICATORSDLL __declspec(dllexport)
 #else
-#define INDICATORDLL __declspec(dllimport)
+#define INDICATORSDLL __declspec(dllimport)
 #endif
+
+#include <array>

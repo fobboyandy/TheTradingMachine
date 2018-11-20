@@ -34,6 +34,8 @@ bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle)
     // check for RTH and also don't act on unreported ticks
     if ((rthOnly && !isRTH(newTick.time)) || newTick.attributes.unreported)
     {
+        //return the last valid candle we saw
+        updatedCandle = aggregatedCandle;
         return isNewCandle;
     }
 

@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Annotation.h" />
     <ClInclude Include="BaseAlgorithm.h" />
     <ClInclude Include="Common.h" />
     <ClInclude Include="LocalBroker.h" />
