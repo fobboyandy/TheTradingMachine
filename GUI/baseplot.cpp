@@ -1,4 +1,5 @@
 #include "baseplot.h"
+#include <QFont>
 
 BasePlot::BasePlot(QCustomPlot &t_parentPlot):
     QObject(&t_parentPlot),
@@ -81,6 +82,18 @@ void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotati
 
     case Annotation::AnnotationType::LABEL:
     {
+        auto textLabel = new QCPItemText(&parentPlot_);
+        auto textAnnotation = std::dynamic_pointer_cast<Annotation::Label>(t_annotation);
+
+        textLabel->setClipAxisRect(&axisRect_);
+        textLabel->position->setAxisRect(&axisRect_);
+        textLabel->position->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+        textLabel->position->setType(QCPItemPosition::PositionType::ptPlotCoords);
+        textLabel->position->setCoords(textAnnotation->x_, textAnnotation->y_); // place position at center/top of axis rect
+
+        QFont serifFont("Times", 5, QFont::Bold);
+        textLabel->setText(QString(textAnnotation->text_.c_str()));
+        textLabel->setPen(QPen(Qt::black)); // show black border around text
 
     }
         break;

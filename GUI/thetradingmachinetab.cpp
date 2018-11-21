@@ -1,7 +1,7 @@
+#include <iostream>
 #include "thetradingmachinetab.h"
 #include "CandleMaker.h"
 #include "playdialog.h"
-#include <iostream>
 #include "../Indicators/Indicators/SimpleMovingAverage.h"
 #include "indicatorplot.h"
 
@@ -154,6 +154,7 @@ void TheTradingMachineTab::updatePlot(void)
         if(isNewCandle)
         {
             updatePlotNewCandle(candleTime, candle);
+
         }
         //keep the plot up to date with an updated candle
         else

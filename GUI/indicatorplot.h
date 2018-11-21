@@ -5,7 +5,6 @@
 #include <array>
 #include "qcustomplot.h"
 #include "../Indicators/Indicators/Common.h"
-#include <iostream>
 
 enum class IndicatorType
 {
