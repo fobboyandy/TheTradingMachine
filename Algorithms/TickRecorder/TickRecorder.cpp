@@ -12,12 +12,19 @@ std::string TimeToString(time_t time)
 TickRecorder::TickRecorder(std::string input, std::shared_ptr<InteractiveBrokersClient> ibInst, bool live):
 	BaseAlgorithm(input, ibInst, live)
 {
-	run();
+	if (input.find(".tickdat") != std::string::npos)
+	{
+		throw std::invalid_argument("It is already a file. Aborting...");
+		return;
+	}
+
+	//remove the newline from TimeToString return value
+	std::string filename = TimeToString(time(nullptr)).substr(4, 6) + ticker + ".tickdat";
+	tickoutput.open(filename, std::ios::trunc | std::ios::out);
 }
 
 TickRecorder::~TickRecorder()
 {
-	stop();
 	tickoutput.close();
 }
 
