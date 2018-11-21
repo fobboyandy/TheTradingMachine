@@ -2,6 +2,7 @@
 
 #include <string>
 
+
 namespace Annotation
 {
 	enum class AnnotationType
@@ -73,11 +74,15 @@ namespace Annotation
 
 	struct Line : public IAnnotation
 	{
-		Line(double t_startX, double t_startY, double t_endX, double t_endY) :
+		// QCP accepts double as parameter but interprets the value as time in x axis.
+		// We are using templates and static_cast to handle warnings. Types will be
+		// auto deduced by the input parameters.
+		template<typename T1, typename T2>
+		Line(T1 t_startX, double t_startY, T2 t_endX, double t_endY) :
 			IAnnotation(AnnotationType::LINE),
-			startX_(t_startX),
+			startX_(static_cast<double>(t_startX)),
 			startY_(t_startY),
-			endX_(t_endX),
+			endX_(static_cast<double>(t_endX)),
 			endY_(t_endY)
 		{}
 		// plot coordinates
@@ -89,9 +94,13 @@ namespace Annotation
 
 	struct Dot : public IAnnotation
 	{
-		Dot(double t_x, double t_y) :
+		// QCP accepts double as parameter but interprets the value as time in x axis.
+		// We are using templates and static_cast to handle warnings. Types will be
+		// auto deduced by the input parameters.
+		template<typename T1>
+		Dot(T1 t_x, double t_y) :
 			IAnnotation(AnnotationType::DOT),
-			x_(t_x),
+			x_(static_cast<double>(t_x)),
 			y_(t_y)
 		{}
 		const double x_;
@@ -100,9 +109,14 @@ namespace Annotation
 
 	struct Circle : public IAnnotation
 	{
-		Circle(double t_x, double t_y, int t_radius) :
+		// QCP accepts double as parameter but interprets the value as time in x axis.
+		// We are using templates and static_cast to handle warnings. Types will be
+		// auto deduced by the input parameters.
+
+		template<typename T>
+		Circle(T t_x, double t_y, int t_radius) :
 			IAnnotation(AnnotationType::CIRCLE),
-			x_(t_x),
+			x_(static_cast<double>(t_x)),
 			y_(t_y),
 			radius_(t_radius)
 		{}
@@ -113,10 +127,14 @@ namespace Annotation
 
 	struct Label : public IAnnotation
 	{
-		Label(std::string t_text, double t_x, double t_y) :
+		// QCP accepts double as parameter but interprets the value as time in x axis.
+		// We are using templates and static_cast to handle warnings. Types will be
+		// auto deduced by the input parameters.
+		template<typename T>
+		Label(std::string t_text, T t_x, double t_y) :
 			IAnnotation(AnnotationType::LABEL),
 			text_(t_text),
-			x_(t_x),
+			x_(static_cast<double>(t_x)),
 			y_(t_y)
 		{}
 		const std::string text_;

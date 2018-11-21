@@ -163,7 +163,7 @@ void TheTradingMachineTab::updatePlot(void)
         }
     }
 
-    // update new annotations to candle plot for now
+    // update new annotations to only the candle plot for now
     for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
     {
         plots_.front()->addAnnotation(plotData_->annotations[lastAnnotationIndex_]);

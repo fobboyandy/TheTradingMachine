@@ -25,7 +25,9 @@ void SupportBreakShort::tickHandler(const Tick & tick)
 		auto plotData = getPlotData();
 
 		//straight line from first candle to two minutes later
-		auto sampleLine = std::make_shared<Annotation::Label>("hello\nalsdjfkljsdaf\nskadjfkjdfj", static_cast<double>(tick.time), tick.price);
+		auto sampleLabel = std::make_shared<Annotation::Label>("asdfdf", tick.time, tick.price);
+		auto sampleLine = std::make_shared<Annotation::Line>(tick.time, 1000, tick.time + 12000, 400000);
+		plotData->annotations.push_back(sampleLabel);
 		plotData->annotations.push_back(sampleLine);
 	}
 

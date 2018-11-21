@@ -66,17 +66,19 @@ void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotati
     {
     case Annotation::AnnotationType::LINE:
     {
-        auto newLineItem = new QCPItemLine(&parentPlot_);
+        auto lineItem = new QCPItemLine(&parentPlot_);
         auto lineAnnotation = std::dynamic_pointer_cast<Annotation::Line>(t_annotation);
 
         // set to this axis rect
-        newLineItem->setClipToAxisRect(false);
-        newLineItem->start->setAxisRect(&axisRect_);
-        newLineItem->end->setAxisRect(&axisRect_);
+        lineItem->setClipAxisRect(&axisRect_);
+        lineItem->start->setAxisRect(&axisRect_);
+        lineItem->end->setAxisRect(&axisRect_);
+        lineItem->start->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+        lineItem->end->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
 
         // set coords
-        newLineItem->start->setCoords(lineAnnotation->startX_, lineAnnotation->startY_);
-        newLineItem->end->setCoords(lineAnnotation->endX_, lineAnnotation->endY_);
+        lineItem->start->setCoords(lineAnnotation->startX_, lineAnnotation->startY_);
+        lineItem->end->setCoords(lineAnnotation->endX_, lineAnnotation->endY_);
     }
         break;
 
