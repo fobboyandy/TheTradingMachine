@@ -52,7 +52,7 @@ BaseAlgorithm::BaseAlgorithmImpl::BaseAlgorithmImpl(BaseAlgorithm* parentIn, std
 	localBroker(input, ibApiPtr, live),
 	running(false)
 {
-	callbackHandle = localBroker.registerCallback([this](const Tick& tick)
+	callbackHandle = localBroker.registerListener([this](const Tick& tick)
 	{
 		this->tickHandler(tick);
 	});

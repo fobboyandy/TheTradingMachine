@@ -30,13 +30,13 @@
     <ClInclude Include="Portfolio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TickDataSource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Position.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Annotation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TickBroadcast.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -44,13 +44,13 @@
     <ClCompile Include="LocalBroker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TickDataSource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BaseAlgorithm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Portfolio.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TickBroadcast.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

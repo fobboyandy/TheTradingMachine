@@ -8,7 +8,7 @@
 #include "../../InteractiveBrokersClient/InteractiveBrokersClient/InteractiveBrokersClient.h"
 #include "Common.h"
 #include "Portfolio.h"
-#include "TickDataSource.h"
+#include "TickBroadcast.h"
 
 
 // Local Broker acts as a basic broker system for the engine. The engine places orders through the local broker.
@@ -22,7 +22,7 @@ public:
 
 	void run();
 	bool valid();
-	CallbackHandle registerCallback(TickCallbackFunction callback);
+	CallbackHandle registerListener(TickListener callback);
 	void unregisterCallback(CallbackHandle handle);
 
 // order api
@@ -51,18 +51,19 @@ private:
 	// for fileplayback stoploss emulation
 	CallbackHandle stoplossHandlerHandle;
 	void stoplossHandler(const Tick& tick);
-	void ibOrderUpdate(OrderId oid, Position p);
+
+	void ibOrderNotification(OrderId oid, Position p);
 
 private:
-	Portfolio _portfolio;
+	Portfolio portfolio_;
 
 	// used to create a mapping from OrderId to PositionId in order to
 	// route ibOrderUpdate callback to the proper position using the orderId
 	// this is only used in live trading mode.
-	std::unordered_map<OrderId, PositionId> _orderPositionMap;
-	std::shared_ptr<InteractiveBrokersClient> _ibApi;
+	std::unordered_map<OrderId, PositionId> orderPositionMap_;
+	std::shared_ptr<InteractiveBrokersClient> ibApi_;
 
-	TickDataSource _dataSource;
-	const bool _liveTrade; 
-	bool _valid;
+	TickBroadcast dataSource_;
+	const bool liveTrade_; 
+	bool valid_;
 };

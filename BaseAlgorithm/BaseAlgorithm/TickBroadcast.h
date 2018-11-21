@@ -7,13 +7,13 @@
 #include <unordered_map>
 #include "Common.h"
 
-class TickDataSource
+class TickBroadcast
 {
 public:
-	TickDataSource(std::string input, std::shared_ptr<InteractiveBrokersClient> ibApiPtr);
-	~TickDataSource();
+	TickBroadcast(std::string input, std::shared_ptr<InteractiveBrokersClient> ibApiPtr);
+	~TickBroadcast();
 
-	CallbackHandle registerCallback(TickCallbackFunction callback);
+	CallbackHandle registerListener(TickListener callback);
 	void unregisterCallback(CallbackHandle handle);
 	bool finished() const;
 	double lastPrice() const;
@@ -30,24 +30,24 @@ private:
 	
 private:	
 	// price is updated from another thread. make atomic
-	std::atomic<double> _lastPrice;
+	std::atomic<double> lastPrice_;
 
-	std::mutex callbackListMtx;
-	CallbackHandle uniqueCallbackHandles;
-	std::unordered_map<CallbackHandle, TickCallbackFunction> callbackList;
+	std::mutex callbackListMtx_;
+	CallbackHandle uniqueCallbackHandles_;
+	std::unordered_map<CallbackHandle, TickListener> listeners_;
 
-	std::string input;
-	bool _realTimeStream;
+	std::string input_;
+	bool realTimeStream_;
 
 	// api data
-	std::shared_ptr<InteractiveBrokersClient> ibApi;
+	std::shared_ptr<InteractiveBrokersClient> ibApi_;
 	// when we request real time data, we are given a handle so that we can cancel it upon closing
-	CallbackHandle dataStreamHandle;
+	CallbackHandle dataStreamHandle_;
 
 	// thread must be created after and destroyed before the callbacks
-	std::atomic<bool> threadCancellationToken;
-	std::thread readTickDataThread;
+	std::atomic<bool> threadCancellationToken_;
+	std::thread readTickDataThread_;
 
-	bool _valid;
-	bool _finished; //finished doesn't need to be atomic since the tickHandler thread runs on the same thread as readTickFile thread
+	bool valid_;
+	bool finished_; //finished doesn't need to be atomic since the tickHandler thread runs on the same thread as readTickFile thread
 };

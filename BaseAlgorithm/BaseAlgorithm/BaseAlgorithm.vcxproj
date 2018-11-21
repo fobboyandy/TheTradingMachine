@@ -26,13 +26,13 @@
     <ClInclude Include="PlotData.h" />
     <ClInclude Include="Portfolio.h" />
     <ClInclude Include="Position.h" />
-    <ClInclude Include="TickDataSource.h" />
+    <ClInclude Include="TickBroadcast.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BaseAlgorithm.cpp" />
     <ClCompile Include="LocalBroker.cpp" />
     <ClCompile Include="Portfolio.cpp" />
-    <ClCompile Include="TickDataSource.cpp" />
+    <ClCompile Include="TickBroadcast.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

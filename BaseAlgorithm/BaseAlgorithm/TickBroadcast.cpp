@@ -3,23 +3,23 @@
 #include <sstream>
 #include <string>
 #include <iostream>
-#include "TickDataSource.h"
+#include "TickBroadcast.h"
 
-TickDataSource::TickDataSource(std::string input, std::shared_ptr<InteractiveBrokersClient> ibApiPtr) :
-	input(input),
-	ibApi(ibApiPtr),
-	threadCancellationToken(false),
-	dataStreamHandle(-1),
-	_finished(false),
-	_realTimeStream(false)
+TickBroadcast::TickBroadcast(std::string input, std::shared_ptr<InteractiveBrokersClient> ibApiPtr) :
+	input_(input),
+	ibApi_(ibApiPtr),
+	threadCancellationToken_(false),
+	dataStreamHandle_(-1),
+	finished_(false),
+	realTimeStream_(false)
 {
 	if (input.find(".tickdat") != std::string::npos)
 	{
-		_realTimeStream = false;
+		realTimeStream_ = false;
 	}
 	else if (ibApiPtr != nullptr && ibApiPtr->isReady())
 	{
-		_realTimeStream = true;
+		realTimeStream_ = true;
 	}
 	else
 	{
@@ -27,43 +27,43 @@ TickDataSource::TickDataSource(std::string input, std::shared_ptr<InteractiveBro
 	}
 }
 
-TickDataSource::~TickDataSource()
+TickBroadcast::~TickBroadcast()
 {
-	if (_realTimeStream && ibApi != nullptr)
+	if (realTimeStream_ && ibApi_ != nullptr)
 	{
-		ibApi->cancelRealTimeTicks(input, dataStreamHandle);	
+		ibApi_->cancelRealTimeTicks(input_, dataStreamHandle_);	
 	}
 	else
 	{
 		// stop the thread if thread is joinable
-		if (readTickDataThread.joinable())
+		if (readTickDataThread_.joinable())
 		{
 			//stop the thread
-			threadCancellationToken = true;
-			readTickDataThread.join();
+			threadCancellationToken_ = true;
+			readTickDataThread_.join();
 		}
 	}
 }
 
-bool TickDataSource::finished() const
+bool TickBroadcast::finished() const
 {
-	return _finished;
+	return finished_;
 }
 
-double TickDataSource::lastPrice() const
+double TickBroadcast::lastPrice() const
 {
-	return _lastPrice;
+	return lastPrice_;
 }
 
-void TickDataSource::run() 
+void TickBroadcast::run()
 {	
 	//
 	// Check if it's a recorded data input for backtesting
 	//
-	if (!_realTimeStream)
+	if (!realTimeStream_)
 	{
 		//start a thread to read file
-		readTickDataThread = std::thread([this]
+		readTickDataThread_ = std::thread([this]
 		{
 			// new thread that reads tick data from a file and calls derived
 			// classes' tickhandler (calls preTickHandler first)
@@ -76,7 +76,7 @@ void TickDataSource::run()
 		// preTickDispatch handler function. preTickDispatch will validate
 		// callback function's existence before calling to prevent calling
 		// invalidated lambda functions.
-		dataStreamHandle = ibApi->requestRealTimeTicks(input, [this](const Tick& tick)
+		dataStreamHandle_ = ibApi_->requestRealTimeTicks(input_, [this](const Tick& tick)
 		{
 			this->broadcastTick(tick);
 		});
@@ -84,9 +84,9 @@ void TickDataSource::run()
 	}
 }
 
-void TickDataSource::readTickFile(void)
+void TickBroadcast::readTickFile(void)
 {
-	std::fstream tickDataFile(input, std::ios::in);
+	std::fstream tickDataFile(input_, std::ios::in);
 	enum class CsvIndex {
 		TICKTYPEINDEX = 0,
 		TIMEINDEX,
@@ -107,7 +107,7 @@ void TickDataSource::readTickFile(void)
 	// For each row in the csv, parse out the values in string
 	// and reconstruct the tick data.
 	//
-	while (std::getline(tickDataFile, currLine) && !threadCancellationToken)
+	while (std::getline(tickDataFile, currLine) && !threadCancellationToken_)
 	{
 		std::stringstream s(currLine);
 		std::string token;
@@ -159,35 +159,35 @@ void TickDataSource::readTickFile(void)
 	}
 
 	//if threadcancellation was toggled, then it was forcefully terminated
-	if (!threadCancellationToken)
+	if (!threadCancellationToken_)
 		std::cout << "done reading from file" << std::endl;
 	else
 		std::cout << "terminated" << std::endl;
 
-	_finished = true;
+	finished_ = true;
 }
 
-CallbackHandle TickDataSource::registerCallback(TickCallbackFunction callback)
+CallbackHandle TickBroadcast::registerListener(TickListener callback)
 {
-	std::lock_guard<std::mutex> lock(callbackListMtx);
-	callbackList[uniqueCallbackHandles] = callback;
-	return uniqueCallbackHandles++;
+	std::lock_guard<std::mutex> lock(callbackListMtx_);
+	listeners_[uniqueCallbackHandles_] = callback;
+	return uniqueCallbackHandles_++;
 }
 
-void TickDataSource::unregisterCallback(CallbackHandle handle)
+void TickBroadcast::unregisterCallback(CallbackHandle handle)
 {
-	std::lock_guard<std::mutex> lock(callbackListMtx);
-	callbackList.erase(handle);
+	std::lock_guard<std::mutex> lock(callbackListMtx_);
+	listeners_.erase(handle);
 }
 
-void TickDataSource::broadcastTick(const Tick & tick)
+void TickBroadcast::broadcastTick(const Tick & tick)
 {
 	//save the price before broadcasting the tick
-	_lastPrice = tick.price;
+	lastPrice_ = tick.price;
 
 	//dispatch the tick to the registered callbacks under a lock
-	std::lock_guard<std::mutex> lock(callbackListMtx);
-	for (auto& fn : callbackList)
+	std::lock_guard<std::mutex> lock(callbackListMtx_);
+	for (auto& fn : listeners_)
 	{
 		// wrap the broadcast in a try catch in case
 		// user didn't call stop and their
