@@ -23,7 +23,7 @@ public:
 	void run();
 	bool valid();
 	CallbackHandle registerListener(TickListener callback);
-	void unregisterCallback(CallbackHandle handle);
+	void unregisterListener(CallbackHandle handle);
 
 // order api
 public:
@@ -63,7 +63,7 @@ private:
 	std::unordered_map<OrderId, PositionId> orderPositionMap_;
 	std::shared_ptr<InteractiveBrokersClient> ibApi_;
 
-	TickBroadcast dataSource_;
+	TickBroadcast tickSource_;
 	const bool liveTrade_; 
 	bool valid_;
 };

@@ -2,7 +2,7 @@
 
 LocalBroker::LocalBroker(std::string input, std::shared_ptr<InteractiveBrokersClient> ibApi, bool live) :
 	ibApi_(ibApi),
-	dataSource_(input, ibApi),
+	tickSource_(input, ibApi),
 	liveTrade_(live)
 {
 	// if live option is turned on but invalid conection is provided
@@ -21,7 +21,7 @@ LocalBroker::LocalBroker(std::string input, std::shared_ptr<InteractiveBrokersCl
 	else
 	{
 		//register stophandler for tick callback from data source.
-		stoplossHandlerHandle = dataSource_.registerListener([this](const Tick& tick)
+		stoplossHandlerHandle = tickSource_.registerListener([this](const Tick& tick)
 		{
 			this->stoplossHandler(tick);
 		});
@@ -30,12 +30,12 @@ LocalBroker::LocalBroker(std::string input, std::shared_ptr<InteractiveBrokersCl
 
 LocalBroker::~LocalBroker()
 {
-	dataSource_.unregisterCallback(stoplossHandlerHandle);
+	tickSource_.unregisterCallback(stoplossHandlerHandle);
 }
 
 void LocalBroker::run()
 {
-	dataSource_.run();
+	tickSource_.run();
 }
 
 PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares)
@@ -63,7 +63,7 @@ PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares)
 		
 		// data source's tick dispatch runs on the same thread as this function
 		// so _dataSource's lastPrice is always within sync
-		portfolio_.fillPosition(posId, dataSource_.lastPrice(), numShares);
+		portfolio_.fillPosition(posId, tickSource_.lastPrice(), numShares);
 	}
 
 	return posId;
@@ -113,7 +113,7 @@ PositionId LocalBroker::shortMarketNoStop(std::string ticker, int numShares)
 		posId = portfolio_.newPosition();
 		// autofill
 		// short positions are negative
-		portfolio_.fillPosition(posId, dataSource_.lastPrice(), -numShares);
+		portfolio_.fillPosition(posId, tickSource_.lastPrice(), -numShares);
 	}
 
 	return posId;
@@ -157,7 +157,7 @@ void LocalBroker::reducePosition(PositionId posId, int numShares)
 	else
 	{
 		// autofill
-		portfolio_.reducePosition(posId, dataSource_.lastPrice(), numShares);
+		portfolio_.reducePosition(posId, tickSource_.lastPrice(), numShares);
 	}
 }
 
@@ -168,12 +168,12 @@ Position LocalBroker::getPosition(PositionId posId)
 
 CallbackHandle LocalBroker::registerListener(TickListener callback)
 {
-	return dataSource_.registerListener(callback);
+	return tickSource_.registerListener(callback);
 }
 
-void LocalBroker::unregisterCallback(CallbackHandle handle)
+void LocalBroker::unregisterListener(CallbackHandle handle)
 {
-	dataSource_.unregisterCallback(handle);
+	tickSource_.unregisterCallback(handle);
 }
 
 void LocalBroker::stoplossHandler(const Tick & tick)
@@ -202,6 +202,6 @@ void LocalBroker::closePosition(PositionId posId)
 	else
 	{
 		// autofill
-		portfolio_.closePosition(posId, dataSource_.lastPrice());
+		portfolio_.closePosition(posId, tickSource_.lastPrice());
 	}
 }

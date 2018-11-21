@@ -78,7 +78,7 @@ void BaseAlgorithm::BaseAlgorithmImpl::stop()
 	{
 		running = false;
 		//unregistering the callback stops the algorithm
-		localBroker.unregisterCallback(callbackHandle);
+		localBroker.unregisterListener(callbackHandle);
 	}
 }
 
