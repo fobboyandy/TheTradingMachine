@@ -85,9 +85,12 @@ void BaseAlgorithm::BaseAlgorithmImpl::stop()
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketNoStop(std::string ticker, int numShares)
 {
 	// when an order gets filled, this lambda submits an annotation
-	return localBroker.longMarketNoStop(ticker, numShares, [this, numShares](double avgFillPrice)
+	return localBroker.longMarketNoStop(ticker, numShares, [this, ticker, numShares](double avgFillPrice)
 	{
-
+		// time should be retrieved from the order confirmation. placeholder for now
+		time_t time = 0;
+		std::string labelText = "Long " + std::to_string(numShares) + " " + ticker + " at $" + std::to_string(avgFillPrice) + ".\n";
+		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, time, avgFillPrice));
 	});	
 }
 
