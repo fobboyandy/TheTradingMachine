@@ -12,11 +12,6 @@ public:
 	Portfolio();
 	~Portfolio();
 
-	// calling this returns a unique position id which identifies the position to be
-	// added to the portfolio. This function only allocates an empty position to the 
-	// portfolio. It should be filled with the number of shares by calling Position::fillPosition(int)
-	PositionId newPosition();
-
 	// all orders are submitted as all or none so we either fill the entire position or none
 	// therefore, this should only be called once for any order
 	void fillPosition(PositionId posId, double avgFillPrice, int numShares);
@@ -31,8 +26,7 @@ public:
 	Position getPosition(PositionId posId);
 
 private:
-	PositionId _uniquePositionId;
-	std::unordered_map<PositionId, Position> _positions;
+	std::unordered_map<PositionId, Position> positions_;
 
 //helpers
 private:

@@ -84,52 +84,83 @@ void BaseAlgorithm::BaseAlgorithmImpl::stop()
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketNoStop(std::string ticker, int numShares)
 {
-	return localBroker.longMarketNoStop(ticker, numShares);
+	// when an order gets filled, this lambda submits an annotation
+	return localBroker.longMarketNoStop(ticker, numShares, [this, numShares](double avgFillPrice)
+	{
+
+	});	
 }
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketStopMarket(std::string ticker, int numShares, double stopPrice)
 {
-	return localBroker.longMarketStopMarket(ticker, numShares, stopPrice);
+	return localBroker.longMarketStopMarket(ticker, numShares, stopPrice, [this, numShares](double avgFillPrice)
+	{
+
+	});
 }
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
 {
-	return localBroker.longMarketStopLimit(ticker, numShares, activationPrice, limitPrice);
+	return localBroker.longMarketStopLimit(ticker, numShares, activationPrice, limitPrice, [this, numShares](double avgFillPrice)
+	{
+
+	});
 }
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
 {
-	return localBroker.longLimitStopMarket(ticker, numShares, buyLimit, activationPrice);
+	return localBroker.longLimitStopMarket(ticker, numShares, buyLimit, activationPrice, [this, numShares](double avgFillPrice)
+	{
+
+	});
 }
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
 {
-	return localBroker.longLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice);
+	return localBroker.longLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice, [this, numShares](double avgFillPrice)
+	{
+
+	});
 }
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketNoStop(std::string ticker, int numShares)
 {
-	return localBroker.shortMarketNoStop(ticker, numShares);
+	return localBroker.shortMarketNoStop(ticker, numShares, [this, numShares](double avgFillPrice)
+	{
+
+	});
 }
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketStopMarket(std::string ticker, int numShares, double activationPrice)
 {
-	return localBroker.shortMarketStopMarket(ticker, numShares, activationPrice);
+	return localBroker.shortMarketStopMarket(ticker, numShares, activationPrice, [this, numShares](double avgFillPrice)
+	{
+
+	});
 }
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
 {
-	return localBroker.shortMarketStopLimit(ticker, numShares, activationPrice, limitPrice);
+	return localBroker.shortMarketStopLimit(ticker, numShares, activationPrice, limitPrice, [this, numShares](double avgFillPrice)
+	{
+
+	});
 }
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
 {
-	return localBroker.shortLimitStopMarket(ticker, numShares, buyLimit, activationPrice);
+	return localBroker.shortLimitStopMarket(ticker, numShares, buyLimit, activationPrice, [this, numShares](double avgFillPrice)
+	{
+
+	});
 }
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
 {
-	return localBroker.shortLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice);
+	return localBroker.shortLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice, [this, numShares](double avgFillPrice)
+	{
+
+	});
 }
 
 void BaseAlgorithm::BaseAlgorithmImpl::closePosition(PositionId posId)
