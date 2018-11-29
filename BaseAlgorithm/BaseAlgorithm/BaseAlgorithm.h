@@ -108,9 +108,11 @@ public:
 	Position getPosition(PositionId posId);
 
 	virtual void tickHandler(const Tick& tick) = 0;
+
+	std::string ticker();
 private:
 	class BaseAlgorithmImpl;
-	BaseAlgorithmImpl* _impl;
+	BaseAlgorithmImpl* impl_;
 protected:
 	
 	//let the impl class call the pure virtual tickHandler

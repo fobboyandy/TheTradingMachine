@@ -27,74 +27,34 @@ public:
 // order api
 public:
 	//long orders
-	PositionId longMarketNoStop(std::string ticker, int numShares, std::function<void(double avgPrice)> callerFillNotification);
-	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice, std::function<void(double avgPrice)> callerFillNotification);
-	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double avgPrice)> callerFillNotification);
-	PositionId longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice, std::function<void(double avgPrice)> callerFillNotification);
-	PositionId longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice, std::function<void(double avgPrice)> callerFillNotification);
+	PositionId longMarketNoStop(std::string ticker, int numShares, std::function<void(double avgPrice)> fillNotification);
+	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice, std::function<void(double avgPrice)> fillNotification);
+	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double avgPrice)> fillNotification);
+	PositionId longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice, std::function<void(double avgPrice)> fillNotification);
+	PositionId longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice, std::function<void(double avgPrice)> fillNotification);
 
 	//short orders
-	PositionId shortMarketNoStop(std::string ticker, int numShares, std::function<void(double avgPrice)> callerFillNotification);
-	PositionId shortMarketStopMarket(std::string ticker, int numShares, double activationPrice, std::function<void(double avgPrice)> callerFillNotification);
-	PositionId shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double avgPrice)> callerFillNotification);
-	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice, std::function<void(double avgPrice)> callerFillNotification);
-	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice, std::function<void(double avgPrice)> callerFillNotification);
+	PositionId shortMarketNoStop(std::string ticker, int numShares, std::function<void(double avgPrice)> fillNotification);
+	PositionId shortMarketStopMarket(std::string ticker, int numShares, double activationPrice, std::function<void(double avgPrice)> fillNotification);
+	PositionId shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double avgPrice)> fillNotification);
+	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice, std::function<void(double avgPrice)> fillNotification);
+	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice, std::function<void(double avgPrice)> fillNotification);
 
-	void reducePosition(PositionId posId, int numShares);
-	void closePosition(PositionId posId);
+	void closePosition(PositionId posId, std::function<void(double avgPrice)> fillNotification);
 
 	Position getPosition(PositionId posId);
-	void executePosition(PositionId posId, std::function<void(double avgPrice)> callerFillNotification);
 private:
 	// handles stoplosses locally without sending a stoploss order to ib. also used
 	// for fileplayback stoploss emulation
 	CallbackHandle stoplossHandlerHandle;
 	void stoplossHandler(const Tick& tick);
+	void reducePosition(PositionId posId, int numShares);
 
 private:
-	// simple orders used to record a position before it's
-	// executed
-	struct SimpleOrder;
-
-	// keeps track of orders that have been placed but not executed
-	// we use pending orders because we want to give the caller a 
-	// chance to set up their order notification callback with the
-	// position id. If the order was filled before the ordering function
-	// returned, the callers notification would be called without 
-	// knowing which position has been filled. once they have set up
-	// their notification functions with the returned position id, they 
-	// can execute the order.
-	PositionId uniquePendingOrderIds_;
-	std::unordered_map<PositionId, std::unique_ptr<SimpleOrder>> pendingOrders_;
-
 	std::shared_ptr<InteractiveBrokersClient> ibApi_;
 	TickBroadcast tickSource_;
 
 	Portfolio portfolio_;
 	const bool liveTrade_; 
 	bool valid_;
-};
-
-struct LocalBroker::SimpleOrder
-{
-	enum class OrderType
-	{
-		LONGMARKETNOSTOP,
-		LONGMARKETSTOPMARKET,
-		LONGMARKETSTOPLIMIT,
-		LONGLIMITSTOPMARKET,
-		LONGLIMITSTOPLIMIT,
-
-		SHORTMARKETNOSTOP,
-		SHORTMARKETSTOPMARKET,
-		SHORTMARKETSTOPLIMIT,
-		SHORTLIMITSTOPMARKET,
-		SHORTLIMITSTOPLIMIT
-	};
-
-	OrderType type;
-	double entryLimit;
-	double stopLimit;
-	int shares;
-
 };

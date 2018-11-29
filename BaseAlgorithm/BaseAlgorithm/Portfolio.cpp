@@ -1,11 +1,20 @@
 #include "Portfolio.h"
 
-Portfolio::Portfolio()
+Portfolio::Portfolio():
+	uniquePositionId_(0)
 {
 }
 
 Portfolio::~Portfolio()
 {
+}
+
+PositionId Portfolio::newPosition()
+{
+	// use postIncrement to keep consistent with m_orderId in ibApi
+	auto currentPositionId = uniquePositionId_++;
+	positions_[currentPositionId] = Position{0, 0, 0};
+	return currentPositionId;
 }
 
 // caller handles errorchecking
@@ -52,7 +61,7 @@ void Portfolio::reducePosition(PositionId posId, double avgFillPrice, int numSha
 
 Position Portfolio::getPosition(PositionId posId)
 {
-	return Position();
+	return positions_[posId];
 }
 
 bool Portfolio::existingPosition(PositionId posId)

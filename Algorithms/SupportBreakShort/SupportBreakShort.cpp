@@ -16,19 +16,24 @@ SupportBreakShort::~SupportBreakShort()
 
 void SupportBreakShort::tickHandler(const Tick & tick)
 {
-
-	static bool fired = false;
-
-	if (!fired)
+	static auto bought = false;
+	static PositionId posId = -1;
+	// buy every 10 minutes
+	if (tick.time % 600 == 0)
 	{
-		fired = true;
-		auto plotData = getPlotData();
-
-		//straight line from first candle to two minutes later
-		auto sampleLabel = std::make_shared<Annotation::Label>("asdfdf", tick.time, tick.price);
-		auto sampleLine = std::make_shared<Annotation::Line>(tick.time, 1000, tick.time + 12000, 400000);
-		plotData->annotations.push_back(sampleLabel);
-		plotData->annotations.push_back(sampleLine);
+		if (!bought)
+		{
+			if (posId != -1)
+			{
+				closePosition(posId);
+			}
+			posId = longMarketNoStop(ticker(), 100);
+		}
+		bought = true;
+	}
+	else
+	{
+		bought = false;
 	}
 
 	// does nothing for now. all plot data is handled in base class

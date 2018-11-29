@@ -26,8 +26,6 @@ LocalBroker::LocalBroker(std::string input, std::shared_ptr<InteractiveBrokersCl
 			this->stoplossHandler(tick);
 		});
 	}
-
-	uniquePendingOrderIds_ = 0;
 }
 
 LocalBroker::~LocalBroker()
@@ -45,15 +43,37 @@ bool LocalBroker::valid()
 	return valid_;
 }
 
-PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares, std::function<void(double avgPrice)> callerFillNotification)
+PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares, std::function<void(double avgPrice)> fillNotification)
 {
 	//validate number of shares
 	numShares = abs(numShares);
-	// for market long orders, we don't need to specify limit prices
-	pendingOrders_[uniquePendingOrderIds_] = std::make_unique<SimpleOrder>(SimpleOrder{ SimpleOrder::OrderType::LONGMARKETNOSTOP, 0, 0, numShares });
 
-	// increment pending order ids
-	return uniquePendingOrderIds_++;
+	auto newPosId = portfolio_.newPosition();
+
+	// this lambda captures the state of the current context
+	// when this is called as a callback later, it will have
+	// the context to dispatch to the caller
+	auto fillPosition = [this, newPosId, fillNotification, numShares](double price) 
+	{
+		portfolio_.fillPosition(newPosId, price, numShares);
+		fillNotification(price);
+	};
+
+	if (liveTrade_)
+	{
+		// submit through ib and register fillPosition as the callback
+	}
+	else
+	{
+		// for non live trades, we simply fill the position with the latest price
+		// instantly and notify the caller. in this case, the caller will be notified
+		// before the posId is returned back to them. this is fine because the posId is not
+		// given as part of the callback argument anyway and would not provide any useful 
+		// information
+		fillPosition(tickSource_.lastPrice());
+	}
+
+	return newPosId;
 }
 
 PositionId LocalBroker::longMarketStopMarket(std::string ticker, int numShares, double stopPrice, std::function<void(double avgPrice)> callerFillNotification)
@@ -78,13 +98,7 @@ PositionId LocalBroker::longLimitStopLimit(std::string ticker, int numShares, do
 
 PositionId LocalBroker::shortMarketNoStop(std::string ticker, int numShares, std::function<void(double avgPrice)> callerFillNotification)
 {
-	//validate number of shares
-	numShares = abs(numShares);
-	// for market long orders, we don't need to specify limit prices
-	pendingOrders_[uniquePendingOrderIds_] = std::make_unique<SimpleOrder>(SimpleOrder{ SimpleOrder::OrderType::SHORTMARKETNOSTOP, 0, 0, -numShares });
-
-	// return the pending order id and increment
-	return uniquePendingOrderIds_++;
+	return 0;
 }
 
 PositionId LocalBroker::shortMarketStopMarket(std::string ticker, int numShares, double activationPrice, std::function<void(double avgPrice)> callerFillNotification)
@@ -131,94 +145,7 @@ void LocalBroker::reducePosition(PositionId posId, int numShares)
 
 Position LocalBroker::getPosition(PositionId posId)
 {
-	return Position();
-}
-
-void LocalBroker::executePosition(PositionId posId, std::function<void(double avgPrice)> callerFillNotification)
-{
-
-	// validate posId by checking for a pending order
-	if (pendingOrders_.find(posId) != pendingOrders_.end())
-	{
-		const auto& pendingOrder = pendingOrders_[posId];			
-		
-		// this lambda function gets called when the position is filled
-		auto fillNotification = [this, posId, callerFillNotification](double avgFillPrice)
-		{
-			portfolio_.fillPosition(posId, avgFillPrice, pendingOrders_[posId]->shares);
-			callerFillNotification(posId);
-		};
-
-		if (liveTrade_)
-		{
-			// if live trading then create an ib order and submit it. 
-			// register fillNotification as the callback when ib fills
-			// the order
-			switch (pendingOrder->type)
-			{
-			case SimpleOrder::OrderType::LONGMARKETNOSTOP:
-			{
-
-			}
-			break;
-			case SimpleOrder::OrderType::LONGMARKETSTOPMARKET:
-			{
-
-			}
-			break;
-			case SimpleOrder::OrderType::LONGMARKETSTOPLIMIT:
-			{
-
-			}
-			break;
-			case SimpleOrder::OrderType::LONGLIMITSTOPMARKET:
-			{
-
-			}
-			break;
-			case SimpleOrder::OrderType::LONGLIMITSTOPLIMIT:
-			{
-
-			}
-			break;
-			case SimpleOrder::OrderType::SHORTMARKETNOSTOP:
-			{
-
-			}
-			break;
-			case SimpleOrder::OrderType::SHORTMARKETSTOPMARKET:
-			{
-
-			}
-			break;
-			case SimpleOrder::OrderType::SHORTMARKETSTOPLIMIT:
-			{
-
-			}
-			break;
-			case SimpleOrder::OrderType::SHORTLIMITSTOPMARKET:
-			{
-
-			}
-			break;
-			case SimpleOrder::OrderType::SHORTLIMITSTOPLIMIT:
-			{
-
-			}
-			break;
-			}
-
-		}
-		else
-		{
-			// for non live trades, we simply fill the position with the latest price
-			// instantly
-			fillNotification(tickSource_.lastPrice());
-		}
-
-		// no longer pending after execution
-		pendingOrders_.erase(posId);
-	}
+	return portfolio_.getPosition(posId);
 }
 
 CallbackHandle LocalBroker::registerListener(TickListener callback)
@@ -235,8 +162,17 @@ void LocalBroker::stoplossHandler(const Tick & tick)
 {
 }
 
-void LocalBroker::closePosition(PositionId posId)
+void LocalBroker::closePosition(PositionId posId, std::function<void(double avgPrice)> fillNotification)
 {
+	// this lambda captures the state of the current context
+	// when this is called as a callback later, it will have
+	// the context to dispatch to the caller
+	auto closePositionFillNotification = [this, posId, fillNotification](double price)
+	{
+		portfolio_.closePosition(posId, price);
+		fillNotification(price);
+	};
+
 	if (liveTrade_)
 	{
 		// we are supposed to create an order and submit it to ibapi. ib api
@@ -253,6 +189,6 @@ void LocalBroker::closePosition(PositionId posId)
 	else
 	{
 		// autofill
-		portfolio_.closePosition(posId, tickSource_.lastPrice());
+		closePositionFillNotification(tickSource_.lastPrice());
 	}
 }

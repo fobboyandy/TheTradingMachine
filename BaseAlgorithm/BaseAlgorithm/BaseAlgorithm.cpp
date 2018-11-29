@@ -1,6 +1,6 @@
-#include <iostream>
 #include <functional>
 #include <atomic>
+#include <algorithm>
 #include <sstream>
 #include <fstream>
 #include <thread>
@@ -18,6 +18,7 @@ public:
 	std::shared_ptr<PlotData> plotData;
 	void run();
 	void stop();
+	std::string ticker();
 
 // ordering functions
 public:
@@ -34,16 +35,21 @@ public:
 	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
 	void closePosition(PositionId posId);
-	void reducePosition(PositionId posId, int numShares);
 	Position getPosition(PositionId posId);
 
 private:
+	std::string ticker_;
+
 	BaseAlgorithm* parent;
 	LocalBroker localBroker;
 	bool running;
 
 	CallbackHandle callbackHandle;
 	void tickHandler(const Tick& tick);
+
+// algorithm benchmarking
+private:
+	double profit_;
 };
 
 BaseAlgorithm::BaseAlgorithmImpl::BaseAlgorithmImpl(BaseAlgorithm* parentIn, std::string input, std::shared_ptr<InteractiveBrokersClient> ibApiPtr, bool live) :
@@ -52,10 +58,34 @@ BaseAlgorithm::BaseAlgorithmImpl::BaseAlgorithmImpl(BaseAlgorithm* parentIn, std
 	localBroker(input, ibApiPtr, live),
 	running(false)
 {
+	auto extensionIndex = input.find(".tickdat");
+	if (extensionIndex != std::wstring::npos)
+	{
+		auto isValidTickerChar = [](char c) 
+		{
+			return (c <= 'z' && c >= 'a') || (c <= 'Z' && c >= 'A') || c == '.';
+		};
+
+		// loop until first invalid character
+		for (auto i = static_cast<std::string::size_type>(extensionIndex) - 1; i >= 0 && isValidTickerChar(input[i]); --i)
+		{
+			ticker_.push_back(input[i]);
+		}
+		std::reverse(ticker_.begin(), ticker_.end());
+	}
+	else
+	{
+		ticker_ = input;
+	}
+
 	callbackHandle = localBroker.registerListener([this](const Tick& tick)
 	{
 		this->tickHandler(tick);
 	});
+
+	// we can initialize profit here because tickHandler won't run until 
+	// run is called
+	profit_ = 0;
 }
 
 BaseAlgorithm::BaseAlgorithmImpl::~BaseAlgorithmImpl()
@@ -82,15 +112,20 @@ void BaseAlgorithm::BaseAlgorithmImpl::stop()
 	}
 }
 
+std::string BaseAlgorithm::BaseAlgorithmImpl::ticker()
+{
+	return ticker_;
+}
+
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketNoStop(std::string ticker, int numShares)
 {
 	// when an order gets filled, this lambda submits an annotation
 	return localBroker.longMarketNoStop(ticker, numShares, [this, ticker, numShares](double avgFillPrice)
 	{
 		// time should be retrieved from the order confirmation. placeholder for now
-		time_t time = 0;
-		std::string labelText = "Long " + std::to_string(numShares) + " " + ticker + " at $" + std::to_string(avgFillPrice) + ".\n";
-		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, time, avgFillPrice));
+		auto latestTickTime = plotData->ticks[plotData->ticks.size() - 1].time;
+		std::string labelText = "Long " + std::to_string(numShares) + " shares at $" + std::to_string(avgFillPrice) + "\n";
+		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, latestTickTime, avgFillPrice));
 	});	
 }
 
@@ -168,12 +203,19 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::shortLimitStopLimit(std::string tic
 
 void BaseAlgorithm::BaseAlgorithmImpl::closePosition(PositionId posId)
 {
-	return localBroker.closePosition(posId);
-}
+	// when an order gets filled, this lambda submits an annotation
+	localBroker.closePosition(posId, [this, posId](double avgFillPrice)
+	{
+		auto positionProfit = localBroker.getPosition(posId).profit;
+		profit_ += positionProfit;
+		// time should be retrieved from the order confirmation. placeholder for now
+		auto latestTickTime = plotData->ticks[plotData->ticks.size() - 1].time;
+		std::string labelText = "Closing Position at $" + std::to_string(avgFillPrice) + "\n";
+		labelText += "Position Profit : " + std::to_string(positionProfit) + "\n";
+		labelText += "Net Algorithm Profit : " + std::to_string(profit_) + "\n";
+		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, latestTickTime, avgFillPrice));
+	});
 
-void BaseAlgorithm::BaseAlgorithmImpl::reducePosition(PositionId posId, int numShares)
-{
-	return localBroker.reducePosition(posId, numShares);
 }
 
 Position BaseAlgorithm::BaseAlgorithmImpl::getPosition(PositionId posId)
@@ -196,101 +238,106 @@ void BaseAlgorithm::BaseAlgorithmImpl::tickHandler(const Tick & tick)
 }
 
 BaseAlgorithm::BaseAlgorithm(std::string input, std::shared_ptr<InteractiveBrokersClient> ibApiPtr, bool live):
-	_impl(new BaseAlgorithmImpl(this, input, ibApiPtr, live))
+	impl_(new BaseAlgorithmImpl(this, input, ibApiPtr, live))
 {
 }
 
 BaseAlgorithm::~BaseAlgorithm()
 {
-	if (_impl != nullptr)
+	if (impl_ != nullptr)
 	{
-		delete _impl;
-		_impl = nullptr;
+		delete impl_;
+		impl_ = nullptr;
 	}
 }
 
 std::shared_ptr<PlotData> BaseAlgorithm::getPlotData()
 {
-	return _impl->plotData;
+	return impl_->plotData;
 }
 
 void BaseAlgorithm::run()
 {
-	if (_impl != nullptr)
+	if (impl_ != nullptr)
 	{
-		_impl->run();
+		impl_->run();
 	}
 }
 
 void BaseAlgorithm::stop()
 {
-	if (_impl != nullptr)
+	if (impl_ != nullptr)
 	{
-		_impl->stop();
+		impl_->stop();
 	}
 }
 
 PositionId BaseAlgorithm::longMarketNoStop(std::string ticker, int numShares)
 {
-	return _impl->longMarketNoStop(ticker, numShares);
+	return impl_->longMarketNoStop(ticker, numShares);
 }
 
 PositionId BaseAlgorithm::longMarketStopMarket(std::string ticker, int numShares, double stopPrice)
 {
-	return _impl->longMarketStopMarket(ticker, numShares, stopPrice);
+	return impl_->longMarketStopMarket(ticker, numShares, stopPrice);
 }
 
 PositionId BaseAlgorithm::longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
 {
-	return _impl->longMarketStopLimit(ticker, numShares, activationPrice, limitPrice);
+	return impl_->longMarketStopLimit(ticker, numShares, activationPrice, limitPrice);
 }
 
 PositionId BaseAlgorithm::longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
 {
-	return _impl->longLimitStopMarket(ticker, numShares, buyLimit, activationPrice);
+	return impl_->longLimitStopMarket(ticker, numShares, buyLimit, activationPrice);
 }
 
 PositionId BaseAlgorithm::longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
 {
-	return _impl->longLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice);
+	return impl_->longLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice);
 }
 
 PositionId BaseAlgorithm::shortMarketNoStop(std::string ticker, int numShares)
 {
-	return _impl->shortMarketNoStop(ticker, numShares);
+	return impl_->shortMarketNoStop(ticker, numShares);
 }
 
 PositionId BaseAlgorithm::shortMarketStopMarket(std::string ticker, int numShares, double activationPrice)
 {
-	return _impl->shortMarketStopMarket(ticker, numShares, activationPrice);
+	return impl_->shortMarketStopMarket(ticker, numShares, activationPrice);
 }
 
 PositionId BaseAlgorithm::shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
 {
-	return _impl->shortMarketStopLimit(ticker, numShares, activationPrice, limitPrice);
+	return impl_->shortMarketStopLimit(ticker, numShares, activationPrice, limitPrice);
 }
 
 PositionId BaseAlgorithm::shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
 {
-	return _impl->shortLimitStopMarket(ticker, numShares, buyLimit, activationPrice);
+	return impl_->shortLimitStopMarket(ticker, numShares, buyLimit, activationPrice);
 }
 
 PositionId BaseAlgorithm::shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
 {
-	return _impl->shortLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice);
+	return impl_->shortLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice);
 }
 
 void BaseAlgorithm::closePosition(PositionId posId)
 {
-	_impl->closePosition(posId);
+	impl_->closePosition(posId);
 }
 
 void BaseAlgorithm::reducePosition(PositionId posId, int numShares)
 {
-	_impl->reducePosition(posId, numShares);
+
 }
 
 Position BaseAlgorithm::getPosition(PositionId posId)
 {
-	return _impl->getPosition(posId);
+	return impl_->getPosition(posId);
+}
+
+std::string BaseAlgorithm::ticker()
+{
+	return impl_->ticker();
 }
