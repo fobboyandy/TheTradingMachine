@@ -20,6 +20,6 @@ Interactive Broker (with streaming data subscription for real time data)
 
 To Be Continued...
 
-# Screenshots
+# Demo
 ![alt text](https://raw.githubusercontent.com/fobboyandy/TheTradingMachine/master/Screenshots/backtest_demo.gif)
 
