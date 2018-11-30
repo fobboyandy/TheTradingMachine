@@ -27,7 +27,7 @@ namespace Annotation
 		IAnnotation(AnnotationType t_type):
 			type_(t_type),
 			width_(1),
-			color_{ 255, 255, 255 }
+			color_{ 0, 0, 0 }
 		{}
 		virtual ~IAnnotation() {}
 

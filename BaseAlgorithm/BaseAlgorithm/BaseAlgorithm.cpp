@@ -185,10 +185,22 @@ void BaseAlgorithm::BaseAlgorithmImpl::closePosition(PositionId posId)
 		profit_ += position.profit;
 		std::string labelText = "Closing Position at $" + std::to_string(avgFillPrice) + "\n";
 		labelText += "Position Profit : " + std::to_string(position.profit) + "\n";
-		labelText += "Net Algorithm Profit : " + std::to_string(profit_) + "\n";
+		labelText += "Net Profit : " + std::to_string(profit_) + "\n";
 
-		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, time, avgFillPrice));
-		plotData->annotations.push_back(std::make_shared<Annotation::Line>(position.openTime, position.averagePrice, position.closeTime, avgFillPrice));
+		auto labelAnnotation = std::make_shared<Annotation::Label>(labelText, time, avgFillPrice);
+		auto lineAnnotation = std::make_shared<Annotation::Line>(position.openTime, position.averagePrice, position.closeTime, avgFillPrice);
+		if (position.profit < 0)
+		{
+			labelAnnotation->setColor(255, 0, 0);
+			lineAnnotation->setColor(255, 0, 0);
+		}
+		else if (position.profit > 0)
+		{
+			labelAnnotation->setColor(0, 255, 0);
+			lineAnnotation->setColor(0, 255, 0);
+		}
+		plotData->annotations.push_back(labelAnnotation);
+		plotData->annotations.push_back(lineAnnotation);
 	});
 
 }

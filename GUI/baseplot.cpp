@@ -62,6 +62,15 @@ BasePlot::~BasePlot()
 
 void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotation)
 {
+    // pointer is coming in from user. check for validity
+    if(t_annotation == nullptr)
+    {
+        return;
+    }
+
+    QPen pen;
+    pen.setColor(QColor(t_annotation->color().red, t_annotation->color().green, t_annotation->color().blue));
+
     switch(t_annotation->type())
     {
     case Annotation::AnnotationType::LINE:
@@ -79,6 +88,9 @@ void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotati
         // set coords
         lineItem->start->setCoords(lineAnnotation->startX_, lineAnnotation->startY_);
         lineItem->end->setCoords(lineAnnotation->endX_, lineAnnotation->endY_);
+
+        lineItem->setPen(pen);
+
     }
         break;
 
@@ -95,7 +107,7 @@ void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotati
 
         QFont serifFont("Times", 5, QFont::Bold);
         textLabel->setText(QString(textAnnotation->text_.c_str()));
-        textLabel->setPen(QPen(Qt::black)); // show black border around text
+        textLabel->setPen(pen);
 
     }
         break;
