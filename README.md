@@ -13,9 +13,13 @@ Almost anyone with some programming skills can study a chart, propose a pattern,
 # Requirements
 
 Windows Operating System with Microsoft Visual Studio
+
 Interactive Broker (with streaming data subscription for real time data)
 
 # Instructions
 
 To Be Continued...
+
+# Screenshots
+![alt text](https://raw.githubusercontent.com/fobboyandy/TheTradingMachine/master/Screenshots/position_annotations.PNG)
 
