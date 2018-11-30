@@ -62,7 +62,7 @@ void Portfolio::reducePosition(PositionId posId, double avgFillPrice, int numSha
 	}
 }
 
-Position Portfolio::getPosition(PositionId posId)
+Position& Portfolio::getPosition(PositionId posId)
 {
 	return positions_[posId];
 }

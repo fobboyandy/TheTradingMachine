@@ -28,7 +28,7 @@ public:
 	// It will never over reduce an existing position. ie. it will never oversell a long position or overcover a short position.
 	void reducePosition(PositionId posId, double avgFillPrice, int numShares);
 
-	Position getPosition(PositionId posId);
+	Position& getPosition(PositionId posId);
 
 private:
 	PositionId uniquePositionId_;
