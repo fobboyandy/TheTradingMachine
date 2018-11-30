@@ -15,7 +15,7 @@
 #include <Windows.h>
 
 // The Trading Machine
-#include "../InteractiveBrokersClient/InteractiveBrokersClient/InteractiveBrokersClient.h"
+#include "../BaseModules/InteractiveBrokersClient/InteractiveBrokersClient.h"
 #include "thetradingmachinetab.h"
 
 

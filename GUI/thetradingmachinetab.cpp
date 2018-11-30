@@ -2,7 +2,7 @@
 #include "thetradingmachinetab.h"
 #include "CandleMaker.h"
 #include "playdialog.h"
-#include "../Indicators/Indicators/SimpleMovingAverage.h"
+#include "../BaseModules/Indicators/SimpleMovingAverage.h"
 #include "indicatorplot.h"
 
 TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<InteractiveBrokersClient> client, QWidget* parent) :

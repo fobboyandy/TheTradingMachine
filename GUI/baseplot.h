@@ -3,8 +3,8 @@
 
 #include "qcustomplot.h"
 #include "indicatorplot.h"
-#include "../InteractiveBrokersClient/InteractiveBrokersApi/bar.h"
-#include "../BaseAlgorithm/BaseAlgorithm/Annotation.h"
+#include "../BaseModules/InteractiveBrokersApi/bar.h"
+#include "../BaseModules/BaseAlgorithm/Annotation.h"
 
 class BasePlot : public QObject
 {

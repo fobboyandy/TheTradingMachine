@@ -24,9 +24,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++11
 
-INCLUDEPATH += \
-        ./../InteractiveBrokersClient/InteractiveBrokersClient/
-
 SOURCES += \
         main.cpp \
         qcustomplot.cpp \
@@ -45,15 +42,15 @@ HEADERS += \
     playdialog.h \
     thetradingmachinetab.h \
     CandleMaker.h \
-    ../BaseAlgorithm/BaseAlgorithm/PlotData.h \
-    ../Indicators/Indicators/Common.h \
-    ../Indicators/Indicators/SimpleMovingAverage.h \
     indicatorplot.h \
     candleplot.h \
     volumeplot.h \
     indicatordialog.h \
-    ../BaseAlgorithm/BaseAlgorithm/Annotation.h \
-    baseplot.h
+    baseplot.h \
+    ../BaseModules/BaseAlgorithm/Annotation.h \
+    ../BaseModules/BaseAlgorithm/PlotData.h \
+    ../BaseModules/BaseAlgorithm/Common.h \
+    indicatorincludes.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \
@@ -67,12 +64,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RESOURCES += \
     resource.qrc
 
-win32: LIBS += -L$$PWD/../InteractiveBrokersClient/x64/Debug/ -lInteractiveBrokersClient
-
-INCLUDEPATH += $$PWD/../InteractiveBrokersClient/x64/Debug
-DEPENDPATH += $$PWD/../InteractiveBrokersClient/x64/Debug
-
-win32: LIBS += -L$$PWD/../Indicators/x64/Debug/ -lIndicators
-
-INCLUDEPATH += $$PWD/../Indicators/x64/Debug
-DEPENDPATH += $$PWD/../Indicators/x64/Debug
+win32: LIBS += -L$$PWD/../BaseModules/x64/Debug/ -lInteractiveBrokersClient -lIndicators

@@ -1,7 +1,7 @@
 #include "candleplot.h"
 #include "indicatorplot.h"
-#include "../Indicators/Indicators/Indicators.h"
 #include "indicatordialog.h"
+#include "indicatorincludes.h"
 #include <unordered_set>
 #include <memory>
 

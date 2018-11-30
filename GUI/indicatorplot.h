@@ -4,7 +4,7 @@
 #include <memory>
 #include <array>
 #include "qcustomplot.h"
-#include "../Indicators/Indicators/Common.h"
+#include "../BaseModules/Indicators/Indicators.h"
 
 enum class IndicatorType
 {

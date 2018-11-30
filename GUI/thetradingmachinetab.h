@@ -11,8 +11,8 @@
 #include <list>
 #include "qcustomplot.h"
 #include "CandleMaker.h"
-#include "../InteractiveBrokersClient/InteractiveBrokersClient/InteractiveBrokersClient.h"
-#include "../BaseAlgorithm/BaseAlgorithm/PlotData.h"
+#include "../BaseModules/InteractiveBrokersClient/InteractiveBrokersClient.h"
+#include "../BaseModules/BaseAlgorithm/PlotData.h"
 #include "candleplot.h"
 #include "volumeplot.h"
 

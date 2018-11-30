@@ -2,7 +2,7 @@
 #define CANDLEPLOT_H
 
 #include "qcustomplot.h"
-#include "../InteractiveBrokersApi/bar.h"
+#include "../BaseModules/InteractiveBrokersApi/bar.h"
 #include "indicatorplot.h"
 #include "baseplot.h"
 #include <unordered_map>

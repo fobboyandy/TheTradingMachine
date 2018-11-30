@@ -4,8 +4,7 @@
 #include <Windows.h>
 #include <QString>
 #include <QInputDialog>
-#include <type_traits>
-#include "../InteractiveBrokersClient/InteractiveBrokersClient/InteractiveBrokersClient.h"
+#include "../BaseModules/InteractiveBrokersClient/InteractiveBrokersClient.h"
 
 // instantiation of static members
 std::shared_ptr<InteractiveBrokersClient> TheTradingMachineMainWindow::client_ = nullptr;
