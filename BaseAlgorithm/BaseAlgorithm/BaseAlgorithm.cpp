@@ -120,18 +120,16 @@ std::string BaseAlgorithm::BaseAlgorithmImpl::ticker()
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketNoStop(std::string ticker, int numShares)
 {
 	// when an order gets filled, this lambda submits an annotation
-	return localBroker.longMarketNoStop(ticker, numShares, [this, ticker, numShares](double avgFillPrice)
+	return localBroker.longMarketNoStop(ticker, numShares, [this, ticker, numShares](double avgFillPrice, time_t time)
 	{
-		// time should be retrieved from the order confirmation. placeholder for now
-		auto latestTickTime = plotData->ticks[plotData->ticks.size() - 1].time;
 		std::string labelText = "Long " + std::to_string(numShares) + " shares at $" + std::to_string(avgFillPrice) + "\n";
-		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, latestTickTime, avgFillPrice));
+		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, time, avgFillPrice));
 	});	
 }
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketStopMarket(std::string ticker, int numShares, double stopPrice)
 {
-	return localBroker.longMarketStopMarket(ticker, numShares, stopPrice, [this, numShares](double avgFillPrice)
+	return localBroker.longMarketStopMarket(ticker, numShares, stopPrice, [this, numShares](double avgFillPrice, time_t time)
 	{
 
 	});
@@ -139,7 +137,7 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketStopMarket(std::string ti
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
 {
-	return localBroker.longMarketStopLimit(ticker, numShares, activationPrice, limitPrice, [this, numShares](double avgFillPrice)
+	return localBroker.longMarketStopLimit(ticker, numShares, activationPrice, limitPrice, [this, numShares](double avgFillPrice, time_t time)
 	{
 
 	});
@@ -147,7 +145,7 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketStopLimit(std::string tic
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
 {
-	return localBroker.longLimitStopMarket(ticker, numShares, buyLimit, activationPrice, [this, numShares](double avgFillPrice)
+	return localBroker.longLimitStopMarket(ticker, numShares, buyLimit, activationPrice, [this, numShares](double avgFillPrice, time_t time)
 	{
 
 	});
@@ -155,7 +153,7 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::longLimitStopMarket(std::string tic
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
 {
-	return localBroker.longLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice, [this, numShares](double avgFillPrice)
+	return localBroker.longLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice, [this, numShares](double avgFillPrice, time_t time)
 	{
 
 	});
@@ -163,7 +161,7 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::longLimitStopLimit(std::string tick
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketNoStop(std::string ticker, int numShares)
 {
-	return localBroker.shortMarketNoStop(ticker, numShares, [this, numShares](double avgFillPrice)
+	return localBroker.shortMarketNoStop(ticker, numShares, [this, numShares](double avgFillPrice, time_t time)
 	{
 
 	});
@@ -171,7 +169,7 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketNoStop(std::string ticke
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketStopMarket(std::string ticker, int numShares, double activationPrice)
 {
-	return localBroker.shortMarketStopMarket(ticker, numShares, activationPrice, [this, numShares](double avgFillPrice)
+	return localBroker.shortMarketStopMarket(ticker, numShares, activationPrice, [this, numShares](double avgFillPrice, time_t time)
 	{
 
 	});
@@ -179,7 +177,7 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketStopMarket(std::string t
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
 {
-	return localBroker.shortMarketStopLimit(ticker, numShares, activationPrice, limitPrice, [this, numShares](double avgFillPrice)
+	return localBroker.shortMarketStopLimit(ticker, numShares, activationPrice, limitPrice, [this, numShares](double avgFillPrice, time_t time)
 	{
 
 	});
@@ -187,7 +185,7 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketStopLimit(std::string ti
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
 {
-	return localBroker.shortLimitStopMarket(ticker, numShares, buyLimit, activationPrice, [this, numShares](double avgFillPrice)
+	return localBroker.shortLimitStopMarket(ticker, numShares, buyLimit, activationPrice, [this, numShares](double avgFillPrice, time_t time)
 	{
 
 	});
@@ -195,7 +193,7 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::shortLimitStopMarket(std::string ti
 
 PositionId BaseAlgorithm::BaseAlgorithmImpl::shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
 {
-	return localBroker.shortLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice, [this, numShares](double avgFillPrice)
+	return localBroker.shortLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice, [this, numShares](double avgFillPrice, time_t time)
 	{
 
 	});
@@ -204,16 +202,16 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::shortLimitStopLimit(std::string tic
 void BaseAlgorithm::BaseAlgorithmImpl::closePosition(PositionId posId)
 {
 	// when an order gets filled, this lambda submits an annotation
-	localBroker.closePosition(posId, [this, posId](double avgFillPrice)
+	localBroker.closePosition(posId, [this, posId](double avgFillPrice, time_t time)
 	{
-		auto positionProfit = localBroker.getPosition(posId).profit;
-		profit_ += positionProfit;
-		// time should be retrieved from the order confirmation. placeholder for now
-		auto latestTickTime = plotData->ticks[plotData->ticks.size() - 1].time;
+		auto position = localBroker.getPosition(posId);
+		profit_ += position.profit;
 		std::string labelText = "Closing Position at $" + std::to_string(avgFillPrice) + "\n";
-		labelText += "Position Profit : " + std::to_string(positionProfit) + "\n";
+		labelText += "Position Profit : " + std::to_string(position.profit) + "\n";
 		labelText += "Net Algorithm Profit : " + std::to_string(profit_) + "\n";
-		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, latestTickTime, avgFillPrice));
+
+		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, time, avgFillPrice));
+		plotData->annotations.push_back(std::make_shared<Annotation::Line>(position.openTime, position.averagePrice, position.closeTime, avgFillPrice));
 	});
 
 }

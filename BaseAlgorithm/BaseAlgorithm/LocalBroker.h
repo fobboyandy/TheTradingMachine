@@ -27,20 +27,20 @@ public:
 // order api
 public:
 	//long orders
-	PositionId longMarketNoStop(std::string ticker, int numShares, std::function<void(double avgPrice)> fillNotification);
-	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice, std::function<void(double avgPrice)> fillNotification);
-	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double avgPrice)> fillNotification);
-	PositionId longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice, std::function<void(double avgPrice)> fillNotification);
-	PositionId longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice, std::function<void(double avgPrice)> fillNotification);
+	PositionId longMarketNoStop(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification);
+	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice, std::function<void(double, time_t)> fillNotification);
+	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double, time_t)> fillNotification);
+	PositionId longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice, std::function<void(double, time_t)> fillNotification);
+	PositionId longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice, std::function<void(double, time_t)> fillNotification);
 
 	//short orders
-	PositionId shortMarketNoStop(std::string ticker, int numShares, std::function<void(double avgPrice)> fillNotification);
-	PositionId shortMarketStopMarket(std::string ticker, int numShares, double activationPrice, std::function<void(double avgPrice)> fillNotification);
-	PositionId shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double avgPrice)> fillNotification);
-	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice, std::function<void(double avgPrice)> fillNotification);
-	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice, std::function<void(double avgPrice)> fillNotification);
+	PositionId shortMarketNoStop(std::string ticker, int numShares,  std::function<void(double, time_t)> fillNotification);
+	PositionId shortMarketStopMarket(std::string ticker, int numShares, double activationPrice, std::function<void(double, time_t)> fillNotification);
+	PositionId shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double, time_t)> fillNotification);
+	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice, std::function<void(double, time_t)> fillNotification);
+	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice, std::function<void(double, time_t)> fillNotification);
 
-	void closePosition(PositionId posId, std::function<void(double avgPrice)> fillNotification);
+	void closePosition(PositionId posId, std::function<void(double, time_t)> fillNotification);
 
 	Position getPosition(PositionId posId);
 private:

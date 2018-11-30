@@ -10,4 +10,6 @@ struct Position
 	double averagePrice;
 	int shares;
 	double profit;
+	time_t openTime;
+	time_t closeTime;
 };

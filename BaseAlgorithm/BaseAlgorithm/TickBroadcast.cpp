@@ -50,9 +50,10 @@ bool TickBroadcast::finished() const
 	return finished_;
 }
 
-double TickBroadcast::lastPrice() const
+Tick TickBroadcast::lastTick() const
 {
-	return lastPrice_;
+	std::lock_guard<std::mutex> tickLock(tickMtx_);
+	return lastTick_;
 }
 
 void TickBroadcast::run()
@@ -182,8 +183,10 @@ void TickBroadcast::unregisterCallback(CallbackHandle handle)
 
 void TickBroadcast::broadcastTick(const Tick & tick)
 {
-	//save the price before broadcasting the tick
-	lastPrice_ = tick.price;
+	std::unique_lock<std::mutex> tickLock(tickMtx_);
+	//save the tick before broadcasting
+	lastTick_ = tick;
+	tickLock.unlock();
 
 	//dispatch the tick to the registered callbacks under a lock
 	std::lock_guard<std::mutex> lock(callbackListMtx_);
@@ -194,6 +197,6 @@ void TickBroadcast::broadcastTick(const Tick & tick)
 		// tickHandler goes out of scope before
 		// BaseAlgorithm was able to unregister it.
 
-		fn.second(tick);
+		fn.second(lastTick_);
 	}
 }

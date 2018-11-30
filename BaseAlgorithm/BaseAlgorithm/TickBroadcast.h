@@ -16,7 +16,7 @@ public:
 	CallbackHandle registerListener(TickListener callback);
 	void unregisterCallback(CallbackHandle handle);
 	bool finished() const;
-	double lastPrice() const;
+	Tick lastTick() const;
 
 	// we want the data source to start running when the parent has set up everything
 	// if we don't have a run function, the ticks would be fired before the parent 
@@ -29,8 +29,9 @@ private:
 	void readTickFile(void);
 	
 private:	
-	// price is updated from another thread. make atomic
-	std::atomic<double> lastPrice_;
+	// tick is written from another thread. protect with lock 
+	mutable std::mutex tickMtx_;
+	Tick lastTick_;
 
 	std::mutex callbackListMtx_;
 	CallbackHandle uniqueCallbackHandles_;

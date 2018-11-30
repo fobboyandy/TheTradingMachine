@@ -19,10 +19,10 @@ public:
 
 	// all orders are submitted as all or none so we either fill the entire position or none
 	// therefore, this should only be called once for any order
-	void fillPosition(PositionId posId, double avgFillPrice, int numShares);
+	void fillPosition(PositionId posId, double avgFillPrice, int numShares, time_t fillTime);
 
 	// close position reduces all the shares to 0. If it was a long, it sells. If it was a short, it covers.
-	void closePosition(PositionId posId, double avgFillPrice);
+	void closePosition(PositionId posId, double avgFillPrice, time_t closeTime);
 
 	// reducePosition reduces the position in the opposite direction. If it was a long, it sells. If it's a short, it covers. 
 	// It will never over reduce an existing position. ie. it will never oversell a long position or overcover a short position.

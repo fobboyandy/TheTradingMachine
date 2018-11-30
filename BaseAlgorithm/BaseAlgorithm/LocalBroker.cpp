@@ -43,7 +43,7 @@ bool LocalBroker::valid()
 	return valid_;
 }
 
-PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares, std::function<void(double avgPrice)> fillNotification)
+PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification)
 {
 	//validate number of shares
 	numShares = abs(numShares);
@@ -53,10 +53,10 @@ PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares, std:
 	// this lambda captures the state of the current context
 	// when this is called as a callback later, it will have
 	// the context to dispatch to the caller
-	auto fillPosition = [this, newPosId, fillNotification, numShares](double price) 
+	auto fillPositionNotification = [this, newPosId, fillNotification, numShares](double price, time_t time) 
 	{
-		portfolio_.fillPosition(newPosId, price, numShares);
-		fillNotification(price);
+		portfolio_.fillPosition(newPosId, price, numShares, time);
+		fillNotification(price, time);
 	};
 
 	if (liveTrade_)
@@ -70,53 +70,53 @@ PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares, std:
 		// before the posId is returned back to them. this is fine because the posId is not
 		// given as part of the callback argument anyway and would not provide any useful 
 		// information
-		fillPosition(tickSource_.lastPrice());
+		fillPositionNotification(tickSource_.lastTick().price, tickSource_.lastTick().time);
 	}
 
 	return newPosId;
 }
 
-PositionId LocalBroker::longMarketStopMarket(std::string ticker, int numShares, double stopPrice, std::function<void(double avgPrice)> callerFillNotification)
+PositionId LocalBroker::longMarketStopMarket(std::string ticker, int numShares, double stopPrice,  std::function<void(double, time_t)> fillNotification)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double avgPrice)> callerFillNotification)
+PositionId LocalBroker::longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice,  std::function<void(double, time_t)> fillNotification)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::longLimitStopMarket(std::string ticker, int numShares, double longLimit, double activationPrice, std::function<void(double avgPrice)> callerFillNotification)
+PositionId LocalBroker::longLimitStopMarket(std::string ticker, int numShares, double longLimit, double activationPrice,  std::function<void(double, time_t)> fillNotification)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::longLimitStopLimit(std::string ticker, int numShares, double longLimit, double activationPrice, double limitPrice, std::function<void(double avgPrice)> callerFillNotification)
+PositionId LocalBroker::longLimitStopLimit(std::string ticker, int numShares, double longLimit, double activationPrice, double limitPrice,  std::function<void(double, time_t)> fillNotification)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::shortMarketNoStop(std::string ticker, int numShares, std::function<void(double avgPrice)> callerFillNotification)
+PositionId LocalBroker::shortMarketNoStop(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification)
 {
 	return 0;
 }
 
-PositionId LocalBroker::shortMarketStopMarket(std::string ticker, int numShares, double activationPrice, std::function<void(double avgPrice)> callerFillNotification)
+PositionId LocalBroker::shortMarketStopMarket(std::string ticker, int numShares, double activationPrice,  std::function<void(double, time_t)> fillNotification)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double avgPrice)> callerFillNotification)
+PositionId LocalBroker::shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice,  std::function<void(double, time_t)> fillNotification)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice, std::function<void(double avgPrice)> callerFillNotification)
+PositionId LocalBroker::shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice,  std::function<void(double, time_t)> fillNotification)
 {
 	return PositionId();
 }
 
-PositionId LocalBroker::shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice, std::function<void(double avgPrice)> callerFillNotification)
+PositionId LocalBroker::shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice,  std::function<void(double, time_t)> fillNotification)
 {
 	return PositionId();
 }
@@ -139,7 +139,7 @@ void LocalBroker::reducePosition(PositionId posId, int numShares)
 	else
 	{
 		// autofill
-		portfolio_.reducePosition(posId, tickSource_.lastPrice(), numShares);
+		portfolio_.reducePosition(posId, tickSource_.lastTick().price, numShares);
 	}
 }
 
@@ -162,15 +162,15 @@ void LocalBroker::stoplossHandler(const Tick & tick)
 {
 }
 
-void LocalBroker::closePosition(PositionId posId, std::function<void(double avgPrice)> fillNotification)
+void LocalBroker::closePosition(PositionId posId, std::function<void(double, time_t)> fillNotification)
 {
 	// this lambda captures the state of the current context
 	// when this is called as a callback later, it will have
 	// the context to dispatch to the caller
-	auto closePositionFillNotification = [this, posId, fillNotification](double price)
+	auto closePositionFillNotification = [this, posId, fillNotification](double price, time_t time)
 	{
-		portfolio_.closePosition(posId, price);
-		fillNotification(price);
+		portfolio_.closePosition(posId, price, time);
+		fillNotification(price, time);
 	};
 
 	if (liveTrade_)
@@ -189,6 +189,6 @@ void LocalBroker::closePosition(PositionId posId, std::function<void(double avgP
 	else
 	{
 		// autofill
-		closePositionFillNotification(tickSource_.lastPrice());
+		closePositionFillNotification(tickSource_.lastTick().price, tickSource_.lastTick().time);
 	}
 }

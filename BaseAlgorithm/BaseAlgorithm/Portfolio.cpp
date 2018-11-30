@@ -13,12 +13,12 @@ PositionId Portfolio::newPosition()
 {
 	// use postIncrement to keep consistent with m_orderId in ibApi
 	auto currentPositionId = uniquePositionId_++;
-	positions_[currentPositionId] = Position{0, 0, 0};
+	positions_[currentPositionId] = Position{0, 0, 0, 0, 0};
 	return currentPositionId;
 }
 
 // caller handles errorchecking
-void Portfolio::fillPosition(PositionId posId, double avgFillPrice, int numShares)
+void Portfolio::fillPosition(PositionId posId, double avgFillPrice, int numShares, time_t fillTime)
 {
 	// only update existing positions that hasn't been filled
 	if (existingPosition(posId) && positions_[posId].shares == 0)
@@ -26,14 +26,18 @@ void Portfolio::fillPosition(PositionId posId, double avgFillPrice, int numShare
 		positions_[posId].shares = numShares;
 		positions_[posId].averagePrice = avgFillPrice;
 		positions_[posId].profit = 0;
+		positions_[posId].openTime = fillTime;
+		positions_[posId].closeTime = 0;
+
 	}
 }
 
-void Portfolio::closePosition(PositionId posId, double avgFillPrice)
+void Portfolio::closePosition(PositionId posId, double avgFillPrice, time_t closeTime)
 {
 	if (existingPosition(posId))
 	{
 		reducePosition(posId, avgFillPrice, positions_[posId].shares);
+		positions_[posId].closeTime = closeTime;
 	}
 }
 
