@@ -1,4 +1,5 @@
 #include "LocalBroker.h"
+#include <algorithm>
 
 LocalBroker::LocalBroker(std::string input, std::shared_ptr<InteractiveBrokersClient> ibApi, bool live) :
 	ibApi_(ibApi),
@@ -16,17 +17,10 @@ LocalBroker::LocalBroker(std::string input, std::shared_ptr<InteractiveBrokersCl
 			throw std::runtime_error("A valid IB connection is needed for live trading.");
 		}
 	}
-
-	//register our stoploss handler to main all stoplosses locally
-	stoplossHandlerHandle = tickSource_.registerListener([this](const Tick& tick)
-	{
-		this->stoplossHandler(tick);
-	});
 }
 
 LocalBroker::~LocalBroker()
 {
-	tickSource_.unregisterCallback(stoplossHandlerHandle);
 }
 
 void LocalBroker::run()
@@ -39,7 +33,7 @@ bool LocalBroker::valid()
 	return valid_;
 }
 
-PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification)
+PositionId LocalBroker::longMarket(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification)
 {
 	//validate number of shares
 	numShares = abs(numShares);
@@ -72,55 +66,7 @@ PositionId LocalBroker::longMarketNoStop(std::string ticker, int numShares, std:
 	return newPosId;
 }
 
-PositionId LocalBroker::longMarketStopMarket(std::string ticker, int numShares, double stopPrice, std::function<void(double, time_t)> fillNotification)
-{
-	//validate number of shares
-	numShares = abs(numShares);
-
-	auto newPosId = portfolio_.newPosition();
-
-	// this lambda captures the state of the current context
-	// when this is called as a callback later, it will have
-	// the context to dispatch to the caller
-	auto fillPositionNotification = [=](double price, time_t time)
-	{
-		// add stoploss to handler
-		std::unique_lock<std::mutex> stoplossLock(stoplossMtx_);
-		longStoplosses_[static_cast<int>(stopPrice * 100)].push_back(newPosId);
-		stoplossLock.unlock();
-
-		portfolio_.fillPosition(newPosId, price, numShares, time);
-		fillNotification(price, time);
-	};
-
-	if (liveTrade_)
-	{
-		// submit through ib and register fillPosition as the callback
-	}
-	else
-	{
-		fillPositionNotification(tickSource_.lastTick().price, tickSource_.lastTick().time);
-	}
-
-	return newPosId;
-}
-
-PositionId LocalBroker::longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice,  std::function<void(double, time_t)> fillNotification)
-{
-	return PositionId();
-}
-
-PositionId LocalBroker::longLimitStopMarket(std::string ticker, int numShares, double longLimit, double activationPrice,  std::function<void(double, time_t)> fillNotification)
-{
-	return PositionId();
-}
-
-PositionId LocalBroker::longLimitStopLimit(std::string ticker, int numShares, double longLimit, double activationPrice, double limitPrice,  std::function<void(double, time_t)> fillNotification)
-{
-	return PositionId();
-}
-
-PositionId LocalBroker::shortMarketNoStop(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification)
+PositionId LocalBroker::shortMarket(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification)
 {
 	//validate number of shares
 	numShares = abs(numShares);
@@ -151,59 +97,6 @@ PositionId LocalBroker::shortMarketNoStop(std::string ticker, int numShares, std
 	}
 
 	return newPosId;
-}
-
-PositionId LocalBroker::shortMarketStopMarket(std::string ticker, int numShares, double activationPrice, std::function<void(double, time_t)> fillNotification)
-{	
-	//validate number of shares
-	numShares = abs(numShares);
-
-	auto newPosId = portfolio_.newPosition();
-
-	// this lambda captures the state of the current context
-	// when this is called as a callback later, it will have
-	// the context to dispatch to the caller
-	auto fillPositionNotification = [=](double price, time_t time)
-	{
-		// add stoploss to handler
-		std::unique_lock<std::mutex> stoplossLock(stoplossMtx_);
-		shortStoplosses_[static_cast<int>(activationPrice * 100)].push_back(newPosId);
-		stoplossLock.unlock();
-
-		portfolio_.fillPosition(newPosId, price, -numShares, time);
-		fillNotification(price, time);
-	};
-
-	if (liveTrade_)
-	{
-		// submit through ib and register fillPosition as the callback
-	}
-	else
-	{
-		// for non live trades, we simply fill the position with the latest price
-		// instantly and notify the caller. in this case, the caller will be notified
-		// before the posId is returned back to them. this is fine because the posId is not
-		// given as part of the callback argument anyway and would not provide any useful 
-		// information
-		fillPositionNotification(tickSource_.lastTick().price, tickSource_.lastTick().time);
-	}
-
-	return newPosId;
-}
-
-PositionId LocalBroker::shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice,  std::function<void(double, time_t)> fillNotification)
-{
-	return PositionId();
-}
-
-PositionId LocalBroker::shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice,  std::function<void(double, time_t)> fillNotification)
-{
-	return PositionId();
-}
-
-PositionId LocalBroker::shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice,  std::function<void(double, time_t)> fillNotification)
-{
-	return PositionId();
 }
 
 void LocalBroker::reducePosition(PositionId posId, int numShares)
@@ -241,19 +134,6 @@ CallbackHandle LocalBroker::registerListener(TickListener callback)
 void LocalBroker::unregisterListener(CallbackHandle handle)
 {
 	tickSource_.unregisterCallback(handle);
-}
-
-void LocalBroker::stoplossHandler(const Tick & tick)
-{
-	// check the long stoplosses
-	auto longStopIt = longStoplosses_.find(static_cast<int>(tick.price * 100));
-	
-	if (longStopIt != longStoplosses_.end())
-	{
-
-	}
-
-
 }
 
 void LocalBroker::closePosition(PositionId posId, std::function<void(double, time_t)> fillNotification)

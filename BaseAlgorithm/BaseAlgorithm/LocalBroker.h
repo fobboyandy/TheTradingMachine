@@ -26,39 +26,14 @@ public:
 
 // order api
 public:
-	//long orders
-	PositionId longMarketNoStop(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification);
-	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice, std::function<void(double, time_t)> fillNotification);
-	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double, time_t)> fillNotification);
-	PositionId longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice, std::function<void(double, time_t)> fillNotification);
-	PositionId longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice, std::function<void(double, time_t)> fillNotification);
-
-	//short orders
-	PositionId shortMarketNoStop(std::string ticker, int numShares,  std::function<void(double, time_t)> fillNotification);
-	PositionId shortMarketStopMarket(std::string ticker, int numShares, double activationPrice, std::function<void(double, time_t)> fillNotification);
-	PositionId shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice, std::function<void(double, time_t)> fillNotification);
-	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice, std::function<void(double, time_t)> fillNotification);
-	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice, std::function<void(double, time_t)> fillNotification);
-
+	//basic order api. Parent will use these to implement their own local stoploss handler
+	PositionId longMarket(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification);
+	PositionId shortMarket(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification);
 	void closePosition(PositionId posId, std::function<void(double, time_t)> fillNotification);
-
 	Position getPosition(PositionId posId);
-private:
-	// handles stoplosses locally without sending a stoploss order to ib. also used
-	// for fileplayback stoploss emulation
-	CallbackHandle stoplossHandlerHandle;
-	void stoplossHandler(const Tick& tick);
-	void reducePosition(PositionId posId, int numShares);
 
-	// stop losses sorted. each stop price has a list of
-	// positions that need to be stopped. We need a lock
-	// for the stoplosses because it is accessed in two threads
-	std::mutex stoplossMtx_;
-	// we use ints as the key because doubles have precision errors
-	// we doubles by 100 to get the second decimal. Although we don't 
-	// index by the exact value, we don't want to deal with ub
-	std::map<int, std::list<PositionId>> longStoplosses_;
-	std::map<int, std::list<PositionId>> shortStoplosses_;
+private:
+	void reducePosition(PositionId posId, int numShares);
 
 private:
 	std::shared_ptr<InteractiveBrokersClient> ibApi_;

@@ -13,7 +13,7 @@ PositionId Portfolio::newPosition()
 {
 	// use postIncrement to keep consistent with m_orderId in ibApi
 	auto currentPositionId = uniquePositionId_++;
-	positions_[currentPositionId] = Position{0, 0, 0, 0, 0};
+	positions_[currentPositionId] = Position{ 0 };
 	return currentPositionId;
 }
 
