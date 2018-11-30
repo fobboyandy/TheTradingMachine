@@ -66,6 +66,11 @@ PositionId LocalBroker::longMarket(std::string ticker, int numShares, std::funct
 	return newPosId;
 }
 
+PositionId LocalBroker::longMarketLimit(std::string ticker, double limitPrice, int numShares, std::function<void(double, time_t)> fillNotification)
+{
+	return PositionId();
+}
+
 PositionId LocalBroker::shortMarket(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification)
 {
 	//validate number of shares
@@ -97,6 +102,11 @@ PositionId LocalBroker::shortMarket(std::string ticker, int numShares, std::func
 	}
 
 	return newPosId;
+}
+
+PositionId LocalBroker::shortMarketLimit(std::string ticker, double limitPrice, int numShares, std::function<void(double, time_t)> fillNotification)
+{
+	return PositionId();
 }
 
 void LocalBroker::reducePosition(PositionId posId, int numShares)
