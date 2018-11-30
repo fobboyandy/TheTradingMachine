@@ -21,5 +21,10 @@ Interactive Broker (with streaming data subscription for real time data)
 To Be Continued...
 
 # Demo
+
+Run time loading user strategies and user defined annotations
 ![alt text](https://raw.githubusercontent.com/fobboyandy/TheTradingMachine/master/Screenshots/backtest_demo.gif)
+
+Real time indicators overlay
+![alt text](https://raw.githubusercontent.com/fobboyandy/TheTradingMachine/master/Screenshots/indicators_demo.gif)
 
