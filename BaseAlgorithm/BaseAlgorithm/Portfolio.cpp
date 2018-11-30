@@ -28,7 +28,6 @@ void Portfolio::fillPosition(PositionId posId, double avgFillPrice, int numShare
 		positions_[posId].profit = 0;
 		positions_[posId].openTime = fillTime;
 		positions_[posId].closeTime = 0;
-
 	}
 }
 

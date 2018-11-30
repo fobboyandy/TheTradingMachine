@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include <unordered_map>
+#include <map>
 #include <string>
 #include <memory>
 #include "../../InteractiveBrokersClient/InteractiveBrokersApi/CommonDefs.h"
@@ -49,6 +49,16 @@ private:
 	CallbackHandle stoplossHandlerHandle;
 	void stoplossHandler(const Tick& tick);
 	void reducePosition(PositionId posId, int numShares);
+
+	// stop losses sorted. each stop price has a list of
+	// positions that need to be stopped. We need a lock
+	// for the stoplosses because it is accessed in two threads
+	std::mutex stoplossMtx_;
+	// we use ints as the key because doubles have precision errors
+	// we doubles by 100 to get the second decimal. Although we don't 
+	// index by the exact value, we don't want to deal with ub
+	std::map<int, std::list<PositionId>> longStoplosses_;
+	std::map<int, std::list<PositionId>> shortStoplosses_;
 
 private:
 	std::shared_ptr<InteractiveBrokersClient> ibApi_;
