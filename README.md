@@ -21,5 +21,5 @@ Interactive Broker (with streaming data subscription for real time data)
 To Be Continued...
 
 # Screenshots
-![alt text](https://raw.githubusercontent.com/fobboyandy/TheTradingMachine/master/Screenshots/position_annotations.PNG)
+![alt text](https://raw.githubusercontent.com/fobboyandy/TheTradingMachine/master/Screenshots/backtest_demo.gif)
 
