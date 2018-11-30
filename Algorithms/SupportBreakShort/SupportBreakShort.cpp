@@ -27,7 +27,7 @@ void SupportBreakShort::tickHandler(const Tick & tick)
 			{
 				closePosition(posId);
 			}
-			posId = longMarketNoStop(ticker(), 100);
+			posId = shortMarketNoStop(ticker(), 100);
 		}
 		bought = true;
 	}

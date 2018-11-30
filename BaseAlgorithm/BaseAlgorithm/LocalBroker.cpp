@@ -98,7 +98,35 @@ PositionId LocalBroker::longLimitStopLimit(std::string ticker, int numShares, do
 
 PositionId LocalBroker::shortMarketNoStop(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification)
 {
-	return 0;
+	//validate number of shares
+	numShares = abs(numShares);
+
+	auto newPosId = portfolio_.newPosition();
+
+	// this lambda captures the state of the current context
+	// when this is called as a callback later, it will have
+	// the context to dispatch to the caller
+	auto fillPositionNotification = [this, newPosId, fillNotification, numShares](double price, time_t time)
+	{
+		portfolio_.fillPosition(newPosId, price, -numShares, time);
+		fillNotification(price, time);
+	};
+
+	if (liveTrade_)
+	{
+		// submit through ib and register fillPosition as the callback
+	}
+	else
+	{
+		// for non live trades, we simply fill the position with the latest price
+		// instantly and notify the caller. in this case, the caller will be notified
+		// before the posId is returned back to them. this is fine because the posId is not
+		// given as part of the callback argument anyway and would not provide any useful 
+		// information
+		fillPositionNotification(tickSource_.lastTick().price, tickSource_.lastTick().time);
+	}
+
+	return newPosId;
 }
 
 PositionId LocalBroker::shortMarketStopMarket(std::string ticker, int numShares, double activationPrice,  std::function<void(double, time_t)> fillNotification)

@@ -163,7 +163,8 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketNoStop(std::string ticke
 {
 	return localBroker.shortMarketNoStop(ticker, numShares, [this, numShares](double avgFillPrice, time_t time)
 	{
-
+		std::string labelText = "Short " + std::to_string(numShares) + " shares at $" + std::to_string(avgFillPrice) + "\n";
+		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, time, avgFillPrice));
 	});
 }
 
