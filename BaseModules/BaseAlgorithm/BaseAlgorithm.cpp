@@ -8,8 +8,6 @@
 #include "BaseAlgorithm.h"
 #include "LocalBroker.h"
 
-#define TICK_CSV_ROW_SZ 12
-
 class BaseAlgorithm::BaseAlgorithmImpl
 {
 public:

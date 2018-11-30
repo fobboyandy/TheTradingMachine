@@ -47,9 +47,6 @@ HEADERS += \
     volumeplot.h \
     indicatordialog.h \
     baseplot.h \
-    ../BaseModules/BaseAlgorithm/Annotation.h \
-    ../BaseModules/BaseAlgorithm/PlotData.h \
-    ../BaseModules/BaseAlgorithm/Common.h \
     indicatorincludes.h
 
 FORMS += \

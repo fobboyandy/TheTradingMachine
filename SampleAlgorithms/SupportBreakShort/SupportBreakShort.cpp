@@ -17,26 +17,6 @@ SupportBreakShort::~SupportBreakShort()
 
 void SupportBreakShort::tickHandler(const Tick & tick)
 {
-	static auto bought = false;
-	static auto posId = 0;
-	static auto pPosId = posId;
-	if (GetAsyncKeyState(0x20))
-	{
-		while (GetAsyncKeyState(0x20));
-
-		if (!bought)
-		{
-			posId = longMarketNoStop(ticker(), 100);
-			bought = true;
-		}
-		else
-		{
-			closePosition(posId);
-			bought = false;
-		}
-
-	}
-
 	// does nothing for now. all plot data is handled in base class
 
 	//Bar minuteBar;

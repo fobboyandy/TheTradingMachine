@@ -2,7 +2,6 @@
 
 #include <string>
 
-
 namespace Annotation
 {
 	enum class AnnotationType
