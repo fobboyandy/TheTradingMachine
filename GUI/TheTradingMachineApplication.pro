@@ -30,7 +30,6 @@ SOURCES += \
     thetradingmachinemainwindow.cpp \
     playdialog.cpp \
     thetradingmachinetab.cpp \
-    CandleMaker.cpp \
     candleplot.cpp \
     volumeplot.cpp \
     indicatordialog.cpp \
@@ -41,13 +40,12 @@ HEADERS += \
     thetradingmachinemainwindow.h \
     playdialog.h \
     thetradingmachinetab.h \
-    CandleMaker.h \
     indicatorplot.h \
-    candleplot.h \
     volumeplot.h \
     indicatordialog.h \
     baseplot.h \
-    indicatorincludes.h
+    indicatorincludes.h \
+    candleplot.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \
@@ -61,4 +59,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RESOURCES += \
     resource.qrc
 
-win32: LIBS += -L$$PWD/../BaseModules/x64/Debug/ -lInteractiveBrokersClient -lIndicators
+win32: LIBS += -L$$PWD/../BaseModules/x64/Debug/ -lInteractiveBrokersClient -lIndicators -lCandleMaker

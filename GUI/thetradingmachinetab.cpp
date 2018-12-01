@@ -1,6 +1,5 @@
 #include <iostream>
 #include "thetradingmachinetab.h"
-#include "CandleMaker.h"
 #include "playdialog.h"
 #include "../BaseModules/Indicators/SimpleMovingAverage.h"
 #include "indicatorplot.h"
@@ -146,20 +145,21 @@ void TheTradingMachineTab::updatePlot(void)
     for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
     {
         Bar candle;
-        // candleTime holds the time of the most recent candle
-        bool isNewCandle = candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], candle);
-        auto candleTime = candleMaker_.getUpdatedCandleTime();
-
-        //update the plot with a new candle.
-        if(isNewCandle)
+        time_t candleTime;
+        bool isNewCandle;
+        if(candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], candle, candleTime, isNewCandle))
         {
-            updatePlotNewCandle(candleTime, candle);
+            //update the plot with a new candle.
+            if(isNewCandle)
+            {
+                updatePlotNewCandle(candleTime, candle);
 
-        }
-        //keep the plot up to date with an updated candle
-        else
-        {
-            updatePlotReplaceCandle(candleTime, candle);
+            }
+            //keep the plot up to date with an updated candle
+            else
+            {
+                updatePlotReplaceCandle(candleTime, candle);
+            }
         }
     }
 

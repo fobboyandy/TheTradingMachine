@@ -10,9 +10,9 @@
 #include <unordered_map>
 #include <list>
 #include "qcustomplot.h"
-#include "CandleMaker.h"
 #include "../BaseModules/InteractiveBrokersClient/InteractiveBrokersClient.h"
 #include "../BaseModules/BaseAlgorithm/PlotData.h"
+#include "../BaseModules/CandleMaker/CandleMaker.h"
 #include "candleplot.h"
 #include "volumeplot.h"
 
