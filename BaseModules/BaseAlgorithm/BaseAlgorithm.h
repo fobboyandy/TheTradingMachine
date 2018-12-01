@@ -12,6 +12,9 @@
 #include <memory>
 #include <stdexcept>
 
+#define ALGORITHM_ARGS std::string input, std::shared_ptr<InteractiveBrokersClient> ibInst, bool live
+#define BASEALGORITHM_PASS_ARGS input, ibInst, live
+
 #define EXPORT_ALGORITHM(CLASSNAME) 																				\
 /*boilerplate code for runtime dll linking*/																		\
 static std::unordered_map<int, std::unique_ptr<CLASSNAME>> AlgorithmInstances; 										\
@@ -40,7 +43,7 @@ extern "C" 																											\
 
 // not really sure how to define these template functions outside of a macro
 template<class Algorithm>
-__declspec(dllexport) int PlayAlgorithmT(
+int PlayAlgorithmT(
 	std::unordered_map<int, std::unique_ptr<Algorithm>>& algorithmInstances,
 	std::string dataInput,
 	std::shared_ptr<PlotData>* dataOut,
@@ -63,7 +66,7 @@ __declspec(dllexport) int PlayAlgorithmT(
 }
 
 template<class Algorithm>
-__declspec(dllexport) bool StopAlgorithmT(
+bool StopAlgorithmT(
 	std::unordered_map<int, std::unique_ptr<Algorithm>>& algorithmInstances,
 	int instHandle)
 {

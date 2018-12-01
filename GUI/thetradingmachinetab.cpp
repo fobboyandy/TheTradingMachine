@@ -147,7 +147,7 @@ void TheTradingMachineTab::updatePlot(void)
         Bar candle;
         time_t candleTime;
         bool isNewCandle;
-        if(candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], candle, candleTime, isNewCandle))
+        if(!plotData_->ticks[lastPlotDataIndex_].attributes.unreported && candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], candle, candleTime, isNewCandle))
         {
             //update the plot with a new candle.
             if(isNewCandle)
