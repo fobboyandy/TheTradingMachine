@@ -185,6 +185,7 @@ void BaseAlgorithm::BaseAlgorithmImpl::closePosition(PositionId posId)
 		labelText += "Position Profit : " + std::to_string(position.profit) + "\n";
 		labelText += "Net Profit : " + std::to_string(profit_) + "\n";
 
+		// shift the closing label down a bit
 		auto labelAnnotation = std::make_shared<Annotation::Label>(labelText, time, avgFillPrice);
 		auto lineAnnotation = std::make_shared<Annotation::Line>(position.openTime, position.averagePrice, position.closeTime, avgFillPrice);
 		if (position.profit < 0)

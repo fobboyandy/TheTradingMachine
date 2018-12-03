@@ -255,7 +255,21 @@ void CandlePlot::indicatorSelectionMenu(QPoint pos)
     subMenu = menu->addMenu("E");
     subMenu->addAction("Ease of Movement");
     subMenu->addAction("Exponential Decay");
-    subMenu->addAction("Exponential Moving Average");
+    subMenu->addAction("Exponential Moving Average", [this]()
+    {
+        //prompt user
+        IndicatorDialog diag;
+        diag.addSpinbox("Period", 5, 1);
+        diag.exec();
+
+        //if user pressed OK
+        if(diag.valid())
+        {
+            auto period = diag.getSpinboxValue("Period");
+            qDebug(std::to_string(period).c_str());
+            indicatorLaunch<ExponentialMovingAverage>(OhlcType::CLOSE, IndicatorDisplayType::OVERLAY, period);
+        }
+    });
     subMenu = menu->addMenu("F");
     subMenu->addAction("Fisher Transform");
     subMenu->addAction("Forecast Oscillator");

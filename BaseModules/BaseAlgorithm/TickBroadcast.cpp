@@ -183,20 +183,24 @@ void TickBroadcast::unregisterCallback(CallbackHandle handle)
 
 void TickBroadcast::broadcastTick(const Tick & tick)
 {
-	std::unique_lock<std::mutex> tickLock(tickMtx_);
-	//save the tick before broadcasting
-	lastTick_ = tick;
-	tickLock.unlock();
-
-	//dispatch the tick to the registered callbacks under a lock
-	std::lock_guard<std::mutex> lock(callbackListMtx_);
-	for (auto& fn : listeners_)
+	// don't broadcast if unreported tick
+	if(!tick.attributes.unreported)
 	{
-		// wrap the broadcast in a try catch in case
-		// user didn't call stop and their
-		// tickHandler goes out of scope before
-		// BaseAlgorithm was able to unregister it.
+		std::unique_lock<std::mutex> tickLock(tickMtx_);
+		//save the tick before broadcasting
+		lastTick_ = tick;
+		tickLock.unlock();
 
-		fn.second(lastTick_);
+		//dispatch the tick to the registered callbacks under a lock
+		std::lock_guard<std::mutex> lock(callbackListMtx_);
+		for (auto& fn : listeners_)
+		{
+			// wrap the broadcast in a try catch in case
+			// user didn't call stop and their
+			// tickHandler goes out of scope before
+			// BaseAlgorithm was able to unregister it.
+
+			fn.second(lastTick_);
+		}
 	}
 }
