@@ -17,5 +17,4 @@ public:
 	void tickHandler(const Tick& tick) override;
 private:
 	std::fstream tickoutput;
-	std::string ticker;
 };

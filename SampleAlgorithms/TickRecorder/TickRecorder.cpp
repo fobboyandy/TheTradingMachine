@@ -19,7 +19,7 @@ TickRecorder::TickRecorder(std::string input, std::shared_ptr<InteractiveBrokers
 	}
 
 	//remove the newline from TimeToString return value
-	std::string filename = TimeToString(time(nullptr)).substr(4, 6) + ticker + ".tickdat";
+	std::string filename = TimeToString(time(nullptr)).substr(4, 6) + ticker() + ".tickdat";
 	tickoutput.open(filename, std::ios::trunc | std::ios::out);
 }
 
