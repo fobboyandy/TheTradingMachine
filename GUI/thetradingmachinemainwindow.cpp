@@ -61,6 +61,9 @@ TheTradingMachineMainWindow::~TheTradingMachineMainWindow()
     delete ui;
     if(dllHndl_ != nullptr)
         FreeLibrary(dllHndl_);
+
+    // allow this algorithm to be opened in a new instance
+    algorithmInstances_.erase(dllFile_);
 }
 
 bool TheTradingMachineMainWindow::valid()
