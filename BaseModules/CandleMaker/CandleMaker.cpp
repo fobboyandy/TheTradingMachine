@@ -12,13 +12,21 @@ public:
 	~CandleMakerImpl();
 
 	//
-	// Given a new tick, updates the candle and the latest candle time. returns true if valid.
+	// updates the Candle maker by adding a tick
 	//
-	bool updateCandle(const Tick& newTick, Bar& updatedCandle, time_t& updatedTime, bool& isNewCandle);
+	void addTick(const Tick& newTick);
+	
+	//
+	// Has outstanding closed candles. Caller can retrieve them by calling getClosedCandles().
+	// Calling getClosedCanddles will clear the candle buffer.
+	//
+	bool hasClosedCandles();
 
-	// return the last known values
-	time_t getTime() const;
-	const Bar& getCandle() const;
+	//
+	// Retrieve candles
+	//
+	std::vector<Candlestick> getClosedCandles();
+	Candlestick getCurrentCandle();
 
 private:
 	//
@@ -37,11 +45,12 @@ private:
 	// Variable to indicate whether price stream has begun
 	//
 	bool beginAggregation;
+	bool periodIndexInit;
 
 	//
 	// Aggregated candle since the beginning of the current time increment
 	//
-	Bar aggregatedCandle;
+	Candlestick aggregatedCandle;
 
 	//
 	// Used to keep track of periods of elapsed timeframes to prevent
@@ -49,17 +58,14 @@ private:
 	//
 	time_t periodIndex;
 
-	//
-	// Used to keep track of the time that the latest candle belongs to
-	//
-	time_t currentCandleTime;
-
 private:
 	//
 	// Aggregates the current candle when a new price tick comes in. 
 	// Update candle mins and max, open and close, and volume. 
 	//
 	void aggregateCandle(const Tick& newTick);
+
+	std::vector<Candlestick> closedCandles;
 
 };
 
@@ -74,90 +80,94 @@ CandleMaker::~CandleMaker()
 	delete impl_;
 }
 
-bool CandleMaker::updateCandle(const Tick& newTick, Bar& updatedCandle, time_t& updatedTime, bool& isNewCandle)
+void CandleMaker::addTick(const Tick & newTick)
 {
-	return impl_->updateCandle(newTick, updatedCandle, updatedTime, isNewCandle);
+	impl_->addTick(newTick);
 }
 
-time_t CandleMaker::getTime() const
+std::vector<Candlestick> CandleMaker::getClosedCandles()
 {
-	return impl_->getTime();
+	return impl_->getClosedCandles();
 }
 
-const Bar& CandleMaker::getCandle() const
+Candlestick CandleMaker::getCurrentCandle()
 {
-    return impl_->getCandle();
+	return impl_->getCurrentCandle();
 }
 
 CandleMaker::CandleMakerImpl::CandleMakerImpl(int timeFrameSeconds) :
-	timeFrame(timeFrameSeconds),
-	beginAggregation(false)
+	timeFrame(timeFrameSeconds)
 {
+	beginAggregation = false;
+	periodIndexInit = false;
 }
 
 CandleMaker::CandleMakerImpl::~CandleMakerImpl()
 {
 }
 
-bool CandleMaker::CandleMakerImpl::updateCandle(const Tick& newTick, Bar& updatedCandle, time_t& updatedTime, bool& isNewCandle)
+void CandleMaker::CandleMakerImpl::addTick(const Tick & newTick)
 {
-	isNewCandle = false;
 	time_t thisPeriodIndex = newTick.time / timeFrame;
 
-	//check if the current time is in the middle of an
-	//on going candle. For example, if we started this candle maker with time
-	//frame 1 minute at 9:00:30, half of the first minute has passed. Therefore,
-	//we need to wait until tick of the next period to begin since we lost the first 30 second
-	//of information. we know that we are in the beginning of a new candle once
-	//thisPeriodIndex is greater than the previous periodIndex.
-	if(!beginAggregation)
+	// initialize the period index with the first tick
+	// we use periodIndex to align the start time with the 
+	// next earliest time frame. for example, at 09:30:30,
+	// with a timeframe 60 seconds, the next time frame
+	// start would be at 9:31:00. We cannot use the first 
+	// tick because there is no way to tell whether if it was
+	// truly the first tick of the starting time frame. we always
+	// need to wait for the start of the next period
+	if (!periodIndexInit)
 	{
-		if(thisPeriodIndex > periodIndex)
-		{
-			beginAggregation = true;
-		}
-		else
-		{
-			return false;
-		}
-
+		periodIndexInit = true;
 		periodIndex = thisPeriodIndex;
-	}
-	
-	 //if thisPeriodIndex > periodIndex, then it's a new candle
-	 //since thisPeriodCounter roll over after truncated division
-	if (thisPeriodIndex > periodIndex)
-	{
-		periodIndex = thisPeriodIndex;
-
-		//create a new candle
-		
-		aggregatedCandle.open = newTick.price;
-		aggregatedCandle.low = newTick.price;
-		aggregatedCandle.high = newTick.price;
-		aggregatedCandle.close = newTick.price;
-		aggregatedCandle.volume = newTick.size;
-		currentCandleTime = newTick.time - (newTick.time % timeFrame); // candle time should align with the nearest timeframe
-		isNewCandle = true;
 	}
 	else
 	{
-		aggregateCandle(newTick);
+		if (thisPeriodIndex > periodIndex)
+		{
+			// if we have began aggregation, then
+			// the current aggregatedCandle is a valid
+			// closing candle 
+			if (beginAggregation)
+			{
+				//push the current candle to the closed candles
+				closedCandles.push_back(aggregatedCandle);
+			}
+			//create a new candle
+			aggregatedCandle.open = newTick.price;
+			aggregatedCandle.low = newTick.price;
+			aggregatedCandle.high = newTick.price;
+			aggregatedCandle.close = newTick.price;
+			aggregatedCandle.volume = newTick.size;
+			aggregatedCandle.time = newTick.time - (newTick.time % timeFrame); // candle time should align with the nearest timeframe
+
+			beginAggregation = true;
+
+			// update periodIndex
+			periodIndex = thisPeriodIndex;
+		}
+		else
+		{
+			aggregateCandle(newTick);
+		}
 	}
-
-	// this is the updated candle
-	updatedCandle = aggregatedCandle;
-	updatedTime = currentCandleTime;
-
-	return true;
 }
 
-time_t CandleMaker::CandleMakerImpl::getTime() const
+bool CandleMaker::CandleMakerImpl::hasClosedCandles()
 {
-	return currentCandleTime;
+	return closedCandles.size() > 0;
 }
 
-const Bar& CandleMaker::CandleMakerImpl::getCandle() const
+std::vector<Candlestick> CandleMaker::CandleMakerImpl::getClosedCandles()
+{
+	auto retClosedCandles = std::move(closedCandles);
+	closedCandles.clear();
+	return retClosedCandles;
+}
+
+Candlestick CandleMaker::CandleMakerImpl::getCurrentCandle()
 {
 	return aggregatedCandle;
 }

@@ -2,7 +2,6 @@
 #define VOLUMEPLOT_H
 
 #include "qcustomplot.h"
-#include "../BaseModules/InteractiveBrokersApi/bar.h"
 #include "indicatorplot.h"
 #include "baseplot.h"
 #include <unordered_map>
@@ -14,8 +13,8 @@ class VolumePlot : public BasePlot
 public:
     VolumePlot(QCustomPlot& t_parentPlot);
     ~VolumePlot() override;
-    void updatePlotAdd(const time_t candleTime, const Bar &candle) override;
-    void updatePlotReplace(const time_t candleTime, const Bar &candle) override;
+    void updatePlotAdd(const Candlestick &candle) override;
+    void updatePlotReplace(const Candlestick &candle) override;
     void rescalePlot() override;
     void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot) override;
     void addIndicator(IndicatorType indicatorType, std::unique_ptr<IIndicatorPlot> indicatorPlot);

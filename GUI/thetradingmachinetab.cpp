@@ -115,19 +115,19 @@ QString TheTradingMachineTab::formatTabName(const QString &input)
     return inputFormatted;
 }
 
-void TheTradingMachineTab::updatePlotNewCandle(const time_t candleTime, const Bar &candle)
+void TheTradingMachineTab::updatePlotNewCandle(const Candlestick &candle)
 {
     for(auto plot: plots_)
     {
-        plot->updatePlotAdd(candleTime, candle);
+        plot->updatePlotAdd(candle);
     }
 }
 
-void TheTradingMachineTab::updatePlotReplaceCandle(const time_t candleTime, const Bar &candle)
+void TheTradingMachineTab::updatePlotReplaceCandle(const Candlestick &candle)
 {
     for(auto plot: plots_)
     {
-        plot->updatePlotReplace(candleTime, candle);
+        plot->updatePlotReplace(candle);
     }
 }
 
@@ -144,23 +144,15 @@ void TheTradingMachineTab::updatePlot(void)
 
     for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
     {
-        Bar candle;
-        time_t candleTime;
-        bool isNewCandle;
-        if(!plotData_->ticks[lastPlotDataIndex_].attributes.unreported && candleMaker_.updateCandle(plotData_->ticks[lastPlotDataIndex_], candle, candleTime, isNewCandle))
+        candleMaker_.addTick(plotData_->ticks[lastPlotDataIndex_]);
+        auto closedCandles = candleMaker_.getClosedCandles();
+        auto currentCandle = candleMaker_.getCurrentCandle();
+        for(auto candle: closedCandles)
         {
-            //update the plot with a new candle.
-            if(isNewCandle)
-            {
-                updatePlotNewCandle(candleTime, candle);
-
-            }
-            //keep the plot up to date with an updated candle
-            else
-            {
-                updatePlotReplaceCandle(candleTime, candle);
-            }
+            updatePlotNewCandle(candle);
         }
+
+        updatePlotReplaceCandle(currentCandle);
     }
 
     // update new annotations to only the candle plot for now

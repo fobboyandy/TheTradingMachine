@@ -57,7 +57,7 @@ private:
     std::list<std::shared_ptr<BasePlot>> plots_;
 
     // candle data
-    Bar currentCandle_;
+    Candlestick currentCandle_;
     CandleMaker candleMaker_;
     std::vector<double>::size_type lastPlotDataIndex_;
     std::vector<double>::size_type lastAnnotationIndex_;
@@ -75,8 +75,8 @@ private:
 private:
     void layoutSetup();
     QString formatTabName(const QString& input);
-    void updatePlotNewCandle(const time_t candleTime, const Bar &candle);
-    void updatePlotReplaceCandle(const time_t candleTime, const Bar &candle);
+    void updatePlotNewCandle(const Candlestick &candle);
+    void updatePlotReplaceCandle(const Candlestick &candle);
 
 private slots:
     void updatePlot(void);
