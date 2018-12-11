@@ -3,7 +3,7 @@
 
 #include "qcustomplot.h"
 #include "indicatorplot.h"
-#include "../BaseModules/InteractiveBrokersApi/bar.h"
+#include "../BaseModules/CandleMaker/CandleMaker.h"
 #include "../BaseModules/BaseAlgorithm/Annotation.h"
 
 class BasePlot : public QObject
@@ -13,8 +13,8 @@ public:
     BasePlot(QCustomPlot& t_parentPlot);
     virtual ~BasePlot();
 
-    virtual void updatePlotAdd(const time_t candleTime, const Bar &candle) = 0;
-    virtual void updatePlotReplace(const time_t candleTime, const Bar &candle) = 0;
+    virtual void updatePlotAdd(const Candlestick &candle) = 0;
+    virtual void updatePlotReplace(const Candlestick &candle) = 0;
     virtual void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot) = 0;
 
     // this is called periodically from an external event

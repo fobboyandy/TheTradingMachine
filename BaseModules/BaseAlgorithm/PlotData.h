@@ -11,7 +11,7 @@
 // new data
 struct PlotData
 {
-	std::mutex plotDataMtx;
-	std::vector<Tick> ticks;
+    std::mutex plotDataMtx;
+    std::vector<Tick> ticks;
     std::vector<std::shared_ptr<Annotation::IAnnotation>> annotations;
 };

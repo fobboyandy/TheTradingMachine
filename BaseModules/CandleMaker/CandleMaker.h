@@ -10,6 +10,18 @@
 #define CANDLEMAKERDLL __declspec(dllimport)
 #endif
 
+struct Candlestick
+{
+	time_t time;
+	double high;
+	double low;
+	double open;
+	double close;
+	double wap;
+	long long volume;
+	int count;
+};
+
 class CANDLEMAKERDLL CandleMaker
 {
 public:
@@ -21,13 +33,15 @@ public:
 	~CandleMaker();
 
 	//
-    // Given a new tick, updates the candle and the latest candle time. returns true for new candles.
-    //
-    bool updateCandle(const Tick& newTick, Bar& updatedCandle, time_t& updatedTime, bool& isNewCandle);
+	// updates the CandleMaker by adding a tick
+	//
+	void addTick(const Tick& newTick);
 
-	// return the last known values
-    time_t getTime() const;
-	const Bar& getCandle() const;
+	//
+	// Retrieve candles
+	//
+	std::vector<Candlestick> getClosedCandles();
+	Candlestick getCurrentCandle();
 
 private:
 	class CandleMakerImpl;

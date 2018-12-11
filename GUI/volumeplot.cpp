@@ -19,10 +19,10 @@ VolumePlot::~VolumePlot()
 
 }
 
-void VolumePlot::updatePlotAdd(const time_t candleTime, const Bar &candle)
+void VolumePlot::updatePlotAdd(const Candlestick &candle)
 {
     // add a new bar volume and candlesticks
-    volumeBars_->addData(candleTime, candle.volume);
+    volumeBars_->addData(candle.time, candle.volume);
     ++size_;
 
     // recursively update all the indicators belonging to this plot
@@ -30,23 +30,23 @@ void VolumePlot::updatePlotAdd(const time_t candleTime, const Bar &candle)
     {
         for(auto& plotIt: activePlotIt.second)
         {
-            plotIt->updatePlotAdd(candleTime, candle.volume);
+            plotIt->updatePlotAdd(candle.time, candle.volume);
         }
     }
 }
 
-void VolumePlot::updatePlotReplace(const time_t candleTime, const Bar &candle)
+void VolumePlot::updatePlotReplace(const Candlestick &candle)
 {
     if(size_ > 0)
     {
-        volumeBars_->data()->set(size_ - 1, QCPBarsData(candleTime, candle.volume));
+        volumeBars_->data()->set(size_ - 1, QCPBarsData(candle.time, candle.volume));
 
         // recursively update all the indicators belonging to this plot
         for(auto& activePlotIt: activeIndicatorPlots_)
         {
             for(auto& plotIt: activePlotIt.second)
             {
-                plotIt->updatePlotReplace(candleTime, candle.volume);
+                plotIt->updatePlotReplace(candle.time, candle.volume);
             }
         }
     }
