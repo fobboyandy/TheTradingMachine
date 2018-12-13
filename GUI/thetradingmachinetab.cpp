@@ -147,15 +147,21 @@ void TheTradingMachineTab::updatePlot(void)
         candleMaker_.addTick(plotData_->ticks[lastPlotDataIndex_]);
         auto closedCandles = candleMaker_.getClosedCandles();
         auto currentCandle = candleMaker_.getCurrentCandle();
+
+        // this inserts any new closed candles to the back of
+        // the chart
         for(auto candle: closedCandles)
         {
             updatePlotNewCandle(candle);
         }
 
+        // for any given new ticks, the current candle changes.
+        // update the changes to the current candle on the chart
         updatePlotReplaceCandle(currentCandle);
     }
 
-    // update new annotations to only the candle plot for now
+    // add any new annotations from our user to the charts (for now only candle charts
+    // have annotations)
     for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
     {
         plots_.front()->addAnnotation(plotData_->annotations[lastAnnotationIndex_]);
