@@ -41,7 +41,7 @@ void VolumePlot::updatePlotReplace(const Candlestick &candle)
     {
         volumeBars_->data()->set(size_ - 1, QCPBarsData(candle.time, candle.volume));
 
-        // recursively update all the indicators belonging to this plot
+        // update all the indicators belonging to this plot
         for(auto& activePlotIt: activeIndicatorPlots_)
         {
             for(auto& plotIt: activePlotIt.second)
@@ -49,6 +49,11 @@ void VolumePlot::updatePlotReplace(const Candlestick &candle)
                 plotIt->updatePlotReplace(candle.time, candle.volume);
             }
         }
+    }
+    // if there is nothing to replace, add a new one
+    else
+    {
+        updatePlotAdd(candle);
     }
 }
 
