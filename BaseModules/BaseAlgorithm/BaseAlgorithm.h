@@ -10,7 +10,6 @@
 #define BASEALGORITHMDLL __declspec(dllimport)
 #include <unordered_map>
 #include <memory>
-#include <stdexcept>
 
 #define ALGORITHM_ARGS std::string input, std::shared_ptr<InteractiveBrokersClient> ibInst, bool live
 #define BASEALGORITHM_PASS_ARGS input, ibInst, live
