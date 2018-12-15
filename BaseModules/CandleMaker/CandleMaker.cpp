@@ -122,6 +122,7 @@ void CandleMaker::CandleMakerImpl::addTick(const Tick & newTick)
 	{
 		periodIndexInit = true;
 		periodIndex = thisPeriodIndex;
+
 	}
 	else
 	{

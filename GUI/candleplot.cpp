@@ -28,7 +28,7 @@ void CandlePlot::updatePlotAdd(const Candlestick &candle)
     candleBars_->addData(candle.time, candle.open, candle.high, candle.low, candle.close);
     ++size_;
 
-    // since activeIndicatorPlots_ entires map plottables to
+    // since activeIndicatorPlots_ entries map plottables to
     // iplots, we can have more than one plottable mapped to the same
     // iplot. for example, macd has 3 values which can be mapped
     // to the same indicator. we use this unordered_set to mark
@@ -104,6 +104,11 @@ void CandlePlot::updatePlotReplace(const Candlestick &candle)
                 updatedIndicators.insert(activePlotIt.second);
             }
         }
+    }
+    // if there is nothing to replace, add a new one
+    else
+    {
+        updatePlotAdd(candle);
     }
 }
 
