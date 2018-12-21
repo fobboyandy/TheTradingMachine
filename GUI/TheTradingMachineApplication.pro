@@ -33,7 +33,8 @@ SOURCES += \
     candleplot.cpp \
     volumeplot.cpp \
     indicatordialog.cpp \
-    baseplot.cpp
+    baseplot.cpp \
+    annotationplot.cpp
 
 HEADERS += \
         qcustomplot.h \
@@ -45,7 +46,8 @@ HEADERS += \
     indicatordialog.h \
     baseplot.h \
     indicatorincludes.h \
-    candleplot.h
+    candleplot.h \
+    annotationplot.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \

@@ -54,7 +54,10 @@ private:
     std::shared_ptr<InteractiveBrokersClient> client_;
     std::shared_ptr<PlotData> plotData_;
 
-    std::list<std::shared_ptr<BasePlot>> plots_;
+    // using pointers for polymorphism and vectors because
+    // we will be indexing into different plots to add user
+    // annotations
+    std::vector<std::shared_ptr<BasePlot>> plots_;
 
     // candle data
     Candlestick currentCandle_;
