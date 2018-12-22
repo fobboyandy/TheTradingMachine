@@ -190,13 +190,14 @@ void BaseAlgorithm::BaseAlgorithmImpl::closePosition(PositionId posId)
 		auto lineAnnotation = std::make_shared<Annotation::Line>(position.openTime, position.averagePrice, position.closeTime, avgFillPrice);
 		if (position.profit < 0)
 		{
-			labelAnnotation->setColor(255, 0, 0);
-			lineAnnotation->setColor(255, 0, 0);
+			labelAnnotation->color_ = { 255, 0, 0 };
+			lineAnnotation->color_ = { 255, 0, 0};
+
 		}
 		else if (position.profit > 0)
 		{
-			labelAnnotation->setColor(0, 255, 0);
-			lineAnnotation->setColor(0, 255, 0);
+			labelAnnotation->color_ = { 0, 255, 0 };
+			lineAnnotation->color_ = { 0, 255, 0 };
 		}
 		plotData->annotations.push_back(labelAnnotation);
 		plotData->annotations.push_back(lineAnnotation);

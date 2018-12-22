@@ -20,52 +20,19 @@ namespace Annotation
 		int blue;
 	};
 
-	class IAnnotation
+	struct IAnnotation
 	{
-	public:
-		IAnnotation(AnnotationType t_type):
+		IAnnotation(AnnotationType t_type, int t_index):
 			type_(t_type),
 			width_(1),
+			index_(t_index),
 			color_{ 0, 0, 0 }
 		{}
-		virtual ~IAnnotation() {}
+		virtual ~IAnnotation() {};
 
-		void setWidth(int t_width)
-		{
-			width_ = t_width;
-		}
-		void setColor(int t_r, int t_g, int t_b)
-		{
-			color_.red = t_r;
-			color_.green = t_g;
-			color_.blue = t_b;
-		}
-		void setColor(ColorType t_color)
-		{
-			color_ = t_color;
-		}
-		int width()
-		{
-			return width_;
-		}
-		ColorType color()
-		{
-			return color_;
-		}
-		void color(int& t_r, int& t_g, int& t_b)
-		{
-			t_r = color_.red;
-			t_g = color_.green;
-			t_b = color_.blue;
-		}
-
-        AnnotationType type()
-        {
-            return type_;
-        }
-	private:
 		const AnnotationType type_;
 		int width_;
+		const int index_;
 
 		// color
 		ColorType color_;
@@ -77,8 +44,8 @@ namespace Annotation
 		// We are using templates and static_cast to handle warnings. Types will be
 		// auto deduced by the input parameters.
 		template<typename T1, typename T2>
-		Line(T1 t_startX, double t_startY, T2 t_endX, double t_endY) :
-			IAnnotation(AnnotationType::LINE),
+		Line(T1 t_startX, double t_startY, T2 t_endX, double t_endY, int t_index = 0) :
+			IAnnotation(AnnotationType::LINE, t_index),
 			startX_(static_cast<double>(t_startX)),
 			startY_(t_startY),
 			endX_(static_cast<double>(t_endX)),
@@ -97,8 +64,8 @@ namespace Annotation
 		// We are using templates and static_cast to handle warnings. Types will be
 		// auto deduced by the input parameters.
 		template<typename T1>
-		Dot(T1 t_x, double t_y) :
-			IAnnotation(AnnotationType::DOT),
+		Dot(T1 t_x, double t_y, int t_index = 0) :
+			IAnnotation(AnnotationType::DOT, t_index),
 			x_(static_cast<double>(t_x)),
 			y_(t_y)
 		{}
@@ -113,8 +80,8 @@ namespace Annotation
 		// auto deduced by the input parameters.
 
 		template<typename T>
-		Circle(T t_x, double t_y, int t_radius) :
-			IAnnotation(AnnotationType::CIRCLE),
+		Circle(T t_x, double t_y, int t_radius, int t_index = 0) :
+			IAnnotation(AnnotationType::CIRCLE, t_index),
 			x_(static_cast<double>(t_x)),
 			y_(t_y),
 			radius_(t_radius)
@@ -130,8 +97,8 @@ namespace Annotation
 		// We are using templates and static_cast to handle warnings. Types will be
 		// auto deduced by the input parameters.
 		template<typename T>
-		Label(std::string t_text, T t_x, double t_y) :
-			IAnnotation(AnnotationType::LABEL),
+		Label(std::string t_text, T t_x, double t_y, int t_index = 0) :
+			IAnnotation(AnnotationType::LABEL, t_index),
 			text_(t_text),
 			x_(static_cast<double>(t_x)),
 			y_(t_y)

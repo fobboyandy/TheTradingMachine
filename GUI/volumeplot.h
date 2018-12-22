@@ -2,7 +2,7 @@
 #define VOLUMEPLOT_H
 
 #include "qcustomplot.h"
-#include "indicatorplot.h"
+#include "indicatorgraph.h"
 #include "baseplot.h"
 #include <unordered_map>
 #include <ctime>
@@ -16,8 +16,8 @@ public:
     void updatePlotAdd(const Candlestick &candle) override;
     void updatePlotReplace(const Candlestick &candle) override;
     void rescalePlot() override;
-    void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot) override;
-    void addIndicator(IndicatorType indicatorType, std::unique_ptr<IIndicatorPlot> indicatorPlot);
+    void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorGraph> iplot) override;
+    void addIndicator(IndicatorType indicatorType, std::unique_ptr<IIndicatorGraph> indicatorPlot);
 
     double lowerRange();
     double upperRange();
@@ -31,7 +31,7 @@ private:
     QCPBars* volumeBars_;
 
     // active indicators
-    std::unordered_map<IndicatorType, std::list<std::unique_ptr<IIndicatorPlot>>> activeIndicatorPlots_;
+    std::unordered_map<IndicatorType, std::list<std::unique_ptr<IIndicatorGraph>>> activeIndicatorPlots_;
 
     int size_;
 };

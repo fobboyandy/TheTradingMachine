@@ -2,7 +2,7 @@
 #define CANDLEPLOT_H
 
 #include "qcustomplot.h"
-#include "indicatorplot.h"
+#include "indicatorgraph.h"
 #include "baseplot.h"
 #include <unordered_map>
 #include <ctime>
@@ -15,7 +15,7 @@ public:
     ~CandlePlot() override;
     void updatePlotAdd(const Candlestick &candle) override;
     void updatePlotReplace(const Candlestick &candle) override;
-    void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot) override;
+    void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorGraph> iplot) override;
     void rescalePlot() override;
 
     void indicatorSelectionMenu(QPoint pos);
@@ -38,7 +38,7 @@ private:
     // pointer from qcustomplot we can use this pointer to map to the iplot that it
     // corresponds to and remove the entry. refer to showMenu
     // we use a shared_ptr for multiple instances to the same iplot
-    std::unordered_map<QCPAbstractPlottable*, std::shared_ptr<IIndicatorPlot>> activeIndicatorPlots_;
+    std::unordered_map<QCPAbstractPlottable*, std::shared_ptr<IIndicatorGraph>> activeIndicatorPlots_;
 
     int size_;
 

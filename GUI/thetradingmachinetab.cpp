@@ -2,7 +2,8 @@
 #include "thetradingmachinetab.h"
 #include "playdialog.h"
 #include "../BaseModules/Indicators/SimpleMovingAverage.h"
-#include "indicatorplot.h"
+#include "indicatorgraph.h"
+#include "annotationplot.h"
 
 TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<InteractiveBrokersClient> client, QWidget* parent) :
     QWidget(parent),
@@ -37,9 +38,10 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     // this sets up the widget grid and qcustomplot instance
     layoutSetup();
 
-    // create basic plots
-    plots_.push_back(std::make_unique<CandlePlot>(*plot_));
-    plots_.push_back(std::make_unique<VolumePlot>(*plot_));
+    // create basic plots. 0 and 1 indices are reserved for candle and volume
+    // plots
+    plots_[0] = std::make_unique<CandlePlot>(*plot_);
+    plots_[1] = std::make_unique<VolumePlot>(*plot_);
 
     // initialize members here instead of the initializer list
     // to keep the initializer list shorter. shouldn't be too much
@@ -119,7 +121,7 @@ void TheTradingMachineTab::updatePlotNewCandle(const Candlestick &candle)
 {
     for(auto plot: plots_)
     {
-        plot->updatePlotAdd(candle);
+        plot.second->updatePlotAdd(candle);
     }
 }
 
@@ -127,7 +129,7 @@ void TheTradingMachineTab::updatePlotReplaceCandle(const Candlestick &candle)
 {
     for(auto plot: plots_)
     {
-        plot->updatePlotReplace(candle);
+        plot.second->updatePlotReplace(candle);
     }
 }
 
@@ -180,14 +182,22 @@ void TheTradingMachineTab::updatePlot(void)
     // have annotations)
     for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
     {
-        plots_.front()->addAnnotation(plotData_->annotations[lastAnnotationIndex_]);
+        const auto& annotation = plotData_->annotations[lastAnnotationIndex_];
+        if(annotation != nullptr)
+        {
+            if(plots_.find(annotation->index_) == plots_.end())
+            {
+                plots_[annotation->index_] = std::make_unique<AnnotationPlot>(*plot_);
+            }
+            plots_[annotation->index_]->addAnnotation(annotation);
+        }
     }
 
     // rescale all the plots according to their own defined scaling
     // function
     for(auto plot: plots_)
     {
-        plot->rescalePlot();
+        plot.second->rescalePlot();
     }
 
     //replot should always be happening to update the drawing

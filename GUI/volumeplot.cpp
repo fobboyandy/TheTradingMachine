@@ -62,12 +62,12 @@ void VolumePlot::rescalePlot()
     volumeBars_->rescaleValueAxis(false, true);
 }
 
-void VolumePlot::pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot)
+void VolumePlot::pastCandlesPlotUpdate(std::shared_ptr<IIndicatorGraph> iplot)
 {
 
 }
 
-void VolumePlot::addIndicator(IndicatorType indicatorType, std::unique_ptr<IIndicatorPlot> indicatorPlot)
+void VolumePlot::addIndicator(IndicatorType indicatorType, std::unique_ptr<IIndicatorGraph> indicatorPlot)
 {
     // keep the indicatorPlot up to date with all the candles we currently have
     for(auto& it: *volumeBars_->data())
