@@ -38,10 +38,10 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     // this sets up the widget grid and qcustomplot instance
     layoutSetup();
 
-    // create basic plots
+    // create basic plots. 0 and 1 indices are reserved for candle and volume
+    // plots
     plots_[0] = std::make_unique<CandlePlot>(*plot_);
     plots_[1] = std::make_unique<VolumePlot>(*plot_);
-//    plots_.push_back(std::make_unique<AnnotationPlot>(*plot_));
 
     // initialize members here instead of the initializer list
     // to keep the initializer list shorter. shouldn't be too much
@@ -182,7 +182,6 @@ void TheTradingMachineTab::updatePlot(void)
     // have annotations)
     for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
     {
-
         const auto& annotation = plotData_->annotations[lastAnnotationIndex_];
         if(annotation != nullptr)
         {
