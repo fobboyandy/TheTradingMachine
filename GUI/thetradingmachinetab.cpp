@@ -186,14 +186,11 @@ void TheTradingMachineTab::updatePlot(void)
         const auto& annotation = plotData_->annotations[lastAnnotationIndex_];
         if(annotation != nullptr)
         {
-            if(plots_.find(annotation->index_) != plots_.end())
-            {
-                plots_[annotation->index_]->addAnnotation(annotation);
-            }
-            else
+            if(plots_.find(annotation->index_) == plots_.end())
             {
                 plots_[annotation->index_] = std::make_unique<AnnotationPlot>(*plot_);
             }
+            plots_[annotation->index_]->addAnnotation(annotation);
         }
     }
 
