@@ -2,7 +2,7 @@
 #define IPLOT_H
 
 #include "qcustomplot.h"
-#include "indicatorplot.h"
+#include "indicatorgraph.h"
 #include "../BaseModules/CandleMaker/CandleMaker.h"
 #include "../BaseModules/BaseAlgorithm/Annotation.h"
 
@@ -15,7 +15,7 @@ public:
 
     virtual void updatePlotAdd(const Candlestick &candle) = 0;
     virtual void updatePlotReplace(const Candlestick &candle) = 0;
-    virtual void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot) = 0;
+    virtual void pastCandlesPlotUpdate(std::shared_ptr<IIndicatorGraph> iplot) = 0;
 
     // this is called periodically from an external event
     // it must be implemented by the derived class to determine

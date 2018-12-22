@@ -1,5 +1,5 @@
 #include "candleplot.h"
-#include "indicatorplot.h"
+#include "indicatorgraph.h"
 #include "indicatordialog.h"
 #include "indicatorincludes.h"
 #include <unordered_set>
@@ -33,7 +33,7 @@ void CandlePlot::updatePlotAdd(const Candlestick &candle)
     // iplot. for example, macd has 3 values which can be mapped
     // to the same indicator. we use this unordered_set to mark
     // which has been updated as we traverse our entries
-    std::unordered_set<std::shared_ptr<IIndicatorPlot>> updatedIndicators;
+    std::unordered_set<std::shared_ptr<IIndicatorGraph>> updatedIndicators;
 
     // update all the indicators
     for(auto& activePlotIt: activeIndicatorPlots_)
@@ -73,7 +73,7 @@ void CandlePlot::updatePlotReplace(const Candlestick &candle)
     {
         candleBars_->data()->set(size_ - 1, QCPFinancialData(candle.time , candle.open, candle.high, candle.low, candle.close));
 
-        std::unordered_set<std::shared_ptr<IIndicatorPlot>> updatedIndicators;
+        std::unordered_set<std::shared_ptr<IIndicatorGraph>> updatedIndicators;
         // update all the indicators belonging to this plot
         for(auto& activePlotIt: activeIndicatorPlots_)
         {
@@ -117,7 +117,7 @@ void CandlePlot::updatePlotReplace(const Candlestick &candle)
 // this is used when we add an indicator after a graph has started
 // for a while already. we still want to be able to plot the indicator for
 // the previous candles
-void CandlePlot::pastCandlesPlotUpdate(std::shared_ptr<IIndicatorPlot> iplot)
+void CandlePlot::pastCandlesPlotUpdate(std::shared_ptr<IIndicatorGraph> iplot)
 {
     for(auto& it: *candleBars_->data())
     {
@@ -468,7 +468,7 @@ void CandlePlot::plotSelectSlot(bool selected)
     // mark the other graphs as selected as well
     if(selected)
     {
-        std::shared_ptr<IIndicatorPlot> selectedPlot;
+        std::shared_ptr<IIndicatorGraph> selectedPlot;
 
         // find the graph that is currently selected
         for(auto& plottableEntry: activeIndicatorPlots_)
@@ -511,7 +511,7 @@ template<typename IndicatorType, typename... Args>
 void CandlePlot::indicatorLaunch(OhlcType valueType, IndicatorDisplayType displayType, Args... args)
 {
     auto indicator = std::make_unique<IndicatorType>(args...);
-    auto plot = std::make_shared<IndicatorPlot<IndicatorType>>(axisRect_, std::move(indicator), valueType, displayType);
+    auto plot = std::make_shared<IndicatorGraph<IndicatorType>>(axisRect_, std::move(indicator), valueType, displayType);
     pastCandlesPlotUpdate(plot);
     auto plottables = plot->getPlottables();
 

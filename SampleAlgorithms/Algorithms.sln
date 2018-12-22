@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27703.2042
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TickRecorder", "TickRecorder\TickRecorder.vcxproj", "{7E582B97-1BC4-4325-ABD5-42EC3FDDF797}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EmaMomentum", "EmaMomentum\EmaMomentum.vcxproj", "{10DECFBD-6E84-46E0-8C37-6C6FB5AD2D07}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeanReversionTest", "MeanReversionTest\MeanReversionTest.vcxproj", "{746C423F-818F-4C72-843F-684779C2C0A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,14 +23,14 @@ Global
 		{7E582B97-1BC4-4325-ABD5-42EC3FDDF797}.Release|x64.Build.0 = Release|x64
 		{7E582B97-1BC4-4325-ABD5-42EC3FDDF797}.Release|x86.ActiveCfg = Release|Win32
 		{7E582B97-1BC4-4325-ABD5-42EC3FDDF797}.Release|x86.Build.0 = Release|Win32
-		{10DECFBD-6E84-46E0-8C37-6C6FB5AD2D07}.Debug|x64.ActiveCfg = Debug|x64
-		{10DECFBD-6E84-46E0-8C37-6C6FB5AD2D07}.Debug|x64.Build.0 = Debug|x64
-		{10DECFBD-6E84-46E0-8C37-6C6FB5AD2D07}.Debug|x86.ActiveCfg = Debug|Win32
-		{10DECFBD-6E84-46E0-8C37-6C6FB5AD2D07}.Debug|x86.Build.0 = Debug|Win32
-		{10DECFBD-6E84-46E0-8C37-6C6FB5AD2D07}.Release|x64.ActiveCfg = Release|x64
-		{10DECFBD-6E84-46E0-8C37-6C6FB5AD2D07}.Release|x64.Build.0 = Release|x64
-		{10DECFBD-6E84-46E0-8C37-6C6FB5AD2D07}.Release|x86.ActiveCfg = Release|Win32
-		{10DECFBD-6E84-46E0-8C37-6C6FB5AD2D07}.Release|x86.Build.0 = Release|Win32
+		{746C423F-818F-4C72-843F-684779C2C0A5}.Debug|x64.ActiveCfg = Debug|x64
+		{746C423F-818F-4C72-843F-684779C2C0A5}.Debug|x64.Build.0 = Debug|x64
+		{746C423F-818F-4C72-843F-684779C2C0A5}.Debug|x86.ActiveCfg = Debug|Win32
+		{746C423F-818F-4C72-843F-684779C2C0A5}.Debug|x86.Build.0 = Debug|Win32
+		{746C423F-818F-4C72-843F-684779C2C0A5}.Release|x64.ActiveCfg = Release|x64
+		{746C423F-818F-4C72-843F-684779C2C0A5}.Release|x64.Build.0 = Release|x64
+		{746C423F-818F-4C72-843F-684779C2C0A5}.Release|x86.ActiveCfg = Release|Win32
+		{746C423F-818F-4C72-843F-684779C2C0A5}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

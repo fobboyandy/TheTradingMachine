@@ -41,13 +41,13 @@ HEADERS += \
     thetradingmachinemainwindow.h \
     playdialog.h \
     thetradingmachinetab.h \
-    indicatorplot.h \
     volumeplot.h \
     indicatordialog.h \
     baseplot.h \
     indicatorincludes.h \
     candleplot.h \
-    annotationplot.h
+    annotationplot.h \
+    indicatorgraph.h
 
 FORMS += \
     thetradingmachinemainwindow.ui \

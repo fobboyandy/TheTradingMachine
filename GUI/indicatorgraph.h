@@ -133,11 +133,11 @@ enum class IndicatorDisplayType
     MATH
 };
 
-class IIndicatorPlot
+class IIndicatorGraph
 {
 public:
-    IIndicatorPlot(){}
-    virtual ~IIndicatorPlot(){}
+    IIndicatorGraph(){}
+    virtual ~IIndicatorGraph(){}
     // interface for updating the plot
     virtual void updatePlotAdd(const time_t candleTime, double value) = 0;
     virtual void updatePlotReplace(const time_t candleTime, double value) = 0;
@@ -152,11 +152,11 @@ public:
 
 // Templatize for indicators
 template <typename T>
-class IndicatorPlot : public IIndicatorPlot
+class IndicatorGraph : public IIndicatorGraph
 {
 public:
-    IndicatorPlot(QCPAxisRect& axisRect, std::unique_ptr<T> indicator, OhlcType type, IndicatorDisplayType display);
-    ~IndicatorPlot() override;
+    IndicatorGraph(QCPAxisRect& axisRect, std::unique_ptr<T> indicator, OhlcType type, IndicatorDisplayType display);
+    ~IndicatorGraph() override;
 
     void updatePlotAdd(const time_t candleTime, double value) override;
     void updatePlotReplace(const time_t candleTime, double value) override;
@@ -174,7 +174,7 @@ private:
 };
 
 template <typename T>
-IndicatorPlot<T>::IndicatorPlot(QCPAxisRect &axisRect, std::unique_ptr<T> indicator, OhlcType type, IndicatorDisplayType display):
+IndicatorGraph<T>::IndicatorGraph(QCPAxisRect &axisRect, std::unique_ptr<T> indicator, OhlcType type, IndicatorDisplayType display):
     indicator_(std::move(indicator)),
     axisRect_(axisRect)
 {
@@ -213,12 +213,12 @@ IndicatorPlot<T>::IndicatorPlot(QCPAxisRect &axisRect, std::unique_ptr<T> indica
 }
 
 template <typename T>
-IndicatorPlot<T>::~IndicatorPlot()
+IndicatorGraph<T>::~IndicatorGraph()
 {
 }
 
 template <typename T>
-void IndicatorPlot<T>::updatePlotAdd(const time_t candleTime, double value)
+void IndicatorGraph<T>::updatePlotAdd(const time_t candleTime, double value)
 {
     auto indicatorDataPoints = indicator_->computeIndicatorPoint(value);
 
@@ -233,7 +233,7 @@ void IndicatorPlot<T>::updatePlotAdd(const time_t candleTime, double value)
 }
 
 template <typename T>
-void IndicatorPlot<T>::updatePlotReplace(const time_t candleTime, double value)
+void IndicatorGraph<T>::updatePlotReplace(const time_t candleTime, double value)
 {
 	if (size_ > 0)
 	{
@@ -247,7 +247,7 @@ void IndicatorPlot<T>::updatePlotReplace(const time_t candleTime, double value)
 }
 
 template <typename T>
-void IndicatorPlot<T>::rescaleValueAxisAutofit()
+void IndicatorGraph<T>::rescaleValueAxisAutofit()
 {
     for(int i = 0; i < T::SIZE; ++i)
     {
@@ -256,7 +256,7 @@ void IndicatorPlot<T>::rescaleValueAxisAutofit()
 }
 
 template<typename T>
-std::list<QCPAbstractPlottable *> IndicatorPlot<T>::getPlottables()
+std::list<QCPAbstractPlottable *> IndicatorGraph<T>::getPlottables()
 {
     std::list<QCPAbstractPlottable *> plottables;
     for(int i = 0; i < T::SIZE; ++i)

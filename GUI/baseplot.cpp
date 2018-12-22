@@ -69,9 +69,9 @@ void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotati
     }
 
     QPen pen;
-    pen.setColor(QColor(t_annotation->color().red, t_annotation->color().green, t_annotation->color().blue));
+    pen.setColor(QColor(t_annotation->color_.red, t_annotation->color_.green, t_annotation->color_.blue));
 
-    switch(t_annotation->type())
+    switch(t_annotation->type_)
     {
     case Annotation::AnnotationType::LINE:
     {

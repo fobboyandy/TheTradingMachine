@@ -57,7 +57,7 @@ private:
     // using pointers for polymorphism and vectors because
     // we will be indexing into different plots to add user
     // annotations
-    std::vector<std::shared_ptr<BasePlot>> plots_;
+    std::unordered_map<int, std::shared_ptr<BasePlot>> plots_;
 
     // candle data
     Candlestick currentCandle_;
