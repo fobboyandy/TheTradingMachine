@@ -73,56 +73,88 @@ void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotati
 
     switch(t_annotation->type_)
     {
-    case Annotation::AnnotationType::LINE:
-    {
-        auto lineItem = new QCPItemLine(&parentPlot_);
-        auto lineAnnotation = std::dynamic_pointer_cast<Annotation::Line>(t_annotation);
+        case Annotation::AnnotationType::LINE:
+        {
+            auto lineItem = new QCPItemLine(&parentPlot_);
+            auto lineAnnotation = std::dynamic_pointer_cast<Annotation::Line>(t_annotation);
 
-        // set to this axis rect
-        lineItem->setClipAxisRect(&axisRect_);
-        lineItem->start->setAxisRect(&axisRect_);
-        lineItem->end->setAxisRect(&axisRect_);
-        lineItem->start->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
-        lineItem->end->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+            // set to this axis rect
+            lineItem->setClipAxisRect(&axisRect_);
+            lineItem->start->setAxisRect(&axisRect_);
+            lineItem->end->setAxisRect(&axisRect_);
+            lineItem->start->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+            lineItem->end->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
 
-        // set coords
-        lineItem->start->setCoords(lineAnnotation->startX_, lineAnnotation->startY_);
-        lineItem->end->setCoords(lineAnnotation->endX_, lineAnnotation->endY_);
+            // set coords
+            lineItem->start->setCoords(lineAnnotation->startX_, lineAnnotation->startY_);
+            lineItem->end->setCoords(lineAnnotation->endX_, lineAnnotation->endY_);
 
-        lineItem->setPen(pen);
+            lineItem->setPen(pen);
 
-    }
-        break;
+        }
+            break;
 
-    case Annotation::AnnotationType::LABEL:
-    {
-        auto textLabel = new QCPItemText(&parentPlot_);
-        auto textAnnotation = std::dynamic_pointer_cast<Annotation::Label>(t_annotation);
+        case Annotation::AnnotationType::LABEL:
+        {
+            auto textLabel = new QCPItemText(&parentPlot_);
+            auto textAnnotation = std::dynamic_pointer_cast<Annotation::Label>(t_annotation);
 
-        textLabel->setClipAxisRect(&axisRect_);
-        textLabel->position->setAxisRect(&axisRect_);
-        textLabel->position->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
-        textLabel->position->setType(QCPItemPosition::PositionType::ptPlotCoords);
-        textLabel->position->setCoords(textAnnotation->x_, textAnnotation->y_); // place position at center/top of axis rect
+            textLabel->setClipAxisRect(&axisRect_);
+            textLabel->position->setAxisRect(&axisRect_);
+            textLabel->position->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+            textLabel->position->setType(QCPItemPosition::PositionType::ptPlotCoords);
+            textLabel->position->setCoords(textAnnotation->x_, textAnnotation->y_); // place position at center/top of axis rect
 
-        QFont serifFont("Times", 5, QFont::Bold);
-        textLabel->setText(QString(textAnnotation->text_.c_str()));
-        textLabel->setPen(pen);
+            QFont serifFont("Times", 5, QFont::Bold);
+            textLabel->setText(QString(textAnnotation->text_.c_str()));
+            textLabel->setPen(pen);
 
-    }
-        break;
+        }
+            break;
 
-    case Annotation::AnnotationType::CIRCLE:
-    {
+        case Annotation::AnnotationType::CIRCLE:
+        {
+            auto circleItem = new QCPItemEllipse(&parentPlot_);
+            auto circleAnnotation = std::dynamic_pointer_cast<Annotation::Circle>(t_annotation);
 
-    }
-        break;
+            // set to this axis rect
+            circleItem->setClipAxisRect(&axisRect_);
+            circleItem->topLeft->setAxisRect(&axisRect_);
+            circleItem->bottomRight->setAxisRect(&axisRect_);
+            circleItem->topLeft->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+            circleItem->bottomRight->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
 
-    case Annotation::AnnotationType::DOT:
-    {
+            // set coords
+            circleItem->topLeft->setCoords(circleAnnotation->x_ - circleAnnotation->radius_, circleAnnotation->y_ + circleAnnotation->radius_);
+            circleItem->bottomRight->setCoords(circleAnnotation->x_ + circleAnnotation->radius_, circleAnnotation->y_ - circleAnnotation->radius_);
 
-    }
-        break;
+            circleItem->setPen(pen);
+        }
+            break;
+
+        case Annotation::AnnotationType::DOT:
+        {
+
+        }
+            break;
+
+        case Annotation::AnnotationType::BOX:
+        {
+            const auto boxAnnotation = std::dynamic_pointer_cast<Annotation::Box>(t_annotation);
+            auto upperLeftX = boxAnnotation->upperLeftX_;
+            auto upperLeftY = boxAnnotation->upperLeftY_;
+
+            auto lowerRightX = boxAnnotation->lowerRightX_;
+            auto lowerRightY = boxAnnotation->lowerRightY_;
+
+            // recursively create 4 lines for a box. we don't need to include the index since
+            // this recursive call will belong to this subplot
+            addAnnotation(std::make_shared<Annotation::Line>(upperLeftX, lowerRightY, lowerRightX, lowerRightY));
+            addAnnotation(std::make_shared<Annotation::Line>(lowerRightX, lowerRightY, lowerRightX, upperLeftY));
+            addAnnotation(std::make_shared<Annotation::Line>(lowerRightX, upperLeftY, upperLeftX, upperLeftY));
+            addAnnotation(std::make_shared<Annotation::Line>(upperLeftX, upperLeftY, upperLeftX, lowerRightY));
+        }
+            break;
 
     }
 
