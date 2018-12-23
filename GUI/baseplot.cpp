@@ -149,10 +149,19 @@ void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotati
 
             // recursively create 4 lines for a box. we don't need to include the index since
             // this recursive call will belong to this subplot
-            addAnnotation(std::make_shared<Annotation::Line>(upperLeftX, lowerRightY, lowerRightX, lowerRightY));
-            addAnnotation(std::make_shared<Annotation::Line>(lowerRightX, lowerRightY, lowerRightX, upperLeftY));
-            addAnnotation(std::make_shared<Annotation::Line>(lowerRightX, upperLeftY, upperLeftX, upperLeftY));
-            addAnnotation(std::make_shared<Annotation::Line>(upperLeftX, upperLeftY, upperLeftX, lowerRightY));
+            auto leftLine = std::make_shared<Annotation::Line>(upperLeftX, upperLeftY, upperLeftX, lowerRightY);
+            leftLine->color_ = t_annotation->color_;
+            auto rightLine = std::make_shared<Annotation::Line>(lowerRightX, lowerRightY, lowerRightX, upperLeftY);
+            rightLine->color_ = t_annotation->color_;
+            auto upperLine = std::make_shared<Annotation::Line>(lowerRightX, upperLeftY, upperLeftX, upperLeftY);
+            upperLine->color_ = t_annotation->color_;
+            auto lowerLine = std::make_shared<Annotation::Line>(upperLeftX, lowerRightY, lowerRightX, lowerRightY);
+            lowerLine->color_ = t_annotation->color_;
+
+            addAnnotation(leftLine);
+            addAnnotation(rightLine);
+            addAnnotation(upperLine);
+            addAnnotation(lowerLine);
         }
             break;
 
