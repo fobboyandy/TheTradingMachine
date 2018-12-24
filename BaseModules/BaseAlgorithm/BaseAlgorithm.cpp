@@ -328,3 +328,13 @@ std::string BaseAlgorithm::ticker()
 {
 	return impl_->ticker();
 }
+
+bool BaseAlgorithm::isRth(time_t time)
+{
+	const int NUM_SECONDS_DAY = 86400;
+	const int RTH_SECONDS = 48600;
+	const int RTH_START = (48600 + 3600);
+	const int RTH_END = (72000 + 3600);
+
+	return (time % NUM_SECONDS_DAY > RTH_START && time % NUM_SECONDS_DAY <= RTH_END);
+}
