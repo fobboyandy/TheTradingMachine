@@ -137,16 +137,17 @@ void TheTradingMachineTab::updatePlot(void)
 {
     std::unique_lock<std::mutex> lock(plotData_->plotDataMtx);
 
-    const size_t plotDataSz = plotData_->ticks.size();
-    const size_t annotationDataSz = plotData_->annotations.size();
-    // according to stl, "Concurrently accessing or modifying different elements is safe."
-    // as long as other thread is always pushing to the end and we are accessing the middle,
-    // the rule is satisfied
+    auto tickBuffer = std::move(plotData_->ticks);
+    auto annotationBuffer = std::move(plotData_->annotations);
+
+    plotData_->ticks.clear();
+    plotData_->annotations.clear();
+
     lock.unlock();
 
-    for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
+    for(auto& tick: tickBuffer)
     {
-        candleMaker_.addTick(plotData_->ticks[lastPlotDataIndex_]);
+        candleMaker_.addTick(tick);
         auto closedCandles = candleMaker_.getClosedCandles();
         auto currentCandle = candleMaker_.getCurrentCandle();
 
@@ -180,9 +181,8 @@ void TheTradingMachineTab::updatePlot(void)
 
     // add any new annotations from our user to the charts (for now only candle charts
     // have annotations)
-    for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
+    for(auto& annotation: annotationBuffer)
     {
-        const auto& annotation = plotData_->annotations[lastAnnotationIndex_];
         if(annotation != nullptr)
         {
             if(plots_.find(annotation->index_) == plots_.end())

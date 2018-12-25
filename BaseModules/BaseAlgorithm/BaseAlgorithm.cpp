@@ -121,6 +121,7 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketNoStop(std::string ticker
 	return localBroker.longMarket(ticker, numShares, [this, ticker, numShares](double avgFillPrice, time_t time)
 	{
 		std::string labelText = "Long " + std::to_string(numShares) + " shares at $" + std::to_string(avgFillPrice) + "\n";
+		std::lock_guard<std::mutex> lock(plotData->plotDataMtx);
 		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, time, avgFillPrice));
 	});	
 }
@@ -150,6 +151,8 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketNoStop(std::string ticke
 	return localBroker.shortMarket(ticker, numShares, [this, numShares](double avgFillPrice, time_t time)
 	{
 		std::string labelText = "Short " + std::to_string(numShares) + " shares at $" + std::to_string(avgFillPrice) + "\n";
+
+		std::lock_guard<std::mutex> lock(plotData->plotDataMtx);
 		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, time, avgFillPrice));
 	});
 }
@@ -199,6 +202,8 @@ void BaseAlgorithm::BaseAlgorithmImpl::closePosition(PositionId posId)
 			labelAnnotation->color_ = { 0, 255, 0 };
 			lineAnnotation->color_ = { 0, 255, 0 };
 		}
+
+		std::lock_guard<std::mutex> lock(plotData->plotDataMtx);
 		plotData->annotations.push_back(labelAnnotation);
 		plotData->annotations.push_back(lineAnnotation);
 	});
