@@ -336,10 +336,22 @@ std::string BaseAlgorithm::ticker()
 
 bool BaseAlgorithm::isRth(time_t time)
 {
-	const int NUM_SECONDS_DAY = 86400;
-	const int RTH_SECONDS = 48600;
-	const int RTH_START = (48600 + 3600);
-	const int RTH_END = (72000 + 3600);
+	char timeCStr[256];
+	ctime_s(timeCStr, 256, &time);
 
-	return (time % NUM_SECONDS_DAY > RTH_START && time % NUM_SECONDS_DAY <= RTH_END);
+	std::string timeStr(timeCStr);
+
+	// we need to convert it to local time in order to account
+	// for DLS. cannot use simple modulus arithmetic to get
+	// RTH. we can simply replace all the colons with 0s
+	// and compare the raw values as integers
+	timeStr[13] = '0';
+	timeStr[16] = '0';
+	auto timeInt = std::stoi(timeStr.substr(11, 8));
+	if (timeInt >= 8030000 && timeInt < 15000000)
+	{
+		return true;
+	}
+
+	return false;
 }
