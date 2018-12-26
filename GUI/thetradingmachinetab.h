@@ -83,6 +83,7 @@ private:
 
 private slots:
     void updatePlot(void);
+    void menuShowSlot(QPoint pos);
 
 };
 

@@ -3,8 +3,15 @@
 
 #include "qcustomplot.h"
 #include "indicatorgraph.h"
+#include "indicatordialog.h"
+#include "indicatorincludes.h"
 #include "../BaseModules/CandleMaker/CandleMaker.h"
 #include "../BaseModules/BaseAlgorithm/Annotation.h"
+#include <unordered_map>
+#include <unordered_set>
+#include <memory>
+#include <iostream>
+#include <string>
 
 class BasePlot : public QObject
 {
@@ -26,7 +33,10 @@ public:
     // add the annotation to a chosen axis
     void addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotation);
 
+    void menuShow(QPoint pos);
+    bool inRect(QPoint pos);
 private:
+    virtual void indicatorSelectionMenu(QPoint pos) = 0;
 
 private slots:
     // there should be a way to define this in the base class instead of
@@ -43,6 +53,19 @@ protected:
 
     bool autoScaleKeyAxis_;
 
+    void removeIndicatorMenu(QPoint pos, QList<QCPAbstractPlottable*> plottables);
+
+    // to create a new indicator entry, we first instantiate an iplot and get the
+    // associated plottables. we create an entry and map the plottable to the new iplot.
+    // when we select a graph in qcp for removal, we first get back a qcpabstractplottable
+    // pointer from qcustomplot we can use this pointer to map to the iplot that it
+    // corresponds to and remove the entry. refer to showMenu
+    // we use a shared_ptr for multiple instances to the same iplot
+    std::unordered_map<QCPAbstractPlottable*, std::shared_ptr<IIndicatorGraph>> activeIndicatorPlots_;
+
+protected slots:
+
+    void plotSelectSlot(bool selected);
 };
 
 #endif // IPLOT_H

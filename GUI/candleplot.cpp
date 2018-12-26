@@ -1,9 +1,4 @@
 #include "candleplot.h"
-#include "indicatorgraph.h"
-#include "indicatordialog.h"
-#include "indicatorincludes.h"
-#include <unordered_set>
-#include <memory>
 
 CandlePlot::CandlePlot(QCustomPlot& parentPlot):
     BasePlot(parentPlot)
@@ -11,9 +6,6 @@ CandlePlot::CandlePlot(QCustomPlot& parentPlot):
     candleBars_ = new QCPFinancial(axisRect_.axis(QCPAxis::atBottom), axisRect_.axis(QCPAxis::atLeft));
     candleBars_->setWidthType(QCPFinancial::WidthType::wtPlotCoords);
     candleBars_->setWidth(60);
-
-    parentPlot_.setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(&parentPlot_, &QCustomPlot::customContextMenuRequested, this, &CandlePlot::menuShowSlot);
 
     size_ = 0;
 }
@@ -119,6 +111,8 @@ void CandlePlot::updatePlotReplace(const Candlestick &candle)
 // the previous candles
 void CandlePlot::pastCandlesPlotUpdate(std::shared_ptr<IIndicatorGraph> iplot)
 {
+
+    std::cout << "candle plot" << std::endl;
     for(auto& it: *candleBars_->data())
     {
         switch(iplot->valueType)
@@ -399,41 +393,6 @@ void CandlePlot::indicatorSelectionMenu(QPoint pos)
     menu->popup(parentPlot_.mapToGlobal(pos));
 }
 
-void CandlePlot::removeIndicatorMenu(QPoint pos, QList<QCPAbstractPlottable*> plottables)
-{
-    QMenu* menu = new QMenu();
-    // destroy the menu after closing
-    menu->setAttribute(Qt::WidgetAttribute::WA_DeleteOnClose);
-
-    menu->addAction("Remove Indicator", this, [this, plottables]()
-    {
-        // get the value axis shared by these plots. check the number
-        // of remaining plottables after removing them
-        auto commonValueAxis = plottables.front()->valueAxis();
-
-        // all plottables associated with a chosen iplot
-        // are provided by the argument
-        for(auto& plottable: plottables)
-        {
-            // erase the plot entries
-            activeIndicatorPlots_.erase(plottable);
-
-            // remove it from the graph
-            parentPlot_.removePlottable(plottable);
-
-        }
-
-        // if there are no more plottables associated with
-        // this axis, remove the axis
-        if(commonValueAxis->plottables().size() == 0)
-        {
-            axisRect_.removeAxis(commonValueAxis);
-        }
-    });
-
-    menu->popup(parentPlot_.mapToGlobal(pos));
-}
-
 double CandlePlot::lowerRange()
 {
     return candleBars_->data()->at(0)->mainKey();
@@ -449,45 +408,6 @@ int CandlePlot::size()
     return size_;
 }
 
-void CandlePlot::menuShowSlot(QPoint pos)
-{
-    auto selectedPlottables = parentPlot_.selectedPlottables();
-    // if no plottables were selected then show indicator selection
-    if(selectedPlottables.size() == 0)
-    {
-        indicatorSelectionMenu(pos);
-    }
-    else
-    {
-        removeIndicatorMenu(pos, selectedPlottables);
-    }
-}
-
-void CandlePlot::plotSelectSlot(bool selected)
-{
-    // mark the other graphs as selected as well
-    if(selected)
-    {
-        std::shared_ptr<IIndicatorGraph> selectedPlot;
-
-        // find the graph that is currently selected
-        for(auto& plottableEntry: activeIndicatorPlots_)
-        {
-            if(plottableEntry.first->selected())
-            {
-                selectedPlot = plottableEntry.second;
-                break; // we know only one will be selected
-            }
-        }
-
-        auto plottables = selectedPlot->getPlottables();
-        for(auto& plottable: plottables)
-        {
-            // cast to qcpgraph since we only have qcpgraphs at the moment
-            plottable->setSelection(QCPDataSelection(static_cast<QCPGraph*>(plottable)->data()->dataRange()));
-        }
-    }
-}
 
 void CandlePlot::xAxisChanged(QCPRange range)
 {
@@ -507,7 +427,7 @@ void CandlePlot::xAxisChanged(QCPRange range)
     rescalePlot();
 }
 
-template<typename IndicatorType, typename... Args>
+template<typename IndicatorType, typename ... Args>
 void CandlePlot::indicatorLaunch(OhlcType valueType, IndicatorDisplayType displayType, Args... args)
 {
     auto indicator = std::make_unique<IndicatorType>(args...);

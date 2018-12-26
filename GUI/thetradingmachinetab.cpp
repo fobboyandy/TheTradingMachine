@@ -43,6 +43,11 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     plots_[0] = std::make_unique<CandlePlot>(*plot_);
     plots_[1] = std::make_unique<VolumePlot>(*plot_);
 
+
+    plot_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(plot_, &QCustomPlot::customContextMenuRequested, this, &TheTradingMachineTab::menuShowSlot);
+
+
     // initialize members here instead of the initializer list
     // to keep the initializer list shorter. shouldn't be too much
     // extra overhead
@@ -179,8 +184,7 @@ void TheTradingMachineTab::updatePlot(void)
 
     }
 
-    // add any new annotations from our user to the charts (for now only candle charts
-    // have annotations)
+    // add any new annotations from our user to the charts
     for(auto& annotation: annotationBuffer)
     {
         if(annotation != nullptr)
@@ -202,4 +206,15 @@ void TheTradingMachineTab::updatePlot(void)
 
     //replot should always be happening to update the drawing
     plot_->replot();
+}
+
+void TheTradingMachineTab::menuShowSlot(QPoint pos)
+{
+    for(auto& plot: plots_)
+    {
+        if(plot.second->inRect(pos))
+        {
+            plot.second->menuShow(pos);
+        }
+    }
 }

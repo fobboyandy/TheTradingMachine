@@ -51,6 +51,7 @@ BasePlot::BasePlot(QCustomPlot &t_parentPlot):
         }
     }
 
+
     connect(axisRect_.axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
     autoScaleKeyAxis_ = true;
 }
@@ -167,4 +168,89 @@ void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotati
 
     }
 
+}
+
+bool BasePlot::inRect(QPoint pos)
+{
+    auto xLowerBound = axisRect_.topLeft().x();
+    auto xUpperBound = axisRect_.topRight().x();
+    auto yLowerBound = axisRect_.topLeft().y();
+    auto yUpperBound = axisRect_.bottomLeft().y();
+
+    return pos.x() >= xLowerBound && pos.x() <= xUpperBound && pos.y() >= yLowerBound && pos.y() <= yUpperBound;
+}
+
+void BasePlot::removeIndicatorMenu(QPoint pos, QList<QCPAbstractPlottable *> plottables)
+{
+    QMenu* menu = new QMenu();
+    // destroy the menu after closing
+    menu->setAttribute(Qt::WidgetAttribute::WA_DeleteOnClose);
+
+    menu->addAction("Remove Indicator", this, [this, plottables]()
+    {
+        // get the value axis shared by these plots. check the number
+        // of remaining plottables after removing them
+        auto commonValueAxis = plottables.front()->valueAxis();
+
+        // all plottables associated with a chosen iplot
+        // are provided by the argument
+        for(auto& plottable: plottables)
+        {
+            // erase the plot entries
+            activeIndicatorPlots_.erase(plottable);
+
+            // remove it from the graph
+            parentPlot_.removePlottable(plottable);
+
+        }
+
+        // if there are no more plottables associated with
+        // this axis, remove the axis
+        if(commonValueAxis->plottables().size() == 0)
+        {
+            axisRect_.removeAxis(commonValueAxis);
+        }
+    });
+
+    menu->popup(parentPlot_.mapToGlobal(pos));
+}
+
+void BasePlot::menuShow(QPoint pos)
+{
+    auto selectedPlottables = parentPlot_.selectedPlottables();
+    // if no plottables were selected then show indicator selection
+    if(selectedPlottables.size() == 0)
+    {
+        indicatorSelectionMenu(pos);
+    }
+    else
+    {
+        removeIndicatorMenu(pos, selectedPlottables);
+    }
+}
+
+void BasePlot::plotSelectSlot(bool selected)
+{
+    // mark the other graphs as selected as well
+    if(selected)
+    {
+        std::shared_ptr<IIndicatorGraph> selectedPlot;
+
+        // find the graph that is currently selected
+        for(auto& plottableEntry: activeIndicatorPlots_)
+        {
+            if(plottableEntry.first->selected())
+            {
+                selectedPlot = plottableEntry.second;
+                break; // we know only one will be selected
+            }
+        }
+
+        auto plottables = selectedPlot->getPlottables();
+        for(auto& plottable: plottables)
+        {
+            // cast to qcpgraph since we only have qcpgraphs at the moment
+            plottable->setSelection(QCPDataSelection(static_cast<QCPGraph*>(plottable)->data()->dataRange()));
+        }
+    }
 }
