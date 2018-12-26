@@ -9,6 +9,7 @@
 #include <thread>
 #include <unordered_map>
 #include <list>
+#include <chrono>
 #include "qcustomplot.h"
 #include "../BaseModules/InteractiveBrokersClient/InteractiveBrokersClient.h"
 #include "../BaseModules/BaseAlgorithm/PlotData.h"
@@ -69,6 +70,9 @@ private:
     bool autoScale_;
     bool plotActive_;
     bool valid_;
+
+    decltype(std::chrono::high_resolution_clock::now()) lastTickReceivedTime;
+    int refreshDelayMs;
 
     enum MenuType
     {

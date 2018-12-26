@@ -43,7 +43,6 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     plots_[0] = std::make_unique<CandlePlot>(*plot_);
     plots_[1] = std::make_unique<VolumePlot>(*plot_);
 
-
     plot_->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(plot_, &QCustomPlot::customContextMenuRequested, this, &TheTradingMachineTab::menuShowSlot);
 
@@ -56,8 +55,11 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     lastPlotDataIndex_ = 0;
     lastAnnotationIndex_ = 0;
 
+    // get the time now
+    lastTickReceivedTime = std::chrono::high_resolution_clock::now();
+    refreshDelayMs = 50;
     // start the plotting
-    replotTimer_->start(50);
+    replotTimer_->start(refreshDelayMs);
 }
 
 TheTradingMachineTab::~TheTradingMachineTab()
@@ -149,6 +151,35 @@ void TheTradingMachineTab::updatePlot(void)
     plotData_->annotations.clear();
 
     lock.unlock();
+
+    // dynamically adjust the refresh rate based on number of ticks received
+    if(tickBuffer.size() > 0)
+    {
+        using namespace std::chrono;
+        auto timeNow = high_resolution_clock::now();
+        auto diffTimeMs = duration_cast<milliseconds>(timeNow - lastTickReceivedTime).count();
+        lastTickReceivedTime = timeNow;
+        refreshDelayMs = static_cast<int>(static_cast<decltype(tickBuffer.size())>(diffTimeMs * 300)/tickBuffer.size());
+        if(refreshDelayMs < 30 && replotTimer_->interval() > 30)
+        {
+            // refresh delay capped at 30ms
+            replotTimer_->setInterval(30);
+        }
+        else if(refreshDelayMs > 30)
+        {
+            replotTimer_->setInterval(refreshDelayMs);
+        }
+    }
+    else
+    {
+        // once the ticks stop getting sent as frequently, set it to 10 seconds refresh rate.
+        // the refresh rate will begin to increase in premarket and ramp up to a faster
+        // rate by the time market starts
+        refreshDelayMs = 10000;
+        replotTimer_->setInterval(refreshDelayMs);
+    }
+
+    std::cout << replotTimer_->interval() << std::endl;
 
     for(auto& tick: tickBuffer)
     {
