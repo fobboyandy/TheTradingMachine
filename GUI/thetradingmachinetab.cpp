@@ -179,8 +179,6 @@ void TheTradingMachineTab::updatePlot(void)
         replotTimer_->setInterval(refreshDelayMs);
     }
 
-    std::cout << replotTimer_->interval() << std::endl;
-
     for(auto& tick: tickBuffer)
     {
         candleMaker_.addTick(tick);
