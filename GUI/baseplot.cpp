@@ -141,28 +141,28 @@ void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotati
 
         case Annotation::AnnotationType::BOX:
         {
+
+            auto boxItem = new QCPItemRect(&parentPlot_);
             const auto boxAnnotation = std::dynamic_pointer_cast<Annotation::Box>(t_annotation);
+
             auto upperLeftX = boxAnnotation->upperLeftX_;
             auto upperLeftY = boxAnnotation->upperLeftY_;
 
             auto lowerRightX = boxAnnotation->lowerRightX_;
             auto lowerRightY = boxAnnotation->lowerRightY_;
 
-            // recursively create 4 lines for a box. we don't need to include the index since
-            // this recursive call will belong to this subplot
-            auto leftLine = std::make_shared<Annotation::Line>(upperLeftX, upperLeftY, upperLeftX, lowerRightY);
-            leftLine->color_ = t_annotation->color_;
-            auto rightLine = std::make_shared<Annotation::Line>(lowerRightX, lowerRightY, lowerRightX, upperLeftY);
-            rightLine->color_ = t_annotation->color_;
-            auto upperLine = std::make_shared<Annotation::Line>(lowerRightX, upperLeftY, upperLeftX, upperLeftY);
-            upperLine->color_ = t_annotation->color_;
-            auto lowerLine = std::make_shared<Annotation::Line>(upperLeftX, lowerRightY, lowerRightX, lowerRightY);
-            lowerLine->color_ = t_annotation->color_;
+            // set to this axis rect
+            boxItem->setClipAxisRect(&axisRect_);
+            boxItem->topLeft->setAxisRect(&axisRect_);
+            boxItem->bottomRight->setAxisRect(&axisRect_);
+            boxItem->topLeft->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+            boxItem->bottomRight->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
 
-            addAnnotation(leftLine);
-            addAnnotation(rightLine);
-            addAnnotation(upperLine);
-            addAnnotation(lowerLine);
+            // set coords
+            boxItem->topLeft->setCoords(upperLeftX, upperLeftY);
+            boxItem->bottomRight->setCoords(lowerRightX, lowerRightY);
+
+            boxItem->setPen(pen);
         }
             break;
 
