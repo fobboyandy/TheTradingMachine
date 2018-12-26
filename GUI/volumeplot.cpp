@@ -171,4 +171,7 @@ void VolumePlot::indicatorLaunch(OhlcType valueType, IndicatorDisplayType displa
         activeIndicatorPlots_[plottable] = plot;
         connect(plottable, SIGNAL(selectionChanged(bool)), this, SLOT(plotSelectSlot(bool)));
     }
+
+    //replot after adding indicator
+    parentPlot_.replot();
 }

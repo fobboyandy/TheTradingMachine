@@ -51,7 +51,6 @@ BasePlot::BasePlot(QCustomPlot &t_parentPlot):
         }
     }
 
-
     connect(axisRect_.axis(QCPAxis::atBottom), SIGNAL(rangeChanged(QCPRange)), this, SLOT(xAxisChanged(QCPRange)));
     autoScaleKeyAxis_ = true;
 }
@@ -141,7 +140,6 @@ void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotati
 
         case Annotation::AnnotationType::BOX:
         {
-
             auto boxItem = new QCPItemRect(&parentPlot_);
             const auto boxAnnotation = std::dynamic_pointer_cast<Annotation::Box>(t_annotation);
 

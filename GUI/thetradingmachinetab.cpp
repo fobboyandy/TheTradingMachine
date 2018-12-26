@@ -179,6 +179,8 @@ void TheTradingMachineTab::updatePlot(void)
         replotTimer_->setInterval(refreshDelayMs);
     }
 
+    // replot only if there are any visible update in the current view
+    bool replot = false;
     for(auto& tick: tickBuffer)
     {
         candleMaker_.addTick(tick);
@@ -203,6 +205,7 @@ void TheTradingMachineTab::updatePlot(void)
 
             // finally add in the current candle which will update with each new tick
             updatePlotNewCandle(currentCandle);
+
         }
         else
         {
@@ -211,6 +214,16 @@ void TheTradingMachineTab::updatePlot(void)
             updatePlotReplaceCandle(currentCandle);
         }
 
+        // grab any axisRect and check the key axis range to determine replot
+        const auto& candlePlotKeyAxis = plot_->axisRect(0)->axis(QCPAxis::AxisType::atBottom);
+        // if we toggled replot, no need to keep doing this for every tick
+        if(!replot)
+        {
+            if(currentCandle.time >= candlePlotKeyAxis->range().lower && currentCandle.time <= candlePlotKeyAxis->range().upper)
+            {
+                replot = true;
+            }
+        }
     }
 
     // add any new annotations from our user to the charts
@@ -233,8 +246,11 @@ void TheTradingMachineTab::updatePlot(void)
         plot.second->rescalePlot();
     }
 
-    //replot should always be happening to update the drawing
-    plot_->replot();
+    if(replot)
+    {
+        plot_->replot();
+        replot = false;
+    }
 }
 
 void TheTradingMachineTab::menuShowSlot(QPoint pos)
