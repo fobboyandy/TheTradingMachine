@@ -22,7 +22,7 @@ VolumePlot::~VolumePlot()
 void VolumePlot::updatePlotAdd(const Candlestick &candle)
 {
     // add a new bar volume and candlesticks
-    volumeBars_->addData(candle.time, candle.volume);
+    volumeBars_->addData(candle.time + 30, candle.volume);
     ++size_;
 
     // since activeIndicatorPlots_ entries map plottables to
@@ -37,7 +37,7 @@ void VolumePlot::updatePlotAdd(const Candlestick &candle)
     {
         if(updatedIndicators.find(activePlotIt.second) == updatedIndicators.end())
         {
-            activePlotIt.second->updatePlotAdd(candle.time, candle.volume);
+            activePlotIt.second->updatePlotAdd(candle.time + 30, candle.volume);
             // mark as updated
             updatedIndicators.insert(activePlotIt.second);
         }
@@ -48,7 +48,7 @@ void VolumePlot::updatePlotReplace(const Candlestick &candle)
 {
     if(size_ > 0)
     {
-        volumeBars_->data()->set(size_ - 1, QCPBarsData(candle.time, candle.volume));
+        volumeBars_->data()->set(size_ - 1, QCPBarsData(candle.time + 30, candle.volume));
 
         std::unordered_set<std::shared_ptr<IIndicatorGraph>> updatedIndicators;
         // update all the indicators belonging to this plot
@@ -56,7 +56,7 @@ void VolumePlot::updatePlotReplace(const Candlestick &candle)
         {
             if(updatedIndicators.find(activePlotIt.second) == updatedIndicators.end())
             {
-                activePlotIt.second->updatePlotReplace( candle.time, candle.volume);
+                activePlotIt.second->updatePlotReplace( candle.time + 30, candle.volume);
                 // mark as updated
                 updatedIndicators.insert(activePlotIt.second);
             }

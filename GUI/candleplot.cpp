@@ -17,7 +17,7 @@ CandlePlot::~CandlePlot()
 void CandlePlot::updatePlotAdd(const Candlestick &candle)
 {
     // add a new bar
-    candleBars_->addData(candle.time, candle.open, candle.high, candle.low, candle.close);
+    candleBars_->addData(candle.time+30, candle.open, candle.high, candle.low, candle.close);
     ++size_;
 
     // since activeIndicatorPlots_ entries map plottables to
@@ -35,21 +35,21 @@ void CandlePlot::updatePlotAdd(const Candlestick &candle)
             switch(activePlotIt.second->valueType)
             {
             case OhlcType::OPEN:
-                activePlotIt.second->updatePlotAdd( candle.time, candle.open);
+                activePlotIt.second->updatePlotAdd( candle.time + 30, candle.open);
                 break;
 
             case OhlcType::HIGH:
-                activePlotIt.second->updatePlotAdd( candle.time, candle.high);
+                activePlotIt.second->updatePlotAdd( candle.time + 30, candle.high);
                 break;
 
             case OhlcType::LOW:
-                activePlotIt.second->updatePlotAdd( candle.time, candle.low);
+                activePlotIt.second->updatePlotAdd( candle.time + 30, candle.low);
                 break;
 
             // close values as default
             case OhlcType::CLOSE:
             default:
-                activePlotIt.second->updatePlotAdd( candle.time, candle.close);
+                activePlotIt.second->updatePlotAdd( candle.time + 30, candle.close);
                 break;
             }
 
@@ -63,7 +63,7 @@ void CandlePlot::updatePlotReplace(const Candlestick &candle)
 {
     if(size_ > 0)
     {
-        candleBars_->data()->set(size_ - 1, QCPFinancialData(candle.time , candle.open, candle.high, candle.low, candle.close));
+        candleBars_->data()->set(size_ - 1, QCPFinancialData(candle.time + 30, candle.open, candle.high, candle.low, candle.close));
 
         std::unordered_set<std::shared_ptr<IIndicatorGraph>> updatedIndicators;
         // update all the indicators belonging to this plot
@@ -74,21 +74,21 @@ void CandlePlot::updatePlotReplace(const Candlestick &candle)
                 switch(activePlotIt.second->valueType)
                 {
                 case OhlcType::OPEN:
-                    activePlotIt.second->updatePlotReplace( candle.time, candle.open);
+                    activePlotIt.second->updatePlotReplace( candle.time + 30, candle.open);
                     break;
 
                 case OhlcType::HIGH:
-                    activePlotIt.second->updatePlotReplace( candle.time, candle.high);
+                    activePlotIt.second->updatePlotReplace( candle.time + 30, candle.high);
                     break;
 
                 case OhlcType::LOW:
-                    activePlotIt.second->updatePlotReplace( candle.time, candle.low);
+                    activePlotIt.second->updatePlotReplace( candle.time + 30, candle.low);
                     break;
 
                 // use closing value as default
                 case OhlcType::CLOSE:
                 default:
-                    activePlotIt.second->updatePlotReplace( candle.time, candle.close);
+                    activePlotIt.second->updatePlotReplace( candle.time + 30, candle.close);
                     break;
                 }
 
