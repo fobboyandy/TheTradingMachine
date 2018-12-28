@@ -72,7 +72,6 @@ private:
     bool valid_;
 
     decltype(std::chrono::high_resolution_clock::now()) lastTickReceivedTime;
-    int refreshDelayMs;
 
     enum MenuType
     {

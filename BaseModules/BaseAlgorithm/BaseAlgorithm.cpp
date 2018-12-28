@@ -32,7 +32,12 @@ public:
 	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
 	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
 
+
+	// Each time we reduce a position, remember the previous position so that we can
+	// track changes relative to the previous position
+	Position pPosition;
 	void closePosition(PositionId posId);
+	void reducePosition(PositionId posId, int numShares);
 	Position getPosition(PositionId posId);
 
 private:
@@ -121,6 +126,12 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketNoStop(std::string ticker
 	return localBroker.longMarket(ticker, numShares, [this, ticker, numShares](double avgFillPrice, time_t time)
 	{
 		std::string labelText = "Long " + std::to_string(numShares) + " shares at $" + std::to_string(avgFillPrice) + "\n";
+		// initialize a new pPosition
+		pPosition.openTime = time;
+		pPosition.averagePrice = avgFillPrice;
+		pPosition.shares = numShares;
+		pPosition.profit = 0;
+
 		std::lock_guard<std::mutex> lock(plotData->plotDataMtx);
 		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, time, avgFillPrice));
 	});	
@@ -151,7 +162,11 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketNoStop(std::string ticke
 	return localBroker.shortMarket(ticker, numShares, [this, numShares](double avgFillPrice, time_t time)
 	{
 		std::string labelText = "Short " + std::to_string(numShares) + " shares at $" + std::to_string(avgFillPrice) + "\n";
-
+		// initialize a new pPosition
+		pPosition.openTime = time;
+		pPosition.averagePrice = avgFillPrice;
+		pPosition.shares = -abs(numShares);
+		pPosition.profit = 0;
 		std::lock_guard<std::mutex> lock(plotData->plotDataMtx);
 		plotData->annotations.push_back(std::make_shared<Annotation::Label>(labelText, time, avgFillPrice));
 	});
@@ -185,19 +200,18 @@ void BaseAlgorithm::BaseAlgorithmImpl::closePosition(PositionId posId)
 		auto position = localBroker.getPosition(posId);
 		profit_ += position.profit;
 		std::string labelText = "Closing Position at $" + std::to_string(avgFillPrice) + "\n";
-		labelText += "Position Profit : " + std::to_string(position.profit) + "\n";
+		labelText += "Profit Change: " + std::to_string(position.profit - pPosition.profit) + "\n";
 		labelText += "Net Profit : " + std::to_string(profit_) + "\n";
 
-		// shift the closing label down a bit
 		auto labelAnnotation = std::make_shared<Annotation::Label>(labelText, time, avgFillPrice);
-		auto lineAnnotation = std::make_shared<Annotation::Line>(position.openTime, position.averagePrice, position.closeTime, avgFillPrice);
-		if (position.profit < 0)
+		auto lineAnnotation = std::make_shared<Annotation::Line>(pPosition.openTime, pPosition.averagePrice, position.closeTime, avgFillPrice);
+		if (position.profit - pPosition.profit < 0)
 		{
 			labelAnnotation->color_ = { 255, 0, 0 };
 			lineAnnotation->color_ = { 255, 0, 0};
 
 		}
-		else if (position.profit > 0)
+		else if (position.profit - pPosition.profit > 0)
 		{
 			labelAnnotation->color_ = { 0, 255, 0 };
 			lineAnnotation->color_ = { 0, 255, 0 };
@@ -208,6 +222,48 @@ void BaseAlgorithm::BaseAlgorithmImpl::closePosition(PositionId posId)
 		plotData->annotations.push_back(lineAnnotation);
 	});
 
+}
+
+void BaseAlgorithm::BaseAlgorithmImpl::reducePosition(PositionId posId, int numShares)
+{
+	if (posId != -1)
+	{
+		// when an order gets filled, this lambda submits an annotation
+		localBroker.reducePosition(posId, numShares, [this, posId](double avgFillPrice, time_t time)
+		{
+			auto cPosition = localBroker.getPosition(posId);
+			std::string labelText = "Reducing Position at $" + std::to_string(avgFillPrice) + "\n";
+
+			// for price reductions, we print the current status but don't add to the net profit
+			labelText += "Profit Change : " + std::to_string(cPosition.profit - pPosition.profit) + "\n";
+			labelText += "Net Profit : " + std::to_string(profit_ + cPosition.profit) + "\n";
+
+			// shift the closing label down a bit
+			auto labelAnnotation = std::make_shared<Annotation::Label>(labelText, time, avgFillPrice);
+			auto lineAnnotation = std::make_shared<Annotation::Line>(pPosition.openTime, pPosition.averagePrice, time, avgFillPrice);
+			if (cPosition.profit - pPosition.profit < 0)
+			{
+				labelAnnotation->color_ = { 255, 0, 0 };
+				lineAnnotation->color_ = { 255, 0, 0 };
+
+			}
+			else if (cPosition.profit - pPosition.profit > 0)
+			{
+				labelAnnotation->color_ = { 0, 255, 0 };
+				lineAnnotation->color_ = { 0, 255, 0 };
+			}
+
+			//update pPosition
+			pPosition.openTime = time;
+			pPosition.averagePrice = avgFillPrice;
+			pPosition.profit = cPosition.profit;
+
+			std::lock_guard<std::mutex> lock(plotData->plotDataMtx);
+			plotData->annotations.push_back(labelAnnotation);
+			plotData->annotations.push_back(lineAnnotation);
+		});
+	}
+	
 }
 
 Position BaseAlgorithm::BaseAlgorithmImpl::getPosition(PositionId posId)
@@ -321,7 +377,7 @@ void BaseAlgorithm::closePosition(PositionId posId)
 
 void BaseAlgorithm::reducePosition(PositionId posId, int numShares)
 {
-
+	impl_->reducePosition(posId, numShares);
 }
 
 Position BaseAlgorithm::getPosition(PositionId posId)

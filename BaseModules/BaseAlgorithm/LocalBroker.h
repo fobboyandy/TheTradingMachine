@@ -33,9 +33,7 @@ public:
 	PositionId shortMarketLimit(std::string ticker, double limitPrice, int numShares, std::function<void(double, time_t)> fillNotification);
 	void closePosition(PositionId posId, std::function<void(double, time_t)> fillNotification);
 	Position getPosition(PositionId posId);
-
-private:
-	void reducePosition(PositionId posId, int numShares);
+	void reducePosition(PositionId posId, int numShares, std::function<void(double, time_t)> fillNotification);
 
 private:
 	std::shared_ptr<InteractiveBrokersClient> ibApi_;

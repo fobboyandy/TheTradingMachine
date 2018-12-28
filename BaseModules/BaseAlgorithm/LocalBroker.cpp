@@ -109,8 +109,18 @@ PositionId LocalBroker::shortMarketLimit(std::string ticker, double limitPrice, 
 	return PositionId();
 }
 
-void LocalBroker::reducePosition(PositionId posId, int numShares)
+void LocalBroker::reducePosition(PositionId posId, int numShares, std::function<void(double, time_t)> fillNotification)
 {
+	// this lambda captures the state of the current context
+	// when this is called as a callback later, it will have
+	// the context to dispatch to the caller
+	// we can simply use numShares as fill amount since we
+	// only submit orders as all or none
+	auto reducePositionFillNotification = [this, posId, fillNotification, numShares](double price, time_t time)
+	{
+		portfolio_.reducePosition(posId, price, numShares);
+		fillNotification(price, time);
+	};
 	if (liveTrade_)
 	{
 		// we are supposed to create an order and submit it to ibapi. ib api
@@ -127,7 +137,7 @@ void LocalBroker::reducePosition(PositionId posId, int numShares)
 	else
 	{
 		// autofill
-		portfolio_.reducePosition(posId, tickSource_.lastTick().price, numShares);
+		reducePositionFillNotification(tickSource_.lastTick().price, tickSource_.lastTick().time);
 	}
 }
 

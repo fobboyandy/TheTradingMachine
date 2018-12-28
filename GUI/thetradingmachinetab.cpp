@@ -57,9 +57,8 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
 
     // get the time now
     lastTickReceivedTime = std::chrono::high_resolution_clock::now();
-    refreshDelayMs = 50;
     // start the plotting
-    replotTimer_->start(refreshDelayMs);
+    replotTimer_->start(30);
 }
 
 TheTradingMachineTab::~TheTradingMachineTab()
@@ -159,13 +158,13 @@ void TheTradingMachineTab::updatePlot(void)
         auto timeNow = high_resolution_clock::now();
         auto diffTimeMs = duration_cast<milliseconds>(timeNow - lastTickReceivedTime).count();
         lastTickReceivedTime = timeNow;
-        refreshDelayMs = static_cast<int>(static_cast<decltype(tickBuffer.size())>(diffTimeMs * 300)/tickBuffer.size());
+        auto refreshDelayMs = static_cast<int>(static_cast<decltype(tickBuffer.size())>(diffTimeMs * 300)/tickBuffer.size());
         if(refreshDelayMs < 30 && replotTimer_->interval() > 30)
         {
             // refresh delay capped at 30ms
             replotTimer_->setInterval(30);
         }
-        else if(refreshDelayMs > 30)
+        else if(refreshDelayMs >= 30 && refreshDelayMs < 5000)
         {
             replotTimer_->setInterval(refreshDelayMs);
         }
@@ -175,8 +174,7 @@ void TheTradingMachineTab::updatePlot(void)
         // once the ticks stop getting sent as frequently, set it to 10 seconds refresh rate.
         // the refresh rate will begin to increase in premarket and ramp up to a faster
         // rate by the time market starts
-        refreshDelayMs = 10000;
-        replotTimer_->setInterval(refreshDelayMs);
+        replotTimer_->setInterval(10000);
     }
 
     // replot only if there are any visible update in the current view
