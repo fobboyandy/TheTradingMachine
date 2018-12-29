@@ -10,6 +10,7 @@ namespace Annotation
 		DOT,
 		CIRCLE,
 		LABEL,
+		BOX
 	};
 
 	struct ColorType
@@ -106,5 +107,24 @@ namespace Annotation
 		const std::string text_;
 		const double x_;
 		const double y_;
+	};
+
+	struct Box : public IAnnotation
+	{
+		template<typename T>
+		Box(T t_upperLeftX, double t_upperLeftY, T t_lowerRightX, double t_lowerRightY, int t_index = 0) :
+			IAnnotation(AnnotationType::BOX, t_index),
+			upperLeftX_(static_cast<double>(t_upperLeftX)),
+			upperLeftY_(t_upperLeftY),
+			lowerRightX_(static_cast<double>(t_lowerRightX)),
+			lowerRightY_(t_lowerRightY)
+		{
+
+		}
+
+		const double upperLeftX_;
+		const double upperLeftY_;
+		const double lowerRightX_;
+		const double lowerRightY_;
 	};
 }

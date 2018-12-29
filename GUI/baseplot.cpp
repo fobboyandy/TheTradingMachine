@@ -73,57 +73,182 @@ void BasePlot::addAnnotation(std::shared_ptr<Annotation::IAnnotation> t_annotati
 
     switch(t_annotation->type_)
     {
-    case Annotation::AnnotationType::LINE:
+        case Annotation::AnnotationType::LINE:
+        {
+            auto lineItem = new QCPItemLine(&parentPlot_);
+            auto lineAnnotation = std::dynamic_pointer_cast<Annotation::Line>(t_annotation);
+
+            // set to this axis rect
+            lineItem->setClipAxisRect(&axisRect_);
+            lineItem->start->setAxisRect(&axisRect_);
+            lineItem->end->setAxisRect(&axisRect_);
+            lineItem->start->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+            lineItem->end->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+
+            // set coords
+            lineItem->start->setCoords(lineAnnotation->startX_, lineAnnotation->startY_);
+            lineItem->end->setCoords(lineAnnotation->endX_, lineAnnotation->endY_);
+
+            lineItem->setPen(pen);
+
+        }
+            break;
+
+        case Annotation::AnnotationType::LABEL:
+        {
+            auto textLabel = new QCPItemText(&parentPlot_);
+            auto textAnnotation = std::dynamic_pointer_cast<Annotation::Label>(t_annotation);
+
+            textLabel->setClipAxisRect(&axisRect_);
+            textLabel->position->setAxisRect(&axisRect_);
+            textLabel->position->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+            textLabel->position->setType(QCPItemPosition::PositionType::ptPlotCoords);
+            textLabel->position->setCoords(textAnnotation->x_, textAnnotation->y_); // place position at center/top of axis rect
+
+            QFont serifFont("Times", 5, QFont::Bold);
+            textLabel->setText(QString(textAnnotation->text_.c_str()));
+            textLabel->setPen(pen);
+
+        }
+            break;
+
+        case Annotation::AnnotationType::CIRCLE:
+        {
+            auto circleItem = new QCPItemEllipse(&parentPlot_);
+            auto circleAnnotation = std::dynamic_pointer_cast<Annotation::Circle>(t_annotation);
+
+            // set to this axis rect
+            circleItem->setClipAxisRect(&axisRect_);
+            circleItem->topLeft->setAxisRect(&axisRect_);
+            circleItem->bottomRight->setAxisRect(&axisRect_);
+            circleItem->topLeft->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+            circleItem->bottomRight->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+
+            // set coords
+            circleItem->topLeft->setCoords(circleAnnotation->x_ - circleAnnotation->radius_, circleAnnotation->y_ + circleAnnotation->radius_);
+            circleItem->bottomRight->setCoords(circleAnnotation->x_ + circleAnnotation->radius_, circleAnnotation->y_ - circleAnnotation->radius_);
+
+            circleItem->setPen(pen);
+        }
+            break;
+
+        case Annotation::AnnotationType::DOT:
+        {
+
+        }
+            break;
+
+        case Annotation::AnnotationType::BOX:
+        {
+            auto boxItem = new QCPItemRect(&parentPlot_);
+            const auto boxAnnotation = std::dynamic_pointer_cast<Annotation::Box>(t_annotation);
+
+            auto upperLeftX = boxAnnotation->upperLeftX_;
+            auto upperLeftY = boxAnnotation->upperLeftY_;
+
+            auto lowerRightX = boxAnnotation->lowerRightX_;
+            auto lowerRightY = boxAnnotation->lowerRightY_;
+
+            // set to this axis rect
+            boxItem->setClipAxisRect(&axisRect_);
+            boxItem->topLeft->setAxisRect(&axisRect_);
+            boxItem->bottomRight->setAxisRect(&axisRect_);
+            boxItem->topLeft->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+            boxItem->bottomRight->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+
+            // set coords
+            boxItem->topLeft->setCoords(upperLeftX, upperLeftY);
+            boxItem->bottomRight->setCoords(lowerRightX, lowerRightY);
+
+            boxItem->setPen(pen);
+        }
+            break;
+
+    }
+
+}
+
+bool BasePlot::inRect(QPoint pos)
+{
+    auto xLowerBound = axisRect_.topLeft().x();
+    auto xUpperBound = axisRect_.topRight().x();
+    auto yLowerBound = axisRect_.topLeft().y();
+    auto yUpperBound = axisRect_.bottomLeft().y();
+
+    return pos.x() >= xLowerBound && pos.x() <= xUpperBound && pos.y() >= yLowerBound && pos.y() <= yUpperBound;
+}
+
+void BasePlot::removeIndicatorMenu(QPoint pos, QList<QCPAbstractPlottable *> plottables)
+{
+    QMenu* menu = new QMenu();
+    // destroy the menu after closing
+    menu->setAttribute(Qt::WidgetAttribute::WA_DeleteOnClose);
+
+    menu->addAction("Remove Indicator", this, [this, plottables]()
     {
-        auto lineItem = new QCPItemLine(&parentPlot_);
-        auto lineAnnotation = std::dynamic_pointer_cast<Annotation::Line>(t_annotation);
+        // get the value axis shared by these plots. check the number
+        // of remaining plottables after removing them
+        auto commonValueAxis = plottables.front()->valueAxis();
 
-        // set to this axis rect
-        lineItem->setClipAxisRect(&axisRect_);
-        lineItem->start->setAxisRect(&axisRect_);
-        lineItem->end->setAxisRect(&axisRect_);
-        lineItem->start->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
-        lineItem->end->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
+        // all plottables associated with a chosen iplot
+        // are provided by the argument
+        for(auto& plottable: plottables)
+        {
+            // erase the plot entries
+            activeIndicatorPlots_.erase(plottable);
 
-        // set coords
-        lineItem->start->setCoords(lineAnnotation->startX_, lineAnnotation->startY_);
-        lineItem->end->setCoords(lineAnnotation->endX_, lineAnnotation->endY_);
+            // remove it from the graph
+            parentPlot_.removePlottable(plottable);
 
-        lineItem->setPen(pen);
+        }
 
-    }
-        break;
+        // if there are no more plottables associated with
+        // this axis, remove the axis
+        if(commonValueAxis->plottables().size() == 0)
+        {
+            axisRect_.removeAxis(commonValueAxis);
+        }
+    });
 
-    case Annotation::AnnotationType::LABEL:
+    menu->popup(parentPlot_.mapToGlobal(pos));
+}
+
+void BasePlot::menuShow(QPoint pos)
+{
+    auto selectedPlottables = parentPlot_.selectedPlottables();
+    // if no plottables were selected then show indicator selection
+    if(selectedPlottables.size() == 0)
     {
-        auto textLabel = new QCPItemText(&parentPlot_);
-        auto textAnnotation = std::dynamic_pointer_cast<Annotation::Label>(t_annotation);
-
-        textLabel->setClipAxisRect(&axisRect_);
-        textLabel->position->setAxisRect(&axisRect_);
-        textLabel->position->setAxes(axisRect_.axis(QCPAxis::AxisType::atBottom), axisRect_.axis(QCPAxis::AxisType::atLeft));
-        textLabel->position->setType(QCPItemPosition::PositionType::ptPlotCoords);
-        textLabel->position->setCoords(textAnnotation->x_, textAnnotation->y_); // place position at center/top of axis rect
-
-        QFont serifFont("Times", 5, QFont::Bold);
-        textLabel->setText(QString(textAnnotation->text_.c_str()));
-        textLabel->setPen(pen);
-
+        indicatorSelectionMenu(pos);
     }
-        break;
-
-    case Annotation::AnnotationType::CIRCLE:
+    else
     {
-
+        removeIndicatorMenu(pos, selectedPlottables);
     }
-        break;
+}
 
-    case Annotation::AnnotationType::DOT:
+void BasePlot::plotSelectSlot(bool selected)
+{
+    // mark the other graphs as selected as well
+    if(selected)
     {
+        std::shared_ptr<IIndicatorGraph> selectedPlot;
 
+        // find the graph that is currently selected
+        for(auto& plottableEntry: activeIndicatorPlots_)
+        {
+            if(plottableEntry.first->selected())
+            {
+                selectedPlot = plottableEntry.second;
+                break; // we know only one will be selected
+            }
+        }
+
+        auto plottables = selectedPlot->getPlottables();
+        for(auto& plottable: plottables)
+        {
+            // cast to qcpgraph since we only have qcpgraphs at the moment
+            plottable->setSelection(QCPDataSelection(static_cast<QCPGraph*>(plottable)->data()->dataRange()));
+        }
     }
-        break;
-
-    }
-
 }

@@ -23,6 +23,9 @@ public:
 private slots:
 
     virtual void xAxisChanged(QCPRange range) override;
+
+private:
+    void indicatorSelectionMenu(QPoint pos) override;
 };
 
 #endif // ANNOTATIONPLOT_H

@@ -22,15 +22,24 @@ VolumePlot::~VolumePlot()
 void VolumePlot::updatePlotAdd(const Candlestick &candle)
 {
     // add a new bar volume and candlesticks
-    volumeBars_->addData(candle.time, candle.volume);
+    volumeBars_->addData(candle.time + 30, candle.volume);
     ++size_;
 
-    // recursively update all the indicators belonging to this plot
+    // since activeIndicatorPlots_ entries map plottables to
+    // iplots, we can have more than one plottable mapped to the same
+    // iplot. for example, macd has 3 values which can be mapped
+    // to the same indicator. we use this unordered_set to mark
+    // which has been updated as we traverse our entries
+    std::unordered_set<std::shared_ptr<IIndicatorGraph>> updatedIndicators;
+
+    // update all the indicators
     for(auto& activePlotIt: activeIndicatorPlots_)
     {
-        for(auto& plotIt: activePlotIt.second)
+        if(updatedIndicators.find(activePlotIt.second) == updatedIndicators.end())
         {
-            plotIt->updatePlotAdd(candle.time, candle.volume);
+            activePlotIt.second->updatePlotAdd(candle.time + 30, candle.volume);
+            // mark as updated
+            updatedIndicators.insert(activePlotIt.second);
         }
     }
 }
@@ -39,14 +48,17 @@ void VolumePlot::updatePlotReplace(const Candlestick &candle)
 {
     if(size_ > 0)
     {
-        volumeBars_->data()->set(size_ - 1, QCPBarsData(candle.time, candle.volume));
+        volumeBars_->data()->set(size_ - 1, QCPBarsData(candle.time + 30, candle.volume));
 
+        std::unordered_set<std::shared_ptr<IIndicatorGraph>> updatedIndicators;
         // update all the indicators belonging to this plot
         for(auto& activePlotIt: activeIndicatorPlots_)
         {
-            for(auto& plotIt: activePlotIt.second)
+            if(updatedIndicators.find(activePlotIt.second) == updatedIndicators.end())
             {
-                plotIt->updatePlotReplace(candle.time, candle.volume);
+                activePlotIt.second->updatePlotReplace( candle.time + 30, candle.volume);
+                // mark as updated
+                updatedIndicators.insert(activePlotIt.second);
             }
         }
     }
@@ -64,7 +76,10 @@ void VolumePlot::rescalePlot()
 
 void VolumePlot::pastCandlesPlotUpdate(std::shared_ptr<IIndicatorGraph> iplot)
 {
-
+    for(auto& it: *volumeBars_->data())
+    {
+        iplot->updatePlotAdd( static_cast<time_t>(it.key), it.value);
+    }
 }
 
 void VolumePlot::addIndicator(IndicatorType indicatorType, std::unique_ptr<IIndicatorGraph> indicatorPlot)
@@ -74,7 +89,7 @@ void VolumePlot::addIndicator(IndicatorType indicatorType, std::unique_ptr<IIndi
     {
         indicatorPlot->updatePlotAdd( static_cast<time_t>(it.key), it.value);
     }
-    activeIndicatorPlots_[indicatorType].push_back(std::move(indicatorPlot));
+//    activeIndicatorPlots_[indicatorType].push_back(std::move(indicatorPlot));
 }
 
 double VolumePlot::lowerRange()
@@ -108,4 +123,55 @@ void VolumePlot::xAxisChanged(QCPRange range)
 
     //rescale our plot.
     rescalePlot();
+}
+
+
+void VolumePlot::indicatorSelectionMenu(QPoint pos)
+{
+    QMenu* menu = new QMenu();
+    // destroy the menu after closing
+    menu->setAttribute(Qt::WidgetAttribute::WA_DeleteOnClose);
+
+    // dynamically create a new graph each time based on the state of the plots
+    // and indicators
+    auto subMenu = menu->addMenu("A");
+
+    // dynamically create a new graph each time based on the state of the plots
+    // and indicators
+    subMenu = menu->addMenu("S");
+    subMenu->addAction("Simple Moving Average", this, [this]()
+    {
+        //prompt user
+        IndicatorDialog diag;
+        diag.addSpinbox("Period", 5, 1);
+        diag.exec();
+
+        //if user pressed OK
+        if(diag.valid())
+        {
+            auto period = diag.getSpinboxValue("Period");
+            indicatorLaunch<SimpleMovingAverage>(OhlcType::VOLUME, IndicatorDisplayType::OVERLAY, period);
+        }
+    });
+
+    menu->popup(parentPlot_.mapToGlobal(pos));
+}
+
+template<typename IndicatorType, typename ... Args>
+void VolumePlot::indicatorLaunch(OhlcType valueType, IndicatorDisplayType displayType, Args... args)
+{
+    auto indicator = std::make_unique<IndicatorType>(args...);
+    auto plot = std::make_shared<IndicatorGraph<IndicatorType>>(axisRect_, std::move(indicator), valueType, displayType);
+    pastCandlesPlotUpdate(plot);
+    auto plottables = plot->getPlottables();
+
+    // add these plottables to our iplot map
+    for(auto& plottable: plottables)
+    {
+        activeIndicatorPlots_[plottable] = plot;
+        connect(plottable, SIGNAL(selectionChanged(bool)), this, SLOT(plotSelectSlot(bool)));
+    }
+
+    //replot after adding indicator
+    parentPlot_.replot();
 }

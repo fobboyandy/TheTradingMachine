@@ -43,6 +43,10 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     plots_[0] = std::make_unique<CandlePlot>(*plot_);
     plots_[1] = std::make_unique<VolumePlot>(*plot_);
 
+    plot_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(plot_, &QCustomPlot::customContextMenuRequested, this, &TheTradingMachineTab::menuShowSlot);
+
+
     // initialize members here instead of the initializer list
     // to keep the initializer list shorter. shouldn't be too much
     // extra overhead
@@ -51,8 +55,10 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     lastPlotDataIndex_ = 0;
     lastAnnotationIndex_ = 0;
 
+    // get the time now
+    lastTickReceivedTime = std::chrono::high_resolution_clock::now();
     // start the plotting
-    replotTimer_->start(50);
+    replotTimer_->start(30);
 }
 
 TheTradingMachineTab::~TheTradingMachineTab()
@@ -137,16 +143,45 @@ void TheTradingMachineTab::updatePlot(void)
 {
     std::unique_lock<std::mutex> lock(plotData_->plotDataMtx);
 
-    const size_t plotDataSz = plotData_->ticks.size();
-    const size_t annotationDataSz = plotData_->annotations.size();
-    // according to stl, "Concurrently accessing or modifying different elements is safe."
-    // as long as other thread is always pushing to the end and we are accessing the middle,
-    // the rule is satisfied
+    auto tickBuffer = std::move(plotData_->ticks);
+    auto annotationBuffer = std::move(plotData_->annotations);
+
+    plotData_->ticks.clear();
+    plotData_->annotations.clear();
+
     lock.unlock();
 
-    for(; lastPlotDataIndex_ < plotDataSz; ++lastPlotDataIndex_)
+    // dynamically adjust the refresh rate based on number of ticks received
+    if(tickBuffer.size() > 0)
     {
-        candleMaker_.addTick(plotData_->ticks[lastPlotDataIndex_]);
+        using namespace std::chrono;
+        auto timeNow = high_resolution_clock::now();
+        auto diffTimeMs = duration_cast<milliseconds>(timeNow - lastTickReceivedTime).count();
+        lastTickReceivedTime = timeNow;
+        auto refreshDelayMs = static_cast<int>(static_cast<decltype(tickBuffer.size())>(diffTimeMs * 300)/tickBuffer.size());
+        if(refreshDelayMs < 30 && replotTimer_->interval() > 30)
+        {
+            // refresh delay capped at 30ms
+            replotTimer_->setInterval(30);
+        }
+        else if(refreshDelayMs >= 30 && refreshDelayMs < 5000)
+        {
+            replotTimer_->setInterval(refreshDelayMs);
+        }
+    }
+    else
+    {
+        // once the ticks stop getting sent as frequently, set it to 10 seconds refresh rate.
+        // the refresh rate will begin to increase in premarket and ramp up to a faster
+        // rate by the time market starts
+        replotTimer_->setInterval(10000);
+    }
+
+    // replot only if there are any visible update in the current view
+    bool replot = false;
+    for(auto& tick: tickBuffer)
+    {
+        candleMaker_.addTick(tick);
         auto closedCandles = candleMaker_.getClosedCandles();
         auto currentCandle = candleMaker_.getCurrentCandle();
 
@@ -168,6 +203,7 @@ void TheTradingMachineTab::updatePlot(void)
 
             // finally add in the current candle which will update with each new tick
             updatePlotNewCandle(currentCandle);
+
         }
         else
         {
@@ -176,13 +212,21 @@ void TheTradingMachineTab::updatePlot(void)
             updatePlotReplaceCandle(currentCandle);
         }
 
+        // grab any axisRect and check the key axis range to determine replot
+        const auto& candlePlotKeyAxis = plot_->axisRect(0)->axis(QCPAxis::AxisType::atBottom);
+        // if we toggled replot, no need to keep doing this for every tick
+        if(!replot)
+        {
+            if(currentCandle.time >= candlePlotKeyAxis->range().lower && currentCandle.time <= candlePlotKeyAxis->range().upper)
+            {
+                replot = true;
+            }
+        }
     }
 
-    // add any new annotations from our user to the charts (for now only candle charts
-    // have annotations)
-    for(; lastAnnotationIndex_ < annotationDataSz; ++lastAnnotationIndex_)
+    // add any new annotations from our user to the charts
+    for(auto& annotation: annotationBuffer)
     {
-        const auto& annotation = plotData_->annotations[lastAnnotationIndex_];
         if(annotation != nullptr)
         {
             if(plots_.find(annotation->index_) == plots_.end())
@@ -200,6 +244,20 @@ void TheTradingMachineTab::updatePlot(void)
         plot.second->rescalePlot();
     }
 
-    //replot should always be happening to update the drawing
-    plot_->replot();
+    if(replot)
+    {
+        plot_->replot();
+        replot = false;
+    }
+}
+
+void TheTradingMachineTab::menuShowSlot(QPoint pos)
+{
+    for(auto& plot: plots_)
+    {
+        if(plot.second->inRect(pos))
+        {
+            plot.second->menuShow(pos);
+        }
+    }
 }

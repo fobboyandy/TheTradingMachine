@@ -91,8 +91,17 @@ public:
 	virtual void run() final;
 	virtual void stop() final;
 
-//ordering api
-public:
+private:
+	class BaseAlgorithmImpl;
+	BaseAlgorithmImpl* impl_;
+protected:
+	
+	//let the impl class call the pure virtual tickHandler
+	friend BaseAlgorithmImpl;
+
+	bool isRth(time_t time);
+
+	//ordering api
 	PositionId longMarketNoStop(std::string ticker, int numShares);
 	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice);
 	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
@@ -112,11 +121,4 @@ public:
 	virtual void tickHandler(const Tick& tick) = 0;
 
 	std::string ticker();
-private:
-	class BaseAlgorithmImpl;
-	BaseAlgorithmImpl* impl_;
-protected:
-	
-	//let the impl class call the pure virtual tickHandler
-	friend BaseAlgorithmImpl;
 };

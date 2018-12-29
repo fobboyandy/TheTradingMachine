@@ -52,13 +52,14 @@ void Portfolio::reducePosition(PositionId posId, double avgFillPrice, int numSha
 		{
 			// profit positive for rising price.
 			positions_[posId].profit += (avgFillPrice - positions_[posId].averagePrice) * numShares;
+			positions_[posId].shares -= numShares;
 		}
 		else
 		{
 			// profit is positive  for falling price
 			positions_[posId].profit += -(avgFillPrice - positions_[posId].averagePrice) * numShares;
+			positions_[posId].shares += numShares;
 		}
-		positions_[posId].shares -= numShares;
 	}
 }
 

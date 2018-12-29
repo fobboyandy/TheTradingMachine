@@ -29,11 +29,12 @@ private slots:
 private:
     // graph
     QCPBars* volumeBars_;
-
-    // active indicators
-    std::unordered_map<IndicatorType, std::list<std::unique_ptr<IIndicatorGraph>>> activeIndicatorPlots_;
-
     int size_;
+    void indicatorSelectionMenu(QPoint pos) override;
+
+    template<typename IndicatorType, typename... Args>
+    void indicatorLaunch(OhlcType valueType, IndicatorDisplayType displayType, Args... args);
+
 };
 
 #endif // VOLUMEPLOT_H

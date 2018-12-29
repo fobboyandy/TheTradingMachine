@@ -2,8 +2,7 @@
 
 #include <memory>
 #include <mutex>
-#include <vector>
-#include <queue>
+#include <list>
 #include "Common.h"
 
 // plot data structure shared with the gui. plot data is stored in this format.
@@ -12,6 +11,6 @@
 struct PlotData
 {
     std::mutex plotDataMtx;
-    std::vector<Tick> ticks;
-    std::vector<std::shared_ptr<Annotation::IAnnotation>> annotations;
+    std::list<Tick> ticks;
+    std::list<std::shared_ptr<Annotation::IAnnotation>> annotations;
 };
