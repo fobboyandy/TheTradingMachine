@@ -16,6 +16,12 @@ public:
 	InteractiveBrokersClient();
 	~InteractiveBrokersClient();
 
+	//order api
+	void longMarket(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification);
+	void longLimit(std::string ticker, double limitPrice, int numShares, std::function<void(double, time_t)> fillNotification);
+	void shortMarket(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification);
+	void shortLimit(std::string ticker, double limitPrice, int numShares, std::function<void(double, time_t)> fillNotification);
+
 	int requestRealTimeTicks(std::string ticker, std::function<void(const Tick&)> callback);
 	bool cancelRealTimeTicks(std::string ticker, int handle);
 	bool isReady(void);

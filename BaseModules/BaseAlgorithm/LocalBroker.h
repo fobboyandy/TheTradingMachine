@@ -28,9 +28,9 @@ public:
 public:
 	//basic order api. Parent will use these to implement their own local stoploss handler. This provides more flexibility
 	PositionId longMarket(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification);
-	PositionId longMarketLimit(std::string ticker, double limitPrice, int numShares, std::function<void(double, time_t)> fillNotification);
+	PositionId longLimit(std::string ticker, double limitPrice, int numShares, std::function<void(double, time_t)> fillNotification);
 	PositionId shortMarket(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification);
-	PositionId shortMarketLimit(std::string ticker, double limitPrice, int numShares, std::function<void(double, time_t)> fillNotification);
+	PositionId shortLimit(std::string ticker, double limitPrice, int numShares, std::function<void(double, time_t)> fillNotification);
 	void closePosition(PositionId posId, std::function<void(double, time_t)> fillNotification);
 	Position getPosition(PositionId posId);
 	void reducePosition(PositionId posId, int numShares, std::function<void(double, time_t)> fillNotification);

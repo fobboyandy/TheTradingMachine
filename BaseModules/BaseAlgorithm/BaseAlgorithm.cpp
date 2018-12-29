@@ -20,18 +20,11 @@ public:
 
 // ordering functions
 public:
-	PositionId longMarketNoStop(std::string ticker, int numShares);
-	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice);
-	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
-	PositionId longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
-	PositionId longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
+	PositionId longMarket(std::string ticker, int numShares);
+	PositionId longLimit(std::string ticker, double limitPrice, int numShares);
 
-	PositionId shortMarketNoStop(std::string ticker, int numShares);
-	PositionId shortMarketStopMarket(std::string ticker, int numShares, double activationPrice);
-	PositionId shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
-	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
-	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
-
+	PositionId shortMarket(std::string ticker, int numShares);
+	PositionId shortLimit(std::string ticker, double limitPrice, int numShares);
 
 	// Each time we reduce a position, remember the previous position so that we can
 	// track changes relative to the previous position
@@ -120,7 +113,7 @@ std::string BaseAlgorithm::BaseAlgorithmImpl::ticker()
 	return ticker_;
 }
 
-PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketNoStop(std::string ticker, int numShares)
+PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarket(std::string ticker, int numShares)
 {
 	// when an order gets filled, this lambda submits an annotation
 	return localBroker.longMarket(ticker, numShares, [this, ticker, numShares](double avgFillPrice, time_t time)
@@ -137,27 +130,12 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketNoStop(std::string ticker
 	});	
 }
 
-PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketStopMarket(std::string ticker, int numShares, double stopPrice)
+PositionId BaseAlgorithm::BaseAlgorithmImpl::longLimit(std::string ticker, double limitPrice, int numShares)
 {
-	return 0;
+	return PositionId();
 }
 
-PositionId BaseAlgorithm::BaseAlgorithmImpl::longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
-{
-	return 0;
-}
-
-PositionId BaseAlgorithm::BaseAlgorithmImpl::longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
-{
-	return 0;
-}
-
-PositionId BaseAlgorithm::BaseAlgorithmImpl::longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
-{
-	return 0;
-}
-
-PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketNoStop(std::string ticker, int numShares)
+PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarket(std::string ticker, int numShares)
 {
 	return localBroker.shortMarket(ticker, numShares, [this, numShares](double avgFillPrice, time_t time)
 	{
@@ -172,25 +150,11 @@ PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketNoStop(std::string ticke
 	});
 }
 
-PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketStopMarket(std::string ticker, int numShares, double activationPrice)
+PositionId BaseAlgorithm::BaseAlgorithmImpl::shortLimit(std::string ticker, double limitPrice, int numShares)
 {
-	return 0;
+	return PositionId();
 }
 
-PositionId BaseAlgorithm::BaseAlgorithmImpl::shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
-{
-	return 0;
-}
-
-PositionId BaseAlgorithm::BaseAlgorithmImpl::shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
-{
-	return 0;
-}
-
-PositionId BaseAlgorithm::BaseAlgorithmImpl::shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
-{
-	return 0;
-}
 
 void BaseAlgorithm::BaseAlgorithmImpl::closePosition(PositionId posId)
 {
@@ -320,54 +284,24 @@ void BaseAlgorithm::stop()
 	}
 }
 
-PositionId BaseAlgorithm::longMarketNoStop(std::string ticker, int numShares)
+PositionId BaseAlgorithm::longMarket(std::string ticker, int numShares)
 {
-	return impl_->longMarketNoStop(ticker, numShares);
+	return impl_->longMarket(ticker, numShares);
 }
 
-PositionId BaseAlgorithm::longMarketStopMarket(std::string ticker, int numShares, double stopPrice)
+PositionId BaseAlgorithm::longLimit(std::string ticker, double limitPrice, int numShares)
 {
-	return impl_->longMarketStopMarket(ticker, numShares, stopPrice);
+	return impl_->longLimit(ticker, limitPrice, numShares);
 }
 
-PositionId BaseAlgorithm::longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
+PositionId BaseAlgorithm::shortMarket(std::string ticker, int numShares)
 {
-	return impl_->longMarketStopLimit(ticker, numShares, activationPrice, limitPrice);
+	return impl_->shortMarket(ticker, numShares);
 }
 
-PositionId BaseAlgorithm::longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
+PositionId BaseAlgorithm::shortLimit(std::string ticker, double limitPrice, int numShares)
 {
-	return impl_->longLimitStopMarket(ticker, numShares, buyLimit, activationPrice);
-}
-
-PositionId BaseAlgorithm::longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
-{
-	return impl_->longLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice);
-}
-
-PositionId BaseAlgorithm::shortMarketNoStop(std::string ticker, int numShares)
-{
-	return impl_->shortMarketNoStop(ticker, numShares);
-}
-
-PositionId BaseAlgorithm::shortMarketStopMarket(std::string ticker, int numShares, double activationPrice)
-{
-	return impl_->shortMarketStopMarket(ticker, numShares, activationPrice);
-}
-
-PositionId BaseAlgorithm::shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice)
-{
-	return impl_->shortMarketStopLimit(ticker, numShares, activationPrice, limitPrice);
-}
-
-PositionId BaseAlgorithm::shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice)
-{
-	return impl_->shortLimitStopMarket(ticker, numShares, buyLimit, activationPrice);
-}
-
-PositionId BaseAlgorithm::shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice)
-{
-	return impl_->shortLimitStopLimit(ticker, numShares, buyLimit, activationPrice, limitPrice);
+	return impl_->shortLimit(ticker, limitPrice, numShares);
 }
 
 void BaseAlgorithm::closePosition(PositionId posId)

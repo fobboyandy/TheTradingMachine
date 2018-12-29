@@ -102,18 +102,12 @@ protected:
 	bool isRth(time_t time);
 
 	//ordering api
-	PositionId longMarketNoStop(std::string ticker, int numShares);
-	PositionId longMarketStopMarket(std::string ticker, int numShares, double stopPrice);
-	PositionId longMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
-	PositionId longLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
-	PositionId longLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
-
-	PositionId shortMarketNoStop(std::string ticker, int numShares);
-	PositionId shortMarketStopMarket(std::string ticker, int numShares, double activationPrice);
-	PositionId shortMarketStopLimit(std::string ticker, int numShares, double activationPrice, double limitPrice);
-	PositionId shortLimitStopMarket(std::string ticker, int numShares, double buyLimit, double activationPrice);
-	PositionId shortLimitStopLimit(std::string ticker, int numShares, double buyLimit, double activationPrice, double limitPrice);
-
+	PositionId longMarket(std::string ticker, int numShares);
+	PositionId longLimit(std::string ticker, double limitPrice, int numShares);
+	
+	PositionId shortMarket(std::string ticker, int numShares);
+	PositionId shortLimit(std::string ticker, double limitPrice, int numShares);
+	
 	void closePosition(PositionId posId);
 	void reducePosition(PositionId posId, int numShares);
 	Position getPosition(PositionId posId);
