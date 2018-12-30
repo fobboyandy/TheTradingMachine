@@ -152,7 +152,9 @@ private:
 	//State m_state;
 	time_t m_sleepDeadline;
 
-	OrderId m_orderId;
+	// we need m_orderId to be synchronized since it is accessed and changed
+	// in multiple threads
+	std::atomic<OrderId> m_orderId;
 	EReader *m_pReader;
 	bool m_extraAuth;
 	std::string m_bboExchange;
@@ -161,48 +163,36 @@ private:
 
 public:
 
-	void requestRealTimeMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback);
-	void requestHistoricalMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback);
+	// simply routes the order to ibapi. up to caller to create the proper order and contract
+	// as well as any order checking. the notification will be called once there are updates
+	// to the order. user must keep track of the returned order id. this order id will be used
+	// for the caller to associate the information of an order with the call back
+	using OrderExecutionCallbackType = std::function<void(int, const Contract&, const Execution&)>;
+	OrderId placeOrder(const Contract& contract, const Order& order);
+	void registerOrderStatusCallback(const OrderExecutionCallbackType& callback);
 
 	//
 	// This function is used to register the function which assigns realTimeTickCallback. 
 	// When a new tick arrives, callback will be called with the corresponding OrderId along
 	// with the new tick data. This function MUST be called before using requestRealTimeTicks.
 	//
-	void registerRealTimeTickCallback(std::function<void(OrderId, const Tick&)> callback);
+	using RealtimeTickCallbackType = std::function<void(OrderId, const Tick&)>;
+	void registerRealTimeTickCallback(const RealtimeTickCallbackType& callback);
 	//
 	// given a ticker, this function simply requests for a real time tick data stream from the IB server.
-	// It does ont perform error checks. It simply sends a request to interactive broker
+	// It does not perform error checks. It simply sends a request to interactive broker
 	//
-	OrderId requestRealTimeTicks(std::string ticker);
+	OrderId requestRealTimeTicks(const Contract & contract, const std::string & tickType, int numberOfTicks, bool ignoreSize);
 	void cancelRealTimeTicks(OrderId oid);
 
+public:
+
+
 private:
+	// function callbacks for when updates are received from interactive broker. 
+	RealtimeTickCallbackType realTimeTickCallback;
+	OrderExecutionCallbackType orderStatusCallback;
 
-	struct Callback
-	{
-		Bar callbackBar;
-		int timeFrame;
-		std::vector<std::function<void(const Bar&)>> callbackFunctions;
-	};
-
-	//
-	// Stores the callback functions registered to receive real time bars.
-	// Each ticker has an list of time frames which will correspond to an 
-	// OrderId (if one exists). This OrderId will have a list of call back 
-	// functions which need to be called.
-	//
-	// Real Time Minute Bars
-	std::unordered_map<std::string, std::unordered_map<int, OrderId>> stockRealTimeBarOrderIds;
-	std::unordered_map<OrderId, Callback> stockRealTimeBarCallbacks;
-
-	// Historical Data
-	std::unordered_map<OrderId, std::function<void(const Bar&)>> historicalBarCallbacks;
-
-	// this function is registered to be called when new ticks arrive. we provide them with the orderId
-	// of the associated arriving ticks.
-	std::function<void(OrderId, const Tick&)> tickCallback;
-	Contract createUsStockContract(std::string ticker);
 };
 
 #endif
