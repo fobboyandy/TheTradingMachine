@@ -21,6 +21,12 @@ LocalBroker::LocalBroker(std::string input, std::shared_ptr<InteractiveBrokersCl
 
 LocalBroker::~LocalBroker()
 {
+	unregisterListener(activeTickListenerHandle);
+
+	for (auto& handle : activeFillNotificationListenersHandles)
+	{
+		ibApi_->unregisterFillNotification(handle);
+	}
 }
 
 void LocalBroker::run()
@@ -52,7 +58,7 @@ PositionId LocalBroker::longMarket(std::string ticker, int numShares, std::funct
 	if (liveTrade_)
 	{
 		// submit through ib and register fillPosition as the callback
-		ibApi_->longMarket(ticker, numShares, fillPositionNotification);
+		activeFillNotificationListenersHandles.push_back(ibApi_->longMarket(ticker, numShares, fillPositionNotification));
 	}
 	else
 	{
@@ -86,7 +92,7 @@ PositionId LocalBroker::longLimit(std::string ticker, double limitPrice, int num
 	if (liveTrade_)
 	{
 		// submit through ib and register fillPosition as the callback
-		ibApi_->longLimit(ticker, limitPrice, numShares, fillPositionNotification);
+		activeFillNotificationListenersHandles.push_back(ibApi_->longLimit(ticker, limitPrice, numShares, fillPositionNotification));
 	}
 	else
 	{
@@ -120,7 +126,7 @@ PositionId LocalBroker::shortMarket(std::string ticker, int numShares, std::func
 	if (liveTrade_)
 	{
 		// submit through ib and register fillPosition as the callback
-		ibApi_->shortMarket(ticker, numShares, fillPositionNotification);
+		activeFillNotificationListenersHandles.push_back(ibApi_->shortMarket(ticker, numShares, fillPositionNotification));
 	}
 	else
 	{
@@ -154,7 +160,7 @@ PositionId LocalBroker::shortLimit(std::string ticker, double limitPrice, int nu
 	if (liveTrade_)
 	{
 		// submit through ib and register fillPosition as the callback
-		ibApi_->shortLimit(ticker, limitPrice, numShares, fillPositionNotification);
+		activeFillNotificationListenersHandles.push_back(ibApi_->shortLimit(ticker, limitPrice, numShares, fillPositionNotification));
 	}
 	else
 	{
@@ -206,9 +212,9 @@ Position LocalBroker::getPosition(PositionId posId)
 	return portfolio_.getPosition(posId);
 }
 
-CallbackHandle LocalBroker::registerListener(TickListener callback)
+void LocalBroker::registerListener(TickListener callback)
 {
-	return tickSource_.registerListener(callback);
+	activeTickListenerHandle = tickSource_.registerListener(callback);
 }
 
 void LocalBroker::unregisterListener(CallbackHandle handle)

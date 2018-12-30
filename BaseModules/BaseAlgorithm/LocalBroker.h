@@ -1,13 +1,14 @@
 #pragma once
 
-#include <map>
-#include <string>
-#include <memory>
 #include "../InteractiveBrokersApi/CommonDefs.h"
 #include "../InteractiveBrokersClient/InteractiveBrokersClient.h"
 #include "Common.h"
 #include "Portfolio.h"
 #include "TickBroadcast.h"
+
+#include <string>
+#include <memory>
+#include <unordered_map>
 
 // Local Broker acts as a basic broker system for the engine. The engine places orders through the local broker.
 // If live trading is turned on, local broker routes the orders to interative brokers for real trading. Otherwise,
@@ -21,7 +22,7 @@ public:
 	void run();
 	bool valid();
 
-	CallbackHandle registerListener(TickListener callback);
+	void registerListener(TickListener callback);
 	void unregisterListener(CallbackHandle handle);
 
 // order api
@@ -42,4 +43,11 @@ private:
 	Portfolio portfolio_;
 	const bool liveTrade_; 
 	bool valid_;
+
+	// keep these handles and unregister these in the destructor to prevent
+	// ib api from crashing. if we don't unregister these, the lambdas in 
+	// the parent class will go out of scope before ib api. when ib api 
+	// tries to delete the std::function, seg fault.
+	int activeTickListenerHandle;
+	std::list<int> activeFillNotificationListenersHandles;
 };
