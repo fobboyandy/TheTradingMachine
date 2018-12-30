@@ -370,14 +370,14 @@ void InteractiveBrokersApi::registerOrderStatusCallback(const OrderExecutionCall
 	orderStatusCallback = callback;
 }
 
-void InteractiveBrokersApi::registerRealTimeTickCallback(const RealtimeTickCallbackType & callback)
+void InteractiveBrokersApi::registerRealtimeTickCallback(const RealtimeTickCallbackType & callback)
 {
 	realTimeTickCallback = callback;
 }
 
 //return value is a handle to the callback function which is used to later remove a callback 
-//using cancelRealTimeTicks
-OrderId InteractiveBrokersApi::requestRealTimeTicks(const Contract &contract, const std::string& tickType, int numberOfTicks, bool ignoreSize)
+//using cancelRealtimeTicks
+OrderId InteractiveBrokersApi::requestRealtimeTicks(const Contract &contract, const std::string& tickType, int numberOfTicks, bool ignoreSize)
 {
 	OrderId oid = m_orderId.fetch_add(1);
 
@@ -396,7 +396,7 @@ OrderId InteractiveBrokersApi::requestRealTimeTicks(const Contract &contract, co
 	return oid;
 }
 
-void InteractiveBrokersApi::cancelRealTimeTicks(OrderId oid)
+void InteractiveBrokersApi::cancelRealtimeTicks(OrderId oid)
 {
 	m_pClient->cancelTickByTickData(oid);
 }
@@ -495,7 +495,7 @@ void InteractiveBrokersApi::scannerDataEnd(int reqId) {
 //! [realtimebar]
 void InteractiveBrokersApi::realtimeBar(TickerId reqId, long time, double open, double high, double low, double close,
 	long volume, double wap, int count) {
-	printf("RealTimeBars. %ld - Time: %ld, Open: %g, High: %g, Low: %g, Close: %g, Volume: %ld, Count: %d, WAP: %g\n", reqId, time, open, high, low, close, volume, count, wap);
+	printf("RealtimeBars. %ld - Time: %ld, Open: %g, High: %g, Low: %g, Close: %g, Volume: %ld, Count: %d, WAP: %g\n", reqId, time, open, high, low, close, volume, count, wap);
 }
 //! [realtimebar]
 

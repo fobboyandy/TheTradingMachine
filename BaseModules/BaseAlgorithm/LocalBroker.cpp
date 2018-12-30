@@ -52,6 +52,7 @@ PositionId LocalBroker::longMarket(std::string ticker, int numShares, std::funct
 	if (liveTrade_)
 	{
 		// submit through ib and register fillPosition as the callback
+		ibApi_->longMarket(ticker, numShares, fillPositionNotification);
 	}
 	else
 	{
@@ -68,7 +69,36 @@ PositionId LocalBroker::longMarket(std::string ticker, int numShares, std::funct
 
 PositionId LocalBroker::longLimit(std::string ticker, double limitPrice, int numShares, std::function<void(double, time_t)> fillNotification)
 {
-	return PositionId();
+	//validate number of shares
+	numShares = abs(numShares);
+
+	auto newPosId = portfolio_.newPosition();
+
+	// this lambda captures the state of the current context
+	// when this is called as a callback later, it will have
+	// the context to dispatch to the caller
+	auto fillPositionNotification = [this, newPosId, fillNotification, numShares](double price, time_t time)
+	{
+		portfolio_.fillPosition(newPosId, price, numShares, time);
+		fillNotification(price, time);
+	};
+
+	if (liveTrade_)
+	{
+		// submit through ib and register fillPosition as the callback
+		ibApi_->longLimit(ticker, limitPrice, numShares, fillPositionNotification);
+	}
+	else
+	{
+		// for non live trades, we simply fill the position with the latest price
+		// instantly and notify the caller. in this case, the caller will be notified
+		// before the posId is returned back to them. this is fine because the posId is not
+		// given as part of the callback argument anyway and would not provide any useful 
+		// information
+		fillPositionNotification(tickSource_.lastTick().price, tickSource_.lastTick().time);
+	}
+
+	return newPosId;
 }
 
 PositionId LocalBroker::shortMarket(std::string ticker, int numShares, std::function<void(double, time_t)> fillNotification)
@@ -90,6 +120,7 @@ PositionId LocalBroker::shortMarket(std::string ticker, int numShares, std::func
 	if (liveTrade_)
 	{
 		// submit through ib and register fillPosition as the callback
+		ibApi_->shortMarket(ticker, numShares, fillPositionNotification);
 	}
 	else
 	{
@@ -106,7 +137,36 @@ PositionId LocalBroker::shortMarket(std::string ticker, int numShares, std::func
 
 PositionId LocalBroker::shortLimit(std::string ticker, double limitPrice, int numShares, std::function<void(double, time_t)> fillNotification)
 {
-	return PositionId();
+	//validate number of shares
+	numShares = abs(numShares);
+
+	auto newPosId = portfolio_.newPosition();
+
+	// this lambda captures the state of the current context
+	// when this is called as a callback later, it will have
+	// the context to dispatch to the caller
+	auto fillPositionNotification = [=](double price, time_t time)
+	{
+		portfolio_.fillPosition(newPosId, price, -numShares, time);
+		fillNotification(price, time);
+	};
+
+	if (liveTrade_)
+	{
+		// submit through ib and register fillPosition as the callback
+		ibApi_->shortLimit(ticker, limitPrice, numShares, fillPositionNotification);
+	}
+	else
+	{
+		// for non live trades, we simply fill the position with the latest price
+		// instantly and notify the caller. in this case, the caller will be notified
+		// before the posId is returned back to them. this is fine because the posId is not
+		// given as part of the callback argument anyway and would not provide any useful 
+		// information
+		fillPositionNotification(tickSource_.lastTick().price, tickSource_.lastTick().time);
+	}
+
+	return newPosId;
 }
 
 void LocalBroker::reducePosition(PositionId posId, int numShares, std::function<void(double, time_t)> fillNotification)

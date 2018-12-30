@@ -174,16 +174,16 @@ public:
 	//
 	// This function is used to register the function which assigns realTimeTickCallback. 
 	// When a new tick arrives, callback will be called with the corresponding OrderId along
-	// with the new tick data. This function MUST be called before using requestRealTimeTicks.
+	// with the new tick data. This function MUST be called before using requestRealtimeTicks.
 	//
 	using RealtimeTickCallbackType = std::function<void(OrderId, const Tick&)>;
-	void registerRealTimeTickCallback(const RealtimeTickCallbackType& callback);
+	void registerRealtimeTickCallback(const RealtimeTickCallbackType& callback);
 	//
 	// given a ticker, this function simply requests for a real time tick data stream from the IB server.
 	// It does not perform error checks. It simply sends a request to interactive broker
 	//
-	OrderId requestRealTimeTicks(const Contract & contract, const std::string & tickType, int numberOfTicks, bool ignoreSize);
-	void cancelRealTimeTicks(OrderId oid);
+	OrderId requestRealtimeTicks(const Contract & contract, const std::string & tickType, int numberOfTicks, bool ignoreSize);
+	void cancelRealtimeTicks(OrderId oid);
 
 public:
 
