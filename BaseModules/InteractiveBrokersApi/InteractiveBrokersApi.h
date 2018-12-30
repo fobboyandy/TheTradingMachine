@@ -169,7 +169,9 @@ public:
 	// for the caller to associate the information of an order with the call back
 	using OrderExecutionCallbackType = std::function<void(int, const Contract&, const Execution&)>;
 	OrderId placeOrder(const Contract& contract, const Order& order);
+	void cancelOrder(int orderId);
 	void registerOrderStatusCallback(const OrderExecutionCallbackType& callback);
+
 
 	//
 	// This function is used to register the function which assigns realTimeTickCallback. 

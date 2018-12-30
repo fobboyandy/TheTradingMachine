@@ -365,6 +365,11 @@ OrderId InteractiveBrokersApi::placeOrder(const Contract & contract, const Order
 	return oid;
 }
 
+void InteractiveBrokersApi::cancelOrder(int orderId)
+{
+	m_pClient->cancelOrder(orderId);
+}
+
 void InteractiveBrokersApi::registerOrderStatusCallback(const OrderExecutionCallbackType & callback)
 {
 	orderStatusCallback = callback;
