@@ -18,6 +18,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     PlayDialog loadInput(this);
     loadInput.exec();
     auto input = loadInput.getInput();
+    auto liveTrading = loadInput.getLiveTrading();
     name_ = formatTabName(input);
 
     if(name_.size() == 0)
@@ -27,7 +28,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
 
     //if real time, check for ib connection
     // instantiate the algorithm for this ticker
-    algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_, false);
+    algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_, liveTrading);
     if(algorithmHandle_ != -1)
     {
         // tab should only be valid if play algorithm and getplotdata worked
@@ -45,7 +46,6 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
 
     plot_->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(plot_, &QCustomPlot::customContextMenuRequested, this, &TheTradingMachineTab::menuShowSlot);
-
 
     // initialize members here instead of the initializer list
     // to keep the initializer list shorter. shouldn't be too much
