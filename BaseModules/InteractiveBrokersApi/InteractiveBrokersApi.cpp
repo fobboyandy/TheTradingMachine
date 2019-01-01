@@ -152,18 +152,21 @@ void InteractiveBrokersApi::currentTime(long time)
 void InteractiveBrokersApi::error(int id, int errorCode, const std::string& errorString)
 {
 	printf("Error. Id: %d, Code: %d, Msg: %s\n", id, errorCode, errorString.c_str());
+	std::cout << std::endl;
 }
 //! [error]
 
 //! [tickprice]
 void InteractiveBrokersApi::tickPrice(TickerId tickerId, TickType field, double price, const TickAttrib& attribs) {
 	printf("Tick Price. Ticker Id: %ld, Field: %d, Price: %g, CanAutoExecute: %d, PastLimit: %d, PreOpen: %d\n", tickerId, (int)field, price, attribs.canAutoExecute, attribs.pastLimit, attribs.preOpen);
+	std::cout << std::endl;
 }
 //! [tickprice]
 
 //! [ticksize]
 void InteractiveBrokersApi::tickSize(TickerId tickerId, TickType field, int size) {
 	printf("Tick Size. Ticker Id: %ld, Field: %d, Size: %d\n", tickerId, (int)field, size);
+	std::cout << std::endl;
 }
 //! [ticksize]
 
@@ -172,31 +175,37 @@ void InteractiveBrokersApi::tickOptionComputation(TickerId tickerId, TickType ti
 	double optPrice, double pvDividend,
 	double gamma, double vega, double theta, double undPrice) {
 	printf("TickOptionComputation. Ticker Id: %ld, Type: %d, ImpliedVolatility: %g, Delta: %g, OptionPrice: %g, pvDividend: %g, Gamma: %g, Vega: %g, Theta: %g, Underlying Price: %g\n", tickerId, (int)tickType, impliedVol, delta, optPrice, pvDividend, gamma, vega, theta, undPrice);
+	std::cout << std::endl;
 }
 //! [tickoptioncomputation]
 
 //! [tickgeneric]
 void InteractiveBrokersApi::tickGeneric(TickerId tickerId, TickType tickType, double value) {
 	printf("Tick Generic. Ticker Id: %ld, Type: %d, Value: %g\n", tickerId, (int)tickType, value);
+	std::cout << std::endl;
 }
 //! [tickgeneric]
 
 //! [tickstring]
 void InteractiveBrokersApi::tickString(TickerId tickerId, TickType tickType, const std::string& value) {
 	printf("Tick String. Ticker Id: %ld, Type: %d, Value: %s\n", tickerId, (int)tickType, value.c_str());
+	std::cout << std::endl;
 }
 //! [tickstring]
 
 void InteractiveBrokersApi::tickEFP(TickerId tickerId, TickType tickType, double basisPoints, const std::string& formattedBasisPoints,
 	double totalDividends, int holdDays, const std::string& futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate) {
 	printf("TickEFP. %ld, Type: %d, BasisPoints: %g, FormattedBasisPoints: %s, Total Dividends: %g, HoldDays: %d, Future Last Trade Date: %s, Dividend Impact: %g, Dividends To Last Trade Date: %g\n", tickerId, (int)tickType, basisPoints, formattedBasisPoints.c_str(), totalDividends, holdDays, futureLastTradeDate.c_str(), dividendImpact, dividendsToLastTradeDate);
+	std::cout << std::endl;
 }
 
 //! [orderstatus]
 void InteractiveBrokersApi::orderStatus(OrderId orderId, const std::string& status, double filled,
 	double remaining, double avgFillPrice, int permId, int parentId,
 	double lastFillPrice, int clientId, const std::string& whyHeld, double mktCapPrice) {
+
 	printf("OrderStatus. Id: %ld, Status: %s, Filled: %g, Remaining: %g, AvgFillPrice: %g, PermId: %d, LastFillPrice: %g, ClientId: %d, WhyHeld: %s, MktCapPrice: %g\n", orderId, status.c_str(), filled, remaining, avgFillPrice, permId, lastFillPrice, clientId, whyHeld.c_str(), mktCapPrice);
+	std::cout << std::endl;
 }
 //! [orderstatus]
 
@@ -418,7 +427,7 @@ void InteractiveBrokersApi::execDetails(int reqId, const Contract& contract, con
 
 	if (orderStatusCallback != nullptr)
 	{
-		orderStatusCallback(reqId, contract, execution);
+		orderStatusCallback(execution.orderId, contract, execution);
 	}
 
 }

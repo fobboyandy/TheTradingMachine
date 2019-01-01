@@ -9,11 +9,19 @@ Portfolio::~Portfolio()
 {
 }
 
-PositionId Portfolio::newPosition()
+PositionId Portfolio::newPosition(std::string ticker)
 {
 	// use postIncrement to keep consistent with m_orderId in ibApi
 	auto currentPositionId = uniquePositionId_++;
-	positions_[currentPositionId] = Position{ 0 };
+	auto& newPosition = positions_[currentPositionId];
+	newPosition.ticker = ticker;
+	newPosition.averagePrice = 0;
+	newPosition.shares = 0;
+	newPosition.profit = 0;
+	newPosition.stoploss = 0;
+	newPosition.openTime = 0;
+	newPosition.closeTime = 0;
+
 	return currentPositionId;
 }
 

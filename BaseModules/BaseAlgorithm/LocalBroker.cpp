@@ -44,7 +44,7 @@ PositionId LocalBroker::longMarket(std::string ticker, int numShares, std::funct
 	//validate number of shares
 	numShares = abs(numShares);
 
-	auto newPosId = portfolio_.newPosition();
+	auto newPosId = portfolio_.newPosition(ticker);
 
 	// this lambda captures the state of the current context
 	// when this is called as a callback later, it will have
@@ -78,7 +78,7 @@ PositionId LocalBroker::longLimit(std::string ticker, double limitPrice, int num
 	//validate number of shares
 	numShares = abs(numShares);
 
-	auto newPosId = portfolio_.newPosition();
+	auto newPosId = portfolio_.newPosition(ticker);
 
 	// this lambda captures the state of the current context
 	// when this is called as a callback later, it will have
@@ -112,7 +112,7 @@ PositionId LocalBroker::shortMarket(std::string ticker, int numShares, std::func
 	//validate number of shares
 	numShares = abs(numShares);
 
-	auto newPosId = portfolio_.newPosition();
+	auto newPosId = portfolio_.newPosition(ticker);
 
 	// this lambda captures the state of the current context
 	// when this is called as a callback later, it will have
@@ -146,7 +146,7 @@ PositionId LocalBroker::shortLimit(std::string ticker, double limitPrice, int nu
 	//validate number of shares
 	numShares = abs(numShares);
 
-	auto newPosId = portfolio_.newPosition();
+	auto newPosId = portfolio_.newPosition(ticker);
 
 	// this lambda captures the state of the current context
 	// when this is called as a callback later, it will have
@@ -189,15 +189,18 @@ void LocalBroker::reducePosition(PositionId posId, int numShares, std::function<
 	};
 	if (liveTrade_)
 	{
-		// we are supposed to create an order and submit it to ibapi. ib api
-		// returns an orderId to us. We need to map this OrderId to to a position 
-		// that the orderUpdate callback from ibapi will be able to update the appropriate
-		// position
+		auto currentPosition = getPosition(posId);
 
-		// all orders are submitted as all or none
-
-		// skip this part for now. we don't need it until we find a working algo
-
+		// long. use ShortMarket to reduce the shares
+		if (currentPosition.shares > 0)
+		{
+			activeFillNotificationListenersHandles.push_back(ibApi_->shortMarket(currentPosition.ticker, abs(numShares), reducePositionFillNotification));
+		}
+		// else this is a short. use long to reduce the shares
+		else if (currentPosition.shares < 0)
+		{
+			activeFillNotificationListenersHandles.push_back(ibApi_->longMarket(currentPosition.ticker, abs(numShares), reducePositionFillNotification));
+		}
 	}
 	//if not live trading, then all market positions are filled instantly at the last seen price
 	else
@@ -235,14 +238,18 @@ void LocalBroker::closePosition(PositionId posId, std::function<void(double, tim
 
 	if (liveTrade_)
 	{
-		// we are supposed to create an order and submit it to ibapi. ib api
-		// returns an orderId to us. We need to map this OrderId to to a position 
-		// that the orderUpdate callback from ibapi will be able to update the appropriate
-		// position
+		auto currentPosition = getPosition(posId);
 
-		// all orders are submitted as all or none
-
-		// skip this part for now. we don't need it until we find a working algo
+		// long. use ShortMarket to close the position
+		if (currentPosition.shares > 0)
+		{
+			activeFillNotificationListenersHandles.push_back(ibApi_->shortMarket(currentPosition.ticker, abs(currentPosition.shares), closePositionFillNotification));
+		}
+		// else this is a short. use long to close the position
+		else if (currentPosition.shares < 0)
+		{
+			activeFillNotificationListenersHandles.push_back(ibApi_->longMarket(currentPosition.ticker, abs(currentPosition.shares), closePositionFillNotification));
+		}
 
 	}
 	//if not live trading, then all market positions are filled instantly at the last seen price
