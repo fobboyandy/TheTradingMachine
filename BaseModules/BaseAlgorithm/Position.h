@@ -7,6 +7,7 @@
 //
 struct Position
 {
+	std::string ticker;
 	double averagePrice;
 	int shares;
 	double profit;

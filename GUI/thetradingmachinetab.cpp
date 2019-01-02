@@ -18,6 +18,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     PlayDialog loadInput(this);
     loadInput.exec();
     auto input = loadInput.getInput();
+    auto liveTrading = loadInput.getLiveTrading();
     name_ = formatTabName(input);
 
     if(name_.size() == 0)
@@ -27,7 +28,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
 
     //if real time, check for ib connection
     // instantiate the algorithm for this ticker
-    algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_, false);
+    algorithmHandle_ = api_.playAlgorithm(input.toStdString(), &plotData_, client_, liveTrading);
     if(algorithmHandle_ != -1)
     {
         // tab should only be valid if play algorithm and getplotdata worked
@@ -46,7 +47,6 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     plot_->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(plot_, &QCustomPlot::customContextMenuRequested, this, &TheTradingMachineTab::menuShowSlot);
 
-
     // initialize members here instead of the initializer list
     // to keep the initializer list shorter. shouldn't be too much
     // extra overhead
@@ -59,6 +59,7 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     lastTickReceivedTime = std::chrono::high_resolution_clock::now();
     // start the plotting
     replotTimer_->start(30);
+    replotCount_ = 0;
 }
 
 TheTradingMachineTab::~TheTradingMachineTab()
@@ -154,11 +155,13 @@ void TheTradingMachineTab::updatePlot(void)
     // dynamically adjust the refresh rate based on number of ticks received
     if(tickBuffer.size() > 0)
     {
+        replotCount_ = 0;
         using namespace std::chrono;
         auto timeNow = high_resolution_clock::now();
         auto diffTimeMs = duration_cast<milliseconds>(timeNow - lastTickReceivedTime).count();
         lastTickReceivedTime = timeNow;
-        auto refreshDelayMs = static_cast<int>(static_cast<decltype(tickBuffer.size())>(diffTimeMs * 300)/tickBuffer.size());
+        auto refreshDelayMs = static_cast<int>(static_cast<decltype(tickBuffer.size())>(diffTimeMs)/tickBuffer.size());
+
         if(refreshDelayMs < 30 && replotTimer_->interval() > 30)
         {
             // refresh delay capped at 30ms
@@ -171,10 +174,18 @@ void TheTradingMachineTab::updatePlot(void)
     }
     else
     {
-        // once the ticks stop getting sent as frequently, set it to 10 seconds refresh rate.
+        // once the ticks stop getting sent as frequently, set it to 5 seconds refresh rate.
         // the refresh rate will begin to increase in premarket and ramp up to a faster
-        // rate by the time market starts
-        replotTimer_->setInterval(10000);
+        // rate by the time market starts. use a counter to wait for data at the faster rate
+        // before switching to the slow rate
+        if(replotCount_ < 10)
+        {
+            ++replotCount_;
+        }
+        else
+        {
+            replotTimer_->setInterval(5000);
+        }
     }
 
     // replot only if there are any visible update in the current view

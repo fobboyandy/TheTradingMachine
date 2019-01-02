@@ -29,6 +29,11 @@ QString PlayDialog::getInput() const
     return userInput;
 }
 
+bool PlayDialog::getLiveTrading() const
+{
+    return liveTrading;
+}
+
 void PlayDialog::slotFileLoad()
 {
     auto filePath = QFileDialog::getOpenFileName(this, "Load Tick Data", QString("..\\SampleData\\"), "*.tickdat");
@@ -41,4 +46,5 @@ void PlayDialog::slotFileLoad()
 void PlayDialog::confirmInput()
 {
     userInput = ui->lineEdit->text();
+    liveTrading = ui->checkBox->checkState() == Qt::CheckState::Checked ? true : false;
 }

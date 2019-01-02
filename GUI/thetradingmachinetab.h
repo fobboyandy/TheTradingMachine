@@ -70,6 +70,7 @@ private:
     bool autoScale_;
     bool plotActive_;
     bool valid_;
+    int replotCount_;
 
     decltype(std::chrono::high_resolution_clock::now()) lastTickReceivedTime;
 
