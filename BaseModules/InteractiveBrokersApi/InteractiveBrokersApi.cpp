@@ -152,18 +152,21 @@ void InteractiveBrokersApi::currentTime(long time)
 void InteractiveBrokersApi::error(int id, int errorCode, const std::string& errorString)
 {
 	printf("Error. Id: %d, Code: %d, Msg: %s\n", id, errorCode, errorString.c_str());
+	std::cout << std::endl;
 }
 //! [error]
 
 //! [tickprice]
 void InteractiveBrokersApi::tickPrice(TickerId tickerId, TickType field, double price, const TickAttrib& attribs) {
 	printf("Tick Price. Ticker Id: %ld, Field: %d, Price: %g, CanAutoExecute: %d, PastLimit: %d, PreOpen: %d\n", tickerId, (int)field, price, attribs.canAutoExecute, attribs.pastLimit, attribs.preOpen);
+	std::cout << std::endl;
 }
 //! [tickprice]
 
 //! [ticksize]
 void InteractiveBrokersApi::tickSize(TickerId tickerId, TickType field, int size) {
 	printf("Tick Size. Ticker Id: %ld, Field: %d, Size: %d\n", tickerId, (int)field, size);
+	std::cout << std::endl;
 }
 //! [ticksize]
 
@@ -172,31 +175,37 @@ void InteractiveBrokersApi::tickOptionComputation(TickerId tickerId, TickType ti
 	double optPrice, double pvDividend,
 	double gamma, double vega, double theta, double undPrice) {
 	printf("TickOptionComputation. Ticker Id: %ld, Type: %d, ImpliedVolatility: %g, Delta: %g, OptionPrice: %g, pvDividend: %g, Gamma: %g, Vega: %g, Theta: %g, Underlying Price: %g\n", tickerId, (int)tickType, impliedVol, delta, optPrice, pvDividend, gamma, vega, theta, undPrice);
+	std::cout << std::endl;
 }
 //! [tickoptioncomputation]
 
 //! [tickgeneric]
 void InteractiveBrokersApi::tickGeneric(TickerId tickerId, TickType tickType, double value) {
 	printf("Tick Generic. Ticker Id: %ld, Type: %d, Value: %g\n", tickerId, (int)tickType, value);
+	std::cout << std::endl;
 }
 //! [tickgeneric]
 
 //! [tickstring]
 void InteractiveBrokersApi::tickString(TickerId tickerId, TickType tickType, const std::string& value) {
 	printf("Tick String. Ticker Id: %ld, Type: %d, Value: %s\n", tickerId, (int)tickType, value.c_str());
+	std::cout << std::endl;
 }
 //! [tickstring]
 
 void InteractiveBrokersApi::tickEFP(TickerId tickerId, TickType tickType, double basisPoints, const std::string& formattedBasisPoints,
 	double totalDividends, int holdDays, const std::string& futureLastTradeDate, double dividendImpact, double dividendsToLastTradeDate) {
 	printf("TickEFP. %ld, Type: %d, BasisPoints: %g, FormattedBasisPoints: %s, Total Dividends: %g, HoldDays: %d, Future Last Trade Date: %s, Dividend Impact: %g, Dividends To Last Trade Date: %g\n", tickerId, (int)tickType, basisPoints, formattedBasisPoints.c_str(), totalDividends, holdDays, futureLastTradeDate.c_str(), dividendImpact, dividendsToLastTradeDate);
+	std::cout << std::endl;
 }
 
 //! [orderstatus]
 void InteractiveBrokersApi::orderStatus(OrderId orderId, const std::string& status, double filled,
 	double remaining, double avgFillPrice, int permId, int parentId,
 	double lastFillPrice, int clientId, const std::string& whyHeld, double mktCapPrice) {
+
 	printf("OrderStatus. Id: %ld, Status: %s, Filled: %g, Remaining: %g, AvgFillPrice: %g, PermId: %d, LastFillPrice: %g, ClientId: %d, WhyHeld: %s, MktCapPrice: %g\n", orderId, status.c_str(), filled, remaining, avgFillPrice, permId, lastFillPrice, clientId, whyHeld.c_str(), mktCapPrice);
+	std::cout << std::endl;
 }
 //! [orderstatus]
 
@@ -358,82 +367,33 @@ void InteractiveBrokersApi::printBondContractDetailsMsg(const ContractDetails& c
 	printContractDetailsSecIdList(contractDetails.secIdList);
 }
 
-void InteractiveBrokersApi::requestRealTimeMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback)
+OrderId InteractiveBrokersApi::placeOrder(const Contract & contract, const Order & order)
 {
-	OrderId oid;
-	std::string minString = " min";
-	if (timeFrameMinutes > 1)
-		minString.push_back('s');
-
-	auto& timeframeOrderMap = stockRealTimeBarOrderIds[ticker];
-	if(timeframeOrderMap.find(timeFrameMinutes) != timeframeOrderMap.end())
-	{
-		oid = timeframeOrderMap[timeFrameMinutes];
-	}
-	else
-	{
-		oid = m_orderId;
-		m_orderId++;
-		timeframeOrderMap[timeFrameMinutes] = oid;
-
-		//
-		// Submit the request with historical data with the update option 
-		// on
-		//
-		m_pClient->reqHistoricalData(
-			oid,
-			createUsStockContract(ticker),
-			"", 
-			"1 D",
-			std::to_string(timeFrameMinutes) + minString,
-			"TRADES", 
-			true, 
-			1, 
-			true, 
-			TagValueListSPtr());
-		
-		stockRealTimeBarCallbacks[oid].timeFrame = timeFrameMinutes;
-	}
-	stockRealTimeBarCallbacks[oid].callbackFunctions.push_back(callback);
-
+	OrderId oid = m_orderId.fetch_add(1);
+	m_pClient->placeOrder(oid, contract, order);
+	return oid;
 }
 
-void InteractiveBrokersApi::requestHistoricalMinuteBars(std::string ticker, int timeFrameMinutes, std::function<void(const Bar&)> callback)
+void InteractiveBrokersApi::cancelOrder(int orderId)
 {
-	std::string minString = " min";
-	if (timeFrameMinutes > 1)
-		minString.push_back('s');
-	OrderId oid = m_orderId;
-	m_orderId++;
-	m_pClient->reqHistoricalData(
-		oid,
-		createUsStockContract(ticker),
-		"",
-		"1 D",
-		std::to_string(timeFrameMinutes) + minString,
-		"TRADES",
-		true,
-		1,
-		false,
-		TagValueListSPtr());
-
-	historicalBarCallbacks[oid] = callback;
-
+	m_pClient->cancelOrder(orderId);
 }
 
-void InteractiveBrokersApi::registerRealTimeTickCallback(std::function<void(OrderId, const Tick&)> callback)
+void InteractiveBrokersApi::registerOrderStatusCallback(const OrderExecutionCallbackType & callback)
 {
-	tickCallback = callback;
+	orderStatusCallback = callback;
+}
+
+void InteractiveBrokersApi::registerRealtimeTickCallback(const RealtimeTickCallbackType & callback)
+{
+	realTimeTickCallback = callback;
 }
 
 //return value is a handle to the callback function which is used to later remove a callback 
-//using cancelRealTimeTicks
-OrderId InteractiveBrokersApi::requestRealTimeTicks(std::string ticker)
+//using cancelRealtimeTicks
+OrderId InteractiveBrokersApi::requestRealtimeTicks(const Contract &contract, const std::string& tickType, int numberOfTicks, bool ignoreSize)
 {
-	OrderId oid = m_orderId;
-
-	//prepare a new orderId for the next call
-	++m_orderId;
+	OrderId oid = m_orderId.fetch_add(1);
 
 	//
 	// Submit the request with historical data with the update option 
@@ -441,28 +401,18 @@ OrderId InteractiveBrokersApi::requestRealTimeTicks(std::string ticker)
 	// 
 	m_pClient->reqTickByTickData(
 		oid,
-		createUsStockContract(ticker),
-		"AllLast",
-		0,
-		false
+		contract,
+		tickType,
+		numberOfTicks,
+		ignoreSize
 	);
 
 	return oid;
 }
 
-void InteractiveBrokersApi::cancelRealTimeTicks(OrderId oid)
+void InteractiveBrokersApi::cancelRealtimeTicks(OrderId oid)
 {
 	m_pClient->cancelTickByTickData(oid);
-}
-
-Contract InteractiveBrokersApi::createUsStockContract(std::string ticker)
-{
-	Contract c;
-	c.symbol = ticker;
-	c.secType = "STK";
-	c.currency = "USD";
-	c.exchange = "SMART";
-	return c;
 }
 
 //! [contractdetailsend]
@@ -474,6 +424,12 @@ void InteractiveBrokersApi::contractDetailsEnd(int reqId) {
 //! [execdetails]
 void InteractiveBrokersApi::execDetails(int reqId, const Contract& contract, const Execution& execution) {
 	printf("ExecDetails. ReqId: %d - %s, %s, %s - %s, %ld, %g, %d\n", reqId, contract.symbol.c_str(), contract.secType.c_str(), contract.currency.c_str(), execution.execId.c_str(), execution.orderId, execution.shares, execution.lastLiquidity);
+
+	if (orderStatusCallback != nullptr)
+	{
+		orderStatusCallback(execution.orderId, contract, execution);
+	}
+
 }
 //! [execdetails]
 
@@ -521,10 +477,6 @@ void InteractiveBrokersApi::historicalData(TickerId reqId, const Bar& bar) {
 	//
 	// If a function is requesting historical Data callback
 	//
-	if (historicalBarCallbacks.find(reqId) != historicalBarCallbacks.end())
-	{
-		historicalBarCallbacks[reqId](bar);
-	}
 }
 //! [historicaldata]
 
@@ -557,7 +509,7 @@ void InteractiveBrokersApi::scannerDataEnd(int reqId) {
 //! [realtimebar]
 void InteractiveBrokersApi::realtimeBar(TickerId reqId, long time, double open, double high, double low, double close,
 	long volume, double wap, int count) {
-	printf("RealTimeBars. %ld - Time: %ld, Open: %g, High: %g, Low: %g, Close: %g, Volume: %ld, Count: %d, WAP: %g\n", reqId, time, open, high, low, close, volume, count, wap);
+	printf("RealtimeBars. %ld - Time: %ld, Open: %g, High: %g, Low: %g, Close: %g, Volume: %ld, Count: %d, WAP: %g\n", reqId, time, open, high, low, close, volume, count, wap);
 }
 //! [realtimebar]
 
@@ -827,33 +779,6 @@ void InteractiveBrokersApi::histogramData(int reqId, const HistogramDataVector& 
 void InteractiveBrokersApi::historicalDataUpdate(TickerId reqId, const Bar& bar) {
 	//printf("HistoricalDataUpdate. ReqId: %ld - Date: %s, Open: %g, High: %g, Low: %g, Close: %g, Volume: %lld, Count: %d, WAP: %g\n", reqId, bar.time.c_str(), bar.open, bar.high, bar.low, bar.close, bar.volume, bar.count, bar.wap);
 	//
-
-	Callback& orderIdCallback = stockRealTimeBarCallbacks[reqId];
-
-	// Parses the time for the minutes of a bar in integer;
-	//
-	auto getPrevBarMinutes = [&]()
-	{
-		return stoi(orderIdCallback.callbackBar.time.substr(13, 2));
-	};
-
-	//
-	// If the bar time has changed (compared to a non new bar) and the 
-	// previous bar time was a multiple of the current timeframe, then 
-	// the previous bar was complete and should be dispatched via the 
-	// callback.
-	//
-	if (orderIdCallback.callbackBar.time.length() != 0 &&
-		bar.time != orderIdCallback.callbackBar.time &&
-		getPrevBarMinutes() % orderIdCallback.timeFrame == 0)
-	{
-		for (auto& fn : orderIdCallback.callbackFunctions)
-		{
-			fn(orderIdCallback.callbackBar);
-		}
-	}
-
-	orderIdCallback.callbackBar = bar;
 	
 }
 //! [historicalDataUpdate]
@@ -923,10 +848,9 @@ void InteractiveBrokersApi::historicalTicksLast(int reqId, const std::vector<His
 //! [tickbytickalllast]
 void InteractiveBrokersApi::tickByTickAllLast(int reqId, int tickType, time_t time, double price, int size, const TickAttrib& attribs, const std::string& exchange, const std::string& specialConditions) {
 
-	if (tickCallback != nullptr)
+	if (realTimeTickCallback != nullptr)
 	{
-		Tick t = { tickType, time, price, size, attribs, exchange };
-		tickCallback(reqId, t);
+		realTimeTickCallback(reqId, Tick{ tickType, time, price, size, attribs, exchange });
 	}
 }
 //! [tickbytickalllast]

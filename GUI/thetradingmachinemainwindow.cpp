@@ -1,5 +1,6 @@
 #include "thetradingmachinemainwindow.h"
 #include "ui_thetradingmachinemainwindow.h"
+#include "playdialog.h"
 
 #include <Windows.h>
 #include <QString>
@@ -83,16 +84,24 @@ void TheTradingMachineMainWindow::newSession()
 
 void TheTradingMachineMainWindow::play()
 {
-    auto objects = ui->tabWidget->children();
-    TheTradingMachineTab* newTab = new TheTradingMachineTab(api_, client_, nullptr);
-    if(newTab->valid())
+    PlayDialog loadInputDialog(this);
+    loadInputDialog.exec();
+    auto inputs = loadInputDialog.getInput();
+    auto liveTrading = loadInputDialog.getLiveTrading();
+
+    for(const auto& input: inputs)
     {
-        ui->tabWidget->addTab(newTab, newTab->tabName());
+        TheTradingMachineTab* newTab = new TheTradingMachineTab(input, liveTrading, api_, client_, this);
+        if(newTab->valid())
+        {
+            ui->tabWidget->addTab(newTab, newTab->tabName());
+        }
+        else
+        {
+            delete newTab;
+        }
     }
-    else
-    {
-        delete newTab;
-    }
+
 }
 
 void TheTradingMachineMainWindow::stopCurrentSession()

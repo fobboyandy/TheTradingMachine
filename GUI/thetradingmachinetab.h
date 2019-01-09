@@ -31,7 +31,6 @@ public:
         std::function<bool(int)> stopAlgorithm;
     };
 
-    TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<InteractiveBrokersClient> client, QWidget* parent = nullptr);
     ~TheTradingMachineTab();
 
     // deleted functions because there is no need to duplicate a tab that looks like another
@@ -42,6 +41,7 @@ public:
     QString tabName() const;
     bool valid() const;
 
+    TheTradingMachineTab(const QString input, bool liveTrading, const AlgorithmApi &api, std::shared_ptr<InteractiveBrokersClient> client, QWidget *parent);
 private:
     // plot items
     QGridLayout *gridLayout_;
@@ -70,6 +70,7 @@ private:
     bool autoScale_;
     bool plotActive_;
     bool valid_;
+    int replotCount_;
 
     decltype(std::chrono::high_resolution_clock::now()) lastTickReceivedTime;
 

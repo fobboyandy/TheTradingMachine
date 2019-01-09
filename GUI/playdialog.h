@@ -14,14 +14,17 @@ class PlayDialog : public QDialog
 public:
     explicit PlayDialog(QWidget *parent = nullptr);
     ~PlayDialog();
-    QString getInput() const;
+    bool getLiveTrading() const;
+    QStringList getInput() const;
 
 private slots:
     void slotFileLoad();
     void confirmInput();
+
 private:
     Ui::PlayDialog *ui;
-    QString userInput;
+    QStringList userInput;
+    bool liveTrading;
 };
 
 #endif // PLAYDIALOG_H

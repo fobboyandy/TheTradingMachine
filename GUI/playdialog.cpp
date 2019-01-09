@@ -24,21 +24,33 @@ PlayDialog::~PlayDialog()
     delete ui;
 }
 
-QString PlayDialog::getInput() const
+QStringList PlayDialog::getInput() const
 {
     return userInput;
 }
 
+bool PlayDialog::getLiveTrading() const
+{
+    return liveTrading;
+}
+
 void PlayDialog::slotFileLoad()
 {
-    auto filePath = QFileDialog::getOpenFileName(this, "Load Tick Data", QString("..\\SampleData\\"), "*.tickdat");
-    if(filePath.size() > 0)
+    auto filePath = QFileDialog::getOpenFileNames(this, "Load Tick Data", QString("..\\SampleData\\"), "*.tickdat");
+    QString fileLoadBoxText;
+
+    for(auto& filePathStr: filePath)
     {
-        ui->lineEdit->setText(filePath);
+        fileLoadBoxText.push_back(filePathStr);
+        fileLoadBoxText.push_back(";");
     }
+
+    // set the gui to display the text of the files chosen.
+    ui->lineEdit->setText(fileLoadBoxText);
 }
 
 void PlayDialog::confirmInput()
 {
-    userInput = ui->lineEdit->text();
+    userInput = ui->lineEdit->text().split(';', QString::SplitBehavior::SkipEmptyParts);
+    liveTrading = ui->checkBox->checkState() == Qt::CheckState::Checked ? true : false;
 }
