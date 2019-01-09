@@ -215,9 +215,10 @@ Position LocalBroker::getPosition(PositionId posId)
 	return portfolio_.getPosition(posId);
 }
 
-void LocalBroker::registerListener(TickListener callback)
+CallbackHandle LocalBroker::registerListener(TickListener callback)
 {
 	activeTickListenerHandle = tickSource_.registerListener(callback);
+	return activeTickListenerHandle;
 }
 
 void LocalBroker::unregisterListener(CallbackHandle handle)

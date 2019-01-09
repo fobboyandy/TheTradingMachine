@@ -5,7 +5,7 @@
 #include "indicatorgraph.h"
 #include "annotationplot.h"
 
-TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_ptr<InteractiveBrokersClient> client, QWidget* parent) :
+TheTradingMachineTab::TheTradingMachineTab(const QString input, bool liveTrading, const AlgorithmApi& api, std::shared_ptr<InteractiveBrokersClient> client, QWidget* parent) :
     QWidget(parent),
     replotTimer_(new QTimer(this)),
     api_(api),
@@ -13,12 +13,6 @@ TheTradingMachineTab::TheTradingMachineTab(const AlgorithmApi& api, std::shared_
     candleMaker_(60)
 {
     valid_ = false;
-
-    // prompt user for the input method. real time or historical ticks
-    PlayDialog loadInput(this);
-    loadInput.exec();
-    auto input = loadInput.getInput();
-    auto liveTrading = loadInput.getLiveTrading();
     name_ = formatTabName(input);
 
     if(name_.size() == 0)

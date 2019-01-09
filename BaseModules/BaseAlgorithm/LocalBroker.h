@@ -22,7 +22,7 @@ public:
 	void run();
 	bool valid();
 
-	void registerListener(TickListener callback);
+	CallbackHandle registerListener(TickListener callback);
 	void unregisterListener(CallbackHandle handle);
 
 // order api

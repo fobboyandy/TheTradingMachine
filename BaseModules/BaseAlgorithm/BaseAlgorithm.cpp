@@ -40,6 +40,7 @@ private:
 	LocalBroker localBroker;
 	bool running;
 
+	CallbackHandle callbackHandle;
 	void tickHandler(const Tick& tick);
 
 // algorithm benchmarking
@@ -73,7 +74,7 @@ BaseAlgorithm::BaseAlgorithmImpl::BaseAlgorithmImpl(BaseAlgorithm* parentIn, std
 		ticker_ = input;
 	}
 
-	localBroker.registerListener([this](const Tick& tick)
+	callbackHandle = localBroker.registerListener([this](const Tick& tick)
 	{
 		this->tickHandler(tick);
 	});
@@ -102,6 +103,8 @@ void BaseAlgorithm::BaseAlgorithmImpl::stop()
 	if (running)
 	{
 		running = false;
+		//unregistering the callback stops the algorithm
+		localBroker.unregisterListener(callbackHandle);
 	}
 }
 
