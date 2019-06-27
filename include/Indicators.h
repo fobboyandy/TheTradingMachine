@@ -12,7 +12,7 @@
 
 #include <array>
 
-#ifdef INDICATORS_EXPORTS
+#ifdef Indicators_EXPORTS
 #define INDICATORSDLL __declspec(dllexport)
 #else
 #define INDICATORSDLL __declspec(dllimport)

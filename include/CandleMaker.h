@@ -4,7 +4,7 @@
 #include "../InteractiveBrokersApi/bar.h"
 #include "../InteractiveBrokersApi/Tick.h"
 
-#ifdef CANDLEMAKER_EXPORTS
+#ifdef CandleMaker_EXPORTS
 #define CANDLEMAKERDLL __declspec(dllexport)
 #else
 #define CANDLEMAKERDLL __declspec(dllimport)

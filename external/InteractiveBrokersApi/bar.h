@@ -5,6 +5,8 @@
 #ifndef bar_def
 #define bar_def
 
+#include <string>
+
 struct Bar
 {
 	std::string time;

@@ -42,3 +42,21 @@ add_library(InteractiveBrokersClient SHARED
 )
 
 target_link_libraries(InteractiveBrokersClient InteractiveBrokersLib)
+
+add_library(CandleMaker SHARED
+./include/CandleMaker.h
+./src/CandleMaker.cpp
+)
+
+add_library(Indicators SHARED
+./include/BollingerBands.h
+./include/Indicators.h
+./include/RelativeStrengthIndex.h
+./include/SimpleMovingAverage.h
+./include/ExponentialMovingAverage.h
+./src/BollingerBands.cpp
+./src/RelativeStrengthIndex.cpp
+./src/SimpleMovingAverage.cpp
+./src/ExponentialMovingAverage.cpp
+)
+
