@@ -61,4 +61,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RESOURCES += \
     resource.qrc
 
-win32: LIBS += -L$$PWD/../BaseModules/x64/Debug/ -lInteractiveBrokersClient -lIndicators -lCandleMaker
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../BaseModules/x64/release/ -lInteractiveBrokersClient -lIndicators -lCandleMaker
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../BaseModules/x64/debug/ -lInteractiveBrokersClient -lIndicators -lCandleMaker

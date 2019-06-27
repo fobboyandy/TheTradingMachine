@@ -3,6 +3,7 @@
 #include <sstream>
 #include <string>
 #include <iostream>
+#include <windows.h>
 #include "TickBroadcast.h"
 
 TickBroadcast::TickBroadcast(std::string input, std::shared_ptr<InteractiveBrokersClient> ibApiPtr) :
